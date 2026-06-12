@@ -1,0 +1,126 @@
+== Hook params (CustomName / CustomNickName / CustomDescription) ==
+CustomDescription: CustomName
+CustomName: CustomNickName
+CustomNickName: Description
+CustomDescription: CustomName
+CustomName: CustomNickName
+CustomNickName: Description
+CustomDescription: List of geometries
+CustomName: geometry
+CustomNickName: Description
+CustomDescription: USpatial reference identifier to convert the spatial filter to geographic coordinates.
+CustomName: SRID
+CustomNickName: SRID
+CustomDescription: List of variable types
+CustomName: variable types
+CustomNickName: Description
+CustomDescription: &Schema where the table will be created
+CustomName: schema
+CustomNickName: Description
+CustomDescription: Replace table if exists?
+CustomName: replace table
+CustomNickName: Description
+CustomDescription: List of column names
+CustomName: list of columns
+CustomNickName: Description
+CustomDescription: 'Name of the table that will be created.
+CustomName: table name
+CustomNickName: Description
+CustomDescription: [Position correction parameter on the Y axis to bring closer to the origin in the workspace.
+CustomName: Correction Y
+CustomNickName: Description
+CustomDescription: Values of entries in the table.
+CustomName: values
+CustomNickName: Description
+CustomDescription: [Position correction parameter on the X axis to bring closer to the origin in the workspace.
+CustomName: Correction X
+CustomNickName: Description
+CustomDescription: Set "True" to connect.
+CustomName: Connection Toggle
+CustomNickName: CToggle
+CustomDescription: A database connection string.
+CustomName: Connection String
+CustomNickName: CString
+
+== Internal components (GUID -> Name) ==
+Text
+Text
+Integer
+Group
+Scribble
+Container
+Text
+Text
+Text
+Boolean
+Boolean
+Text
+Text
+Text
+Geometry
+Geometry
+Panel
+Panel
+Text
+Text
+Merge
+Panel
+Stream Filter
+Boolean
+Concatenate
+Text
+Text
+Concatenate
+Panel
+Panel
+Text Join
+Panel
+Text
+Text Join
+Panel
+Repeat Data
+Panel
+Integer
+Panel
+Merge
+Repeat Data
+Integer
+Integer
+Series
+Integer
+Text
+Text
+Repeat Data
+Integer
+Repeat Data
+Integer
+Text
+Text Join
+Panel
+Group
+Scribble
+Text Join
+Panel
+Container
+Concatenate
+Panel
+Panel
+Group
+geometry
+SRID
+variable types
+schema
+replace table
+list of columns
+table name
+Correction Y
+values
+Correction X
+Scribble
+Connection Toggle
+Connection String
+Tree Statistics
+SQL Composer
+SQL Composer
+Grasshopper Geometry to WKT
+Run ODBC Command

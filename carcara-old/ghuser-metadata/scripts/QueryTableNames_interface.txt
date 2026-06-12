@@ -1,0 +1,38 @@
+== Hook params (CustomName / CustomNickName / CustomDescription) ==
+CustomDescription: !List of all tables in the schema.
+CustomName: tables
+CustomNickName: Description
+CustomDescription: Displays erros
+CustomName: Exceptions
+CustomNickName: Description
+CustomDescription: Schema to be queried
+CustomName: Schema
+CustomNickName: Description
+CustomDescription: Set "True" to connect.
+CustomName: Connection Toggle
+CustomNickName: CToggle
+CustomDescription: A database connection string.
+CustomName: Connection String
+CustomNickName: CString
+CustomDescription: If you set "true" (or 1), the query will return only base tables. If you set "false" (or 0), views will be included on a separate branch.
+CustomName: Base Tables
+CustomNickName: Description
+
+== Internal components (GUID -> Name) ==
+tables
+Exceptions
+Panel
+Panel
+Stream Filter
+Boolean
+Text
+Boolean
+Text
+Schema
+Connection Toggle
+Connection String
+Base Tables
+Panel
+Run ODBC Query
+SQL Composer
+Merge

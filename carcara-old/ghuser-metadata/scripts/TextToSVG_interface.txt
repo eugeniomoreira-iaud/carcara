@@ -1,0 +1,43 @@
+== Hook params (CustomName / CustomNickName / CustomDescription) ==
+CustomDescription: *Fill color for the text (default 'black').
+CustomName: Fill color
+CustomNickName: Description
+CustomDescription: #One or more text strings to render.
+CustomName: Text
+CustomNickName: Description
+CustomDescription:  Optional font size (default 12).
+CustomName: Font Size
+CustomNickName: Description
+CustomDescription: List of integers (1-9) mapping to text alignment: 1: top left, 2: top center, 3: top right, 4: middle left, 5: middle center, 6: middle right, 7: bottom left, 8: bottom center, 9: bottom right.
+CustomName: Justification
+CustomNickName: Description
+CustomDescription: A rectangle that will serve as a reference canvas for the graphics. If you are using a composition of different geometries, give the same canvas to all of them. This imput should also feed the save svg component. .
+CustomName: Canvas
+CustomNickName: Description
+CustomDescription: Generated SVG code
+CustomName: SVG code
+CustomNickName: Description
+CustomDescription: CustomName
+CustomName: CustomNickName
+CustomNickName: Description
+CustomDescription: Insertion point(s) for the text
+CustomName: Insertion points
+CustomNickName: Description
+
+== Internal components (GUID -> Name) ==
+Text to SVG
+Text Tag 3D
+Text
+Number
+Rectangle
+Fill color
+Text
+Font Size
+Multiplication
+Panel
+Integer
+Justification
+Canvas
+SVG code
+Container
+Insertion points

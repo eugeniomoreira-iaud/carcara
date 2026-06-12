@@ -1,0 +1,25 @@
+{
+  "name": "QueryColumnNames",
+  "nickname": "QC",
+  "category": "Carcara",
+  "subcategory": "02.Queries",
+  "description": "Lists all columns and their types in a specified table.",
+  "exposure": 2,
+  "instanceGuid": "f6a7b8c9-d0e1-2345-fabc-678901234567",
+  "ghpython": {
+    "isAdvancedMode": false,
+    "marshalGuids": true,
+    "iconDisplay": 0,
+    "inputParameters": [
+      { "name": "CString", "description": "Connection string with plain-text password (libpq format)", "typeHintID": "str", "scriptParamAccess": "item" },
+      { "name": "CToggle", "description": "Set True to execute", "typeHintID": "bool", "scriptParamAccess": "item" },
+      { "name": "schema", "description": "Schema name", "typeHintID": "str", "scriptParamAccess": "item" },
+      { "name": "table", "description": "Table name", "typeHintID": "str", "scriptParamAccess": "item" }
+    ],
+    "outputParameters": [
+      { "name": "columns", "description": "List of column names" },
+      { "name": "types", "description": "List of column data types" },
+      { "name": "report", "description": "Status message" }
+    ]
+  }
+}

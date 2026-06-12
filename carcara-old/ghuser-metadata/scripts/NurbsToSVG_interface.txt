@@ -1,0 +1,46 @@
+== Hook params (CustomName / CustomNickName / CustomDescription) ==
+CustomDescription: CustomName
+CustomName: CustomNickName
+CustomNickName: Description
+CustomDescription: (Stroke color (can be a list or constant)
+CustomName: Stroke color
+CustomNickName: Description
+CustomDescription: (troke width (can be a list or constant).
+CustomName: Stroke width
+CustomNickName: Description
+CustomDescription: 'Fill color (can be a list or constant).
+CustomName: Fill color
+CustomNickName: Description
+CustomDescription: A rectangle that will serve as a reference canvas for the graphics. If you are using a composition of different geometries, give the same canvas to all of them. This imput should also feed the save svg component. .
+CustomName: Canvas
+CustomNickName: Description
+CustomDescription: Generated SVG code
+CustomName: SVG code
+CustomNickName: Description
+CustomDescription: Nurbs to be drawn as SVG
+CustomName: Nurbs
+CustomNickName: Description
+CustomDescription: 8Sample count for the nurbs approximation. Default is 50.
+CustomName: Sample
+CustomNickName: Description
+
+== Internal components (GUID -> Name) ==
+Curve Display
+Container
+Number
+Rectangle
+Stroke color
+Stroke width
+Fill color
+Curve
+Number
+Mass Addition
+Stream Filter
+Boolean
+Nurbs to SVG
+Integer
+Canvas
+SVG code
+Nurbs
+Sample
+Planar Meshes

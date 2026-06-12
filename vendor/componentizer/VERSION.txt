@@ -1,0 +1,4 @@
+Source: https://github.com/compas-dev/compas-actions.ghpython_components
+File:   componentize_cpy.py
+Branch: main
+Fetched: 2026-06-09

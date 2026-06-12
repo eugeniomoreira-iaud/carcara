@@ -1,0 +1,37 @@
+== Hook params (CustomName / CustomNickName / CustomDescription) ==
+CustomDescription: Set "True" to connect.
+CustomName: Connection Toggle
+CustomNickName: CToggle
+CustomDescription: A database connection string.
+CustomName: Connection String
+CustomNickName: CString
+CustomDescription: !List of all columns in tha table.
+CustomName: columns
+CustomNickName: Description
+CustomDescription: Displays erros
+CustomName: Exceptions
+CustomNickName: Description
+CustomDescription: Table to be queried.
+CustomName: table
+CustomNickName: Description
+CustomDescription: Schema to be queried.
+CustomName: schema
+CustomNickName: Description
+
+== Internal components (GUID -> Name) ==
+Text
+Merge
+Panel
+Panel
+Connection Toggle
+Connection String
+columns
+Exceptions
+Text
+Text
+table
+schema
+Run ODBC Query
+SQL Composer
+Merge
+Relay

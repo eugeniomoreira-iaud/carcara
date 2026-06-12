@@ -1,0 +1,60 @@
+== Hook params (CustomName / CustomNickName / CustomDescription) ==
+CustomDescription: Displays errors on the query
+CustomName: Exceptions
+CustomNickName: Description
+CustomDescription: Positioning correction parameter on the X axis to bring geometries closer to the origin in the workspace.
+CustomName: Correction X
+CustomNickName: Description
+CustomDescription: Positioning correction parameter on the Y axis to bring geometries closer to the origin in the workspace.
+CustomName: Correction Y
+CustomNickName: Description
+CustomDescription: Table to be queried.
+CustomName: Table
+CustomNickName: Description
+CustomDescription: "Schema where the table is located.
+CustomName: Schema
+CustomNickName: Description
+CustomDescription: -Column where a specific value can be searched
+CustomName: Column
+CustomNickName: Description
+CustomDescription: Value to be searched.
+CustomName: Value
+CustomNickName: Description
+CustomDescription: Set "True" to connect.
+CustomName: Connection Toggle
+CustomNickName: CToggle
+CustomDescription: A database connection string.
+CustomName: Connection String
+CustomNickName: CString
+
+== Internal components (GUID -> Name) ==
+Exceptions
+Correction X
+Correction Y
+Panel
+Panel
+Merge
+Text
+Boolean
+Text
+Text
+Text
+Data
+Table
+Schema
+Column
+Value
+Connection Toggle
+Connection String
+Merge
+Replace Text
+Text Split
+Panel
+Panel
+Replace Text
+List Item
+Panel
+Replace Text
+Panel
+Run ODBC Query
+SQL Composer

@@ -1,0 +1,108 @@
+== Hook params (CustomName / CustomNickName / CustomDescription) ==
+CustomDescription: m2D matrix data to be represented in the heatmap. Each branch will represent a line, each item index a column.
+CustomName: Data
+CustomNickName: Description
+CustomDescription: *Number of decimal places for text plotting
+CustomName: Decimal places
+CustomNickName: Description
+CustomDescription: Axis labels Text Colour
+CustomName: Axis Text Colour
+CustomNickName: Description
+CustomDescription: Cell Edge Colour
+CustomName: cell Edge Colour
+CustomNickName: Description
+CustomDescription: CustomName
+CustomName: CustomNickName
+CustomNickName: Description
+CustomDescription: CustomName
+CustomName: CustomNickName
+CustomNickName: Description
+CustomDescription: CustomName
+CustomName: CustomNickName
+CustomNickName: Description
+CustomDescription: )File name to save the chart in SVG format
+CustomName: File Name
+CustomNickName: file
+CustomDescription: Set "true" to save the SVG file
+CustomName: Save
+CustomNickName: save
+CustomDescription: Text Size
+CustomName: Axis Text Size
+CustomNickName: Description
+CustomDescription: Cell Edge Width
+CustomName: Cell Edge Width
+CustomNickName: Description
+CustomDescription: A rectangle that will serve as a reference canvas for the graphics. If you are using a composition of different geometries, give the same canvas to all of them. This imput should also feed the save svg component. .
+CustomName: Canvas
+CustomNickName: Description
+CustomName: Get "
+CustomName: SourceCount
+CustomName: SourceCount
+CustomName: matGroup
+CustomName: Bounds
+CustomDescription: Cell Edge Width
+CustomName: Cell Edge Width
+CustomName: Jf y
+CustomDescription: m2D matrix data to be represented in the heatmap. Each branch will represent a l"@ using )
+CustomDescription: Cell Edge Colour
+CustomName: cell Edge Colour
+CustomName: f y`
+CustomDescription: m2D matrix data to be represented in the heatmap. Each bran
+CustomName: Cell Edge Width
+CustomName: Data
+CustomDescription: CustomDes
+CustomName: ID_Count
+CustomName: Dhil
+CustomDescription: m2D matrix data to be represented in the heatmap. Ehe SVG f
+CustomName: Cell Edge Width
+CustomName: Data
+CustomDescription: m2D matrix data to be represented in the heatmap. Each branch will represent a l
+CustomName: Data
+CustomDescription: m2D matrix data to be represented in the heatmap. Each branch will represent a l
+CustomName: >&G>
+CustomName: qI}Nz
+CustomName: qI}Nz
+
+== Internal components (GUID -> Name) ==
+Heatmap
+Group
+Group
+Group
+Group
+Group
+Rectangle
+Group
+Number
+Group
+Number
+Group
+Integer
+Number
+Group
+Group
+Group
+Number
+Data
+Decimal places
+Axis Text Colour
+cell Edge Colour
+Container
+Container
+Container
+Text
+File Name
+Group
+Boolean
+Save
+Axis Text Size
+Cell Edge Width
+Canvas
+Data
+Data
+Data
+Polyline to SVG
+Description
+Description
+(=v3G
+0X5o
+Description

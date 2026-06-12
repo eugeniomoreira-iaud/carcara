@@ -102,3 +102,17 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# Carcara-specific
+*.ghuser
+*.gh
+# DO commit the built components shipped inside the deployable folder.
+!carcara/userobjects/
+!carcara/userobjects/*.ghuser
+tests/_manual/
+
+# vendor: DLL is proprietary (copy from Rhino 8 or NuGet); componentizer is tracked
+vendor/ghio/
+
+# Credential scripts (never commit these)
+_obsolete/test_*.py

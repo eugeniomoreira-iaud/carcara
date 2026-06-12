@@ -1,0 +1,34 @@
+== Hook params (CustomName / CustomNickName / CustomDescription) ==
+CustomDescription: CustomName
+CustomName: CustomNickName
+CustomNickName: Description
+CustomDescription: CustomName
+CustomName: CustomNickName
+CustomNickName: Description
+CustomDescription: CustomName
+CustomName: CustomNickName
+CustomNickName: Description
+CustomDescription: CustomName
+CustomName: CustomNickName
+CustomNickName: Description
+CustomDescription: 'Fill color (can be a list or constant).
+CustomName: Fill color
+CustomNickName: Description
+CustomDescription: A rectangle that will serve as a reference canvas for the graphics. If you are using a composition of different geometries, give the same canvas to all of them. This imput should also feed the save svg component. .
+CustomName: Canvas
+CustomNickName: Description
+CustomDescription: Generated SVG code
+CustomName: SVG code
+CustomNickName: Description
+
+== Internal components (GUID -> Name) ==
+Circle to SVG
+Curve Display
+Planar Meshes
+Container
+Container
+Container
+Container
+Fill color
+Canvas
+SVG code

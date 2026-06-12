@@ -1,0 +1,179 @@
+== Hook params (CustomName / CustomNickName / CustomDescription) ==
+CustomDescription: Values in the X axis
+CustomName: Values in X
+CustomNickName: valX
+CustomDescription: Values in the Y axis
+CustomName: Values in Y
+CustomNickName: valY
+CustomDescription: ;Number of ranges to be used for text plotting in the Y axis
+CustomName: Divisions in Y
+CustomNickName: divY
+CustomDescription: ;Number of ranges to be used for text plotting in the X axis
+CustomName: Divisions in X
+CustomNickName: divX
+CustomDescription: *Number of decimal places for text plotting
+CustomName: Decimal places
+CustomNickName: Description
+CustomDescription: Axes Width
+CustomName: Axes Width
+CustomNickName: Description
+CustomDescription: Axes Colour
+CustomName: Axes Colour
+CustomNickName: Description
+CustomDescription:  Extension in the end of the axes
+CustomName: Axes Extension
+CustomNickName: Description
+CustomDescription: #Space between the text and the axes
+CustomName: Text Space
+CustomNickName: Description
+CustomDescription: Text Colour
+CustomName: Text Colour
+CustomNickName: Description
+CustomDescription: Grid line Width
+CustomName: Grid Width
+CustomNickName: Description
+CustomDescription: Grid line Colour
+CustomName: Grid Colour
+CustomNickName: Description
+CustomDescription: |Grid line pattern. Should be a text panel with a value to the dash, a space, and a value to the interval between the dashes.
+CustomName: Grid Pattern
+CustomNickName: Description
+CustomDescription: 6A list of values to be mapped as the size of the dots.
+CustomName: Values to the dots
+CustomNickName: Description
+CustomDescription: Dot Edge Colour
+CustomName: Dot Edge Colour
+CustomNickName: Description
+CustomDescription: CustomName
+CustomName: CustomNickName
+CustomNickName: Description
+CustomDescription: CustomName
+CustomName: CustomNickName
+CustomNickName: Description
+CustomDescription: CustomName
+CustomName: CustomNickName
+CustomNickName: Description
+CustomDescription: CustomName
+CustomName: CustomNickName
+CustomNickName: Description
+CustomDescription: CustomName
+CustomName: CustomNickName
+CustomNickName: Description
+CustomDescription: CustomName
+CustomName: CustomNickName
+CustomNickName: Description
+CustomDescription: )File name to save the chart in SVG format
+CustomName: File Name
+CustomNickName: file
+CustomDescription: Set "true" to save the SVG file
+CustomName: Save
+CustomNickName: save
+CustomDescription: Text Size
+CustomName: Text Size
+CustomNickName: Description
+CustomDescription: Dot Edge Width
+CustomName: Dot Edge Width
+CustomNickName: Description
+CustomDescription: Dot Fill Colour
+CustomName: Dot Fill Colour
+CustomNickName: Description
+CustomDescription: A rectangle that will serve as a reference canvas for the graphics. If you are using a composition of different geometries, give the same canvas to all of them. This imput should also feed the save svg component. .
+CustomName: Canvas
+CustomNickName: Description
+
+== Internal components (GUID -> Name) ==
+Group
+Group
+Group
+Group
+Group
+Group
+Group
+Group
+Group
+Group
+Group
+Group
+Group
+Group
+Group
+Group
+Group
+Group
+Group
+Rectangle
+Group
+Number
+Group
+Number
+Group
+Number
+Group
+Integer
+Group
+Integer
+Number
+Number
+Number
+Number
+Group
+Integer
+Text
+Text
+Number
+Group
+Group
+Number
+Number
+Group
+Group
+Group
+Number
+Group
+Values in X
+Values in Y
+Divisions in Y
+Divisions in X
+Decimal places
+Axes Width
+Axes Colour
+Axes Extension
+Text Space
+Text Colour
+Grid Width
+Grid Colour
+Grid Pattern
+Values to the dots
+Dot Edge Colour
+Container
+Container
+Container
+Container
+Container
+Container
+Text
+File Name
+Group
+Boolean
+Save
+Text Size
+Panel
+Panel
+Number
+Rectangle
+Dot Edge Width
+Rectangle
+Rectangle
+Rectangle
+Number
+Merge
+Group
+Text
+Group
+Boolean
+Group
+Rectangle
+Dot Fill Colour
+Canvas
+Save SVG
+Text to SVG

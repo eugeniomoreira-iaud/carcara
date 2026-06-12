@@ -1,0 +1,23 @@
+== Hook params (CustomName / CustomNickName / CustomDescription) ==
+CustomDescription: Display errors
+CustomName: Exceptions
+CustomNickName: Description
+CustomDescription: (List of all the schemas in the data base
+CustomName: Schemas
+CustomNickName: Description
+CustomDescription: A database conection string
+CustomName: Connection String
+CustomNickName: CString
+CustomDescription: Set "True" to connect
+CustomName: Connection Toggle
+CustomNickName: CToggle
+
+== Internal components (GUID -> Name) ==
+Panel
+Exceptions
+Schemas
+Text
+Boolean
+Connection String
+Connection Toggle
+Run ODBC Query

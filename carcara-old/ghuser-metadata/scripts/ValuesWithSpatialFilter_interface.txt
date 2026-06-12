@@ -1,0 +1,118 @@
+== Hook params (CustomName / CustomNickName / CustomDescription) ==
+CustomDescription: Column to be queried
+CustomName: Column
+CustomNickName: Description
+CustomDescription: fValue to replace null itens with. 
+CustomName: Null Itens
+CustomNickName: Description
+CustomDescription: List of values
+CustomName: Values
+CustomNickName: Description
+CustomDescription: Displays error messages
+CustomName: Exceptions
+CustomNickName: Description
+CustomDescription: Table to be queried.
+CustomName: Table
+CustomNickName: Description
+CustomDescription: Set "True" to connect.
+CustomName: Connection Toggle
+CustomNickName: CToggle
+CustomDescription: A database connection string.
+CustomName: Connection String
+CustomNickName: CString
+CustomDescription: "Schema where the table is located.
+CustomName: Schema
+CustomNickName: Description
+CustomDescription: ^Positioning correction parameter on the X axis to bring closer to the origin in the workspace.
+CustomName: Correction X
+CustomNickName: Description
+CustomDescription: ^Positioning correction parameter on the Y axis to bring closer to the origin in the workspace.
+CustomName: Correction Y
+CustomNickName: Description
+CustomDescription: -Insert a geometry to act as a spatial filter.
+CustomName: Spatial Filter
+CustomNickName: sp_ftl
+CustomDescription: USpatial reference identifier to convert the spatial filter to geographic coordinates.
+CustomName: SRID
+CustomNickName: SRID
+CustomDescription: Choose the filter function.
+CustomName: function
+CustomNickName: Description
+
+== Internal components (GUID -> Name) ==
+Graft Tree
+Replace Text
+Panel
+Merge
+Panel
+Stream Filter
+Larger Than
+List Length
+Panel
+Panel
+Column
+Null Itens
+Values
+Group
+Scribble
+Scribble
+Panel
+Text
+Stream Filter
+Text
+Scribble
+Curve
+Text
+Exceptions
+Group
+Table
+Connection Toggle
+Connection String
+Schema
+Correction X
+Correction Y
+Scribble
+Spatial Filter
+SRID
+function
+Panel
+Text
+Text
+Text
+Text
+Text
+Boolean
+Text
+Boolean
+Text
+Boolean
+Panel
+Text
+Text
+Merge
+Group
+Text
+Text
+Geometry
+Text
+Panel
+Panel
+Text
+Text
+Merge
+Text
+Text
+Text
+Text
+Text
+Group
+Relay
+Relay
+Relay
+Relay
+Merge
+Text
+Text
+Text
+Text
+SQL Composer

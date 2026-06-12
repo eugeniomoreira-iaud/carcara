@@ -1,0 +1,24 @@
+{
+  "name": "QueryValues",
+  "nickname": "QV",
+  "category": "Carcara",
+  "subcategory": "02.Queries",
+  "description": "Runs a SQL query against a PostGIS database and returns rows and column names.",
+  "exposure": 2,
+  "instanceGuid": "c3d4e5f6-a7b8-9012-cdef-345678901234",
+  "ghpython": {
+    "isAdvancedMode": false,
+    "marshalGuids": true,
+    "iconDisplay": 0,
+    "inputParameters": [
+      { "name": "CString", "description": "Connection string with plain-text password (libpq format)", "typeHintID": "str", "scriptParamAccess": "item" },
+      { "name": "CToggle", "description": "Set True to execute", "typeHintID": "bool", "scriptParamAccess": "item" },
+      { "name": "sql", "description": "SQL SELECT statement", "typeHintID": "str", "scriptParamAccess": "item" }
+    ],
+    "outputParameters": [
+      { "name": "rows", "description": "Returned rows as strings" },
+      { "name": "columns", "description": "Column names" },
+      { "name": "report", "description": "Status message" }
+    ]
+  }
+}

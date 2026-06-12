@@ -1,0 +1,24 @@
+{
+  "name": "ConnectionString",
+  "nickname": "ConnStr",
+  "category": "Carcara",
+  "subcategory": "03.Utilities",
+  "description": "Builds a libpq connection string (CString) with plain-text password. Opens an Eto dialog to collect host/user/password; database and port come from canvas inputs.",
+  "exposure": 2,
+  "instanceGuid": "b2c3d4e5-f6a7-8901-bcde-f23456789012",
+  "ghpython": {
+    "isAdvancedMode": false,
+    "marshalGuids": true,
+    "iconDisplay": 0,
+    "inputParameters": [
+      { "name": "database", "description": "Database name to connect to", "typeHintID": "str", "scriptParamAccess": "item" },
+      { "name": "port", "description": "Port (default 5432)", "typeHintID": "int", "scriptParamAccess": "item" },
+      { "name": "CToggle", "description": "Set True to open the credentials dialog and test the connection", "typeHintID": "bool", "scriptParamAccess": "item" }
+    ],
+    "outputParameters": [
+      { "name": "CString", "description": "Connection string with plain-text password (libpq format). Feed into downstream DB components." },
+      { "name": "ok", "description": "True if the connection test succeeded" },
+      { "name": "report", "description": "Status message" }
+    ]
+  }
+}
