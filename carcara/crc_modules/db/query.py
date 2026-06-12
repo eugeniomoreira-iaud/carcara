@@ -4,6 +4,16 @@ import psycopg2.extras
 from .connection import parse_connection_string
 
 
+def _quote_literal(value: str) -> str:
+    """Escape a value for safe embedding as a SQL string literal."""
+    return "'" + str(value).replace("'", "''") + "'"
+
+
+def _quote_identifier(name: str) -> str:
+    """Escape a name for safe embedding as a SQL identifier."""
+    return '"' + str(name).replace('"', '""') + '"'
+
+
 def run_query(cstring: str, sql: str) -> tuple[list, list]:
     """
     Execute a SELECT statement.
@@ -55,8 +65,6 @@ def run_command(cstring: str, sql: str) -> int:
         conn.close()
 
 
-# Private SQL helpers for the query components
-
 def _list_schemas() -> str:
     """SQL to list all non-system schemas."""
     return """
@@ -73,10 +81,10 @@ def _list_tables(schema: str) -> str:
     return """
         SELECT table_name
         FROM information_schema.tables
-        WHERE table_schema = '{}'
+        WHERE table_schema = {schema}
           AND table_type = 'BASE TABLE'
         ORDER BY table_name;
-    """.format(schema).strip()
+    """.format(schema=_quote_literal(schema)).strip()
 
 
 def _list_columns(schema: str, table: str) -> str:
@@ -84,7 +92,28 @@ def _list_columns(schema: str, table: str) -> str:
     return """
         SELECT column_name, data_type
         FROM information_schema.columns
-        WHERE table_schema = '{}'
-          AND table_name = '{}'
+        WHERE table_schema = {schema}
+          AND table_name = {table}
         ORDER BY ordinal_position;
-    """.format(schema, table).strip()
+    """.format(schema=_quote_literal(schema), table=_quote_literal(table)).strip()
+
+
+def _query_values_sql(schema: str, table: str, column: str, null_val: str = "", limit: int | None = None) -> str:
+    """
+    Build SELECT query for a single column with optional NULL replacement and LIMIT.
+    Identifiers and literals are escaped locally — no connection needed to compose.
+    """
+    target = "{}.{}".format(_quote_identifier(schema), _quote_identifier(table))
+    col = _quote_identifier(column)
+
+    if null_val != "":
+        # Cast to text so the NULL-replacement literal and the column share a type.
+        q = "SELECT CASE WHEN {col} IS NULL THEN {nv} ELSE {col}::text END FROM {target}".format(
+            col=col, nv=_quote_literal(null_val), target=target)
+    else:
+        q = "SELECT {col} FROM {target}".format(col=col, target=target)
+
+    if limit is not None and limit > 0:
+        q = "{} LIMIT {}".format(q, int(limit))
+
+    return q

@@ -95,6 +95,11 @@ def main():
     for name in bundles:
         source = os.path.join(COMPONENTS_DIR, name)
         target = os.path.join(DIST_DIR, name + ".ghuser")
+        if not os.path.isfile(os.path.join(source, "code.py")):
+            # C#-only bundles (e.g. CRC_CurveDisplay/code.cs) are not built by the
+            # Python componentizer — their .ghuser is produced separately.
+            results.append(("SKIP", name, "no code.py (non-Python bundle)"))
+            continue
         try:
             create_ghuser_component(source, target, version)
             results.append(("OK", name, target))
@@ -103,14 +108,15 @@ def main():
 
     ok = [r for r in results if r[0] == "OK"]
     fail = [r for r in results if r[0] == "FAIL"]
+    skipped = [r for r in results if r[0] == "SKIP"]
 
     for status, name, detail in results:
-        tag = "[OK]  " if status == "OK" else "[FAIL]"
+        tag = {"OK": "[OK]  ", "FAIL": "[FAIL]", "SKIP": "[SKIP]"}[status]
         info = os.path.basename(detail) if status == "OK" else detail
         print(f"  {tag} {name:<42} {info}")
 
     print()
-    print(f"Done: {len(ok)} built, {len(fail)} failed.")
+    print(f"Done: {len(ok)} built, {len(fail)} failed, {len(skipped)} skipped.")
     if fail:
         sys.exit(1)
 

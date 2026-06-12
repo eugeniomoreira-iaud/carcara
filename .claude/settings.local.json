@@ -43,7 +43,9 @@
       "PowerShell($f = Get-ChildItem 'carcara-old\\\\ghuser-metadata\\\\scripts'; \"$\\($f.Count\\) files; py=$\\(\\($f | Where-Object Extension -eq '.py'\\).Count\\); txt=$\\(\\($f | Where-Object Extension -eq '.txt'\\).Count\\)\")",
       "PowerShell(python _check_md.py)",
       "PowerShell(\\(Get-ChildItem 'carcara-old\\\\ghuser-metadata\\\\scripts'\\).Count; git status --porcelain -- 'carcara-old/ghuser-metadata/scripts' | Select-Object -First 15)",
-      "PowerShell(python _check_md.py; \\(Get-ChildItem 'carcara-old\\\\ghuser-metadata\\\\scripts'\\).Count; Test-Path '_regen_interfaces.py'; Get-Content 'carcara-old\\\\ghuser-metadata\\\\scripts\\\\QuerySchemaNames_interface.txt' -TotalCount 8)"
+      "PowerShell(python _check_md.py; \\(Get-ChildItem 'carcara-old\\\\ghuser-metadata\\\\scripts'\\).Count; Test-Path '_regen_interfaces.py'; Get-Content 'carcara-old\\\\ghuser-metadata\\\\scripts\\\\QuerySchemaNames_interface.txt' -TotalCount 8)",
+      "PowerShell(pytest *)",
+      "PowerShell(conda run *)"
     ]
   }
 }

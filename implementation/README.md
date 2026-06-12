@@ -29,14 +29,14 @@ the build pipeline is broken or the GH installation path is wrong.
 | 02 | `02_smoke_test_component.md`          | One trivial GH component end-to-end                | **YES**  |
 | 03 | `03_db_connection.md`                 | `db/connection.py` + `CRC_ConnectionString`        | **YES**  |
 | 04 | `04_db_query.md`                      | `db/query.py` + 4 query components                 | **YES**  |
-| 05 | `05_db_spatial_query.md`              | `db/spatial_query.py` + 2 spatial components       | **YES**  |
+| 05 | `05_db_spatial_query.md`              | `db/spatial_query.py` + 3 spatial components       | **YES**  |
 | 06 | `06_db_writer.md`                     | `db/writer.py` + CreateTable / CreateShapefile     | **YES**  |
 | 07 | `07_geometry_wkt.md`                  | `geometry/wkt.py` + WKT-family components          | **YES**  |
 | 08 | `08_geometry_offset_mesh.md`          | `geometry/offset.py`, `geometry/building_mesh.py`  | **YES**  |
 | 09 | `09_svg.md`                           | `svg/export.py`, `svg/save.py` + 5 SVG components  | **YES**  |
 | 10 | `10_viz.md`                           | `viz/*` + 4 chart components                       | **YES**  |
 | 11 | `11_utils.md`                         | `utils/*` + utility components                     | **YES**  |
-| 12 | `12_odbc_and_completion.md`           | ODBC wrappers, inventory cross-check, ship         | **YES**  |
+| 12 | `12_odbc_and_completion.md`           | RunQuery/RunCommand wrappers, inventory cross-check, ship | **YES**  |
 
 Each file follows the same shape:
 

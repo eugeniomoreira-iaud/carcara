@@ -42,17 +42,17 @@ carcara/                              ← Repository root
 ├── carcara/                        ← THE deployable folder. Copied as-is to UserObjects.
 │   ├── crc_modules/                ← Pure Python library (import name). No Rhino imports allowed.
 │   │   ├── __init__.py
-│   │   ├── db/                     ← DB layer (mostly 02.Queries; also ConnectionString + RunODBC* which sit in 03.Utilities)
+│   │   ├── db/                     ← DB layer (mostly 02.Queries; also ConnectionString + RunQuery/RunCommand which sit in 03.Utilities)
 │   │   │   ├── __init__.py
 │   │   │   ├── connection.py       ← build/parse CString + test_connection
 │   │   │   ├── query.py            ← run_query / run_command (take CString)
 │   │   │   ├── writer.py           ← INSERT, CREATE TABLE, CREATE Shapefile
 │   │   │   └── spatial_query.py    ← Geometry queries with spatial filters (PK detect, ORDER BY)
-│   │   ├── geometry/               ← wkt, offset, building_mesh, polylabel, duplicates, containment
-│   │   ├── rhino/                  ← Rhino-only helpers (optional Eto dialog). Excluded from pytest.
+│   │   ├── geometry/               ← wkt, polylabel, duplicates, containment (pure Python)
+│   │   ├── rhino/                  ← Rhino-only: offset, building_mesh, curve_display (C#). Excluded from pytest.
 │   │   ├── svg/                    ← export, save
 │   │   ├── viz/                    ← histogram, scatter, lineplot, heatmap
-│   │   └── utils/                  ← color, srid, sql_composer, correction (false-origin SQL)
+│   │   └── utils/                  ← color, sql_composer, correction (false-origin SQL)
 │   ├── userobjects/                ← Built .ghuser files (committed; shipped to users)
 │   │   ├── CRC_ConnectionString.ghuser
 │   │   └── …
@@ -211,19 +211,19 @@ into the matching `crc_modules` functions.
 
 ```python
 def get_geometries(cstring: str, schema: str, table: str,
-                   x_col: str, y_col: str,
                    cx: str = "0", cy: str = "0",
                    where: str = None, srid: int = 4326) -> tuple[list, list]:
     """
     Returns (wkt_geometries, primary_keys).
-    Detects the table primary key, builds
-        ST_AsText(ST_Translate(ST_MakePoint("x_col", "y_col"), -Cx, -Cy))
-    ordered by PK so geometries and keys stay parallel. Cx/Cy are numeric TEXT
-    (the false origin) embedded verbatim into the SQL — never float()-parsed.
+    Auto-detects geometry column (from geometry_columns view) and primary key.
+    Builds ST_AsText(ST_Translate(<geom_expr>, -Cx, -Cy)) ordered by PK so geometries
+    and keys stay parallel. If no PK exists, returns NULL for pk.
+    Cx/Cy are numeric TEXT (the false origin) embedded verbatim into the SQL — never float()-parsed.
+    Output is a DataTree: each geometry (including multipart members) on same branch as its PK.
     """
 
 def get_geometries_with_spatial_filter(cstring: str, schema: str, table: str,
-                                       x_col: str, y_col: str, filter_wkt: str,
+                                       filter_wkt: str,
                                        cx: str = "0", cy: str = "0",
                                        srid: int = 4326,
                                        sql_filter: str = None) -> tuple[list, list]:
@@ -231,9 +231,21 @@ def get_geometries_with_spatial_filter(cstring: str, schema: str, table: str,
     SELECT geometries translated to local (-Cx, -Cy), filtered by a GH-drawn
     boundary that is itself translated to the projected CRS (+Cx, +Cy) inside
     the WHERE:
-        ST_Intersects(ST_MakePoint("x_col","y_col"),
-                      ST_Translate(ST_GeomFromText(filter_wkt, srid), Cx, Cy))
+        ST_Intersects(<db_geom>, ST_Translate(ST_GeomFromText(filter_wkt, srid), Cx, Cy))
         AND (sql_filter)
+    Auto-detects geometry column and PK. Returns DataTree with parallel wkt and pk branches.
+    """
+
+def get_values_with_spatial_filter(cstring: str, schema: str, table: str,
+                                   columns: list[str],
+                                   filter_wkt: str,
+                                   cx: str = "0", cy: str = "0",
+                                   srid: int = 4326,
+                                   sql_filter: str = None) -> tuple[list, list]:
+    """
+    SELECT attribute columns for rows matching spatial filter.
+    Same spatial filter logic as get_geometries_with_spatial_filter.
+    Returns (rows, column_names) as DataTree by column.
     """
 ```
 
@@ -319,7 +331,10 @@ Every component that reads or writes geometry across the DB boundary exposes `Cx
 **text** inputs (default `"0"` = no shift), all in **02.Queries**: the three spatial reads —
 `GeometryEntities`, `GeometriesWithSpatialFilter`, `ValuesWithSpatialFilter` (subtract) — and the
 geometry write `CRC_CreateShapefile` (add). The `CRC_FindCorrectionParameters` utility
-(03.Utilities, `utils/correction.py`) computes a suitable `(Cx, Cy)` for a study area.
+(03.Utilities, `utils/correction.py`) finds a feature by `Column` = `Value` (both optional —
+if neither is given it takes the table's first row), auto-detects the geometry column,
+computes the geometry centroid, and returns the centroid coordinates as **text** `(Cx, Cy)` —
+it does NOT take x_col/y_col.
 
 Pure-GH modeling (**01.Modeling**) and **04.Dataviz** components do **not** correct — they
 operate on whatever (already-local) geometry they are handed.
@@ -331,7 +346,7 @@ operate on whatever (already-local) geometry they are handed.
 Every component is a **folder** under `grasshopper/components/<CRC_Name>/` containing exactly three files:
 
 ```
-CRC_QueryValues/
+CRC_RunQuery/
 ├── metadata.json   ← Component name, category, params, type hints
 ├── code.py         ← The script body the GHPython component will run
 └── icon.png        ← 24×24 PNG (toolbar icon)
@@ -345,11 +360,11 @@ Minimum viable shape:
 
 ```json
 {
-  "name": "QueryValues",
-  "nickname": "QV",
+  "name": "RunQuery",
+  "nickname": "RQ",
   "category": "Carcara",
-  "subcategory": "02.Queries",
-  "description": "Runs a SQL query against a PostGIS database and returns rows and column names.",
+  "subcategory": "03.Utilities",
+  "description": "Runs a raw SQL SELECT against a PostGIS database and returns rows and column names.",
   "exposure": 2,
   "ghpython": {
     "isAdvancedMode": false,
@@ -632,9 +647,9 @@ Within each subcategory, ordered by exposure (`1` first). Global `#` runs across
 
 | # | Component | Exp | Core module | Legacy file | Status |
 |---|---|---|---|---|---|
-| 1 | CRC_BuildingMeshes | 1 | `geometry/building_mesh.py` | `carcara_BuildingMeshes_r03.ghuser` | ⬜ Todo |
+| 1 | CRC_BuildingMeshes | 1 | `rhino/building_mesh.py` | `carcara_BuildingMeshes_r03.ghuser` | ⬜ Todo |
 | 2 | CRC_IdentifyDuplicatePolylines | 1 | `geometry/duplicates.py` | `carcara_IdentifyDuplicatePolylines_r03.ghuser` | ⬜ Todo |
-| 3 | CRC_OffsetPython | 1 | `geometry/offset.py` | `carcara_OffsetPython_r03.ghuser` | ⬜ Todo |
+| 3 | CRC_OffsetPython | 1 | `rhino/offset.py` | `carcara_OffsetPython_r03.ghuser` | ⬜ Todo |
 | 4 | CRC_PointInsidePolygon | 1 | `geometry/polylabel.py` | `carcara_PointInsidePolygon_rev03.ghuser` | ⬜ Todo |
 | 5 | CRC_SortByContainer | 1 | `geometry/containment.py` | `carcara_SortByContainer_rev03.ghuser` | ⬜ Todo |
 | 6 | CRC_ColorCalculator | 2 | `utils/color.py` | `carcara_ColorCalculator_r00.ghuser` | ⬜ Todo |
@@ -643,9 +658,9 @@ Within each subcategory, ordered by exposure (`1` first). Global `#` runs across
 
 | # | Component | Exp | Core module | Legacy file | Status |
 |---|---|---|---|---|---|
-| 7 | CRC_QuerySchemaNames | 1 | `db/query.py` | `carcara_QuerySchemaNames_r03.ghuser` | ⬜ Todo |
-| 8 | CRC_QueryTableNames | 1 | `db/query.py` | `carcara_QueryTableNames_rev03.ghuser` | ⬜ Todo |
-| 9 | CRC_QueryColumnNames | 1 | `db/query.py` | `carcara_QueryColumnNames_rev03.ghuser` | ⬜ Todo |
+| 7 | CRC_QuerySchemaNames | 1 | `db/query.py` | `carcara_QuerySchemaNames_r03.ghuser` | ✅ Done |
+| 8 | CRC_QueryTableNames | 1 | `db/query.py` | `carcara_QueryTableNames_rev03.ghuser` | ✅ Done |
+| 9 | CRC_QueryColumnNames | 1 | `db/query.py` | `carcara_QueryColumnNames_rev03.ghuser` | ✅ Done |
 | 10 | CRC_QueryValues | 1 | `db/query.py` | `carcara_QueryValues_rev03.ghuser` | ⬜ Todo |
 | 11 | CRC_GeometryEntities | 2 | `db/spatial_query.py` | `carcara_GeometryEntities_r03.ghuser` | ⬜ Todo |
 | 12 | CRC_GeometriesWithSpatialFilter | 2 | `db/spatial_query.py` | `carcara_GeometriesWithSpatialFilter_r03.ghuser` | ⬜ Todo |
@@ -653,24 +668,23 @@ Within each subcategory, ordered by exposure (`1` first). Global `#` runs across
 | 14 | CRC_CreateTable | 3 | `db/writer.py` | `carcara_CreateTable_r03.ghuser` | ⬜ Todo |
 | 15 | CRC_CreateShapefile | 3 | `db/writer.py` | `carcara_CreateShapefile_r03.ghuser` | ⬜ Todo |
 
-#### 03.Utilities (8)
+#### 03.Utilities (7)
 
 | # | Component | Exp | Core module | Legacy file | Status |
 |---|---|---|---|---|---|
-| 16 | CRC_ConnectionString | 1 | `db/connection.py` | `carcara_ConnectionString_r03.ghuser` | ⚠️ Rework (shipped sticky/DSN; revert to CString — see Phase 03) |
-| 17 | CRC_SRID | 1 | `utils/srid.py` | `carcara_SRID_r00.ghuser` | ⬜ Todo |
-| 18 | CRC_FindCorrectionParameters | 1 | `utils/correction.py` | `carcara_FindCorrectionParameters_r03.ghuser` | ⬜ Todo |
-| 19 | CRC_SQLComposer | 2 | `utils/sql_composer.py` | `carcara_SQLComposer_rev02.ghuser` | ⬜ Todo |
-| 20 | CRC_RunODBCQuery | 2 | `db/query.py` | `carcara_RunODBCQuery_rev03.ghuser` | ⬜ Todo |
-| 21 | CRC_RunODBCCommand | 2 | `db/query.py` | `carcara_RunODBCCommand_rev01.ghuser` | ⬜ Todo |
-| 22 | CRC_GrasshopperGeometryToWKT | 3 | `geometry/wkt.py` | `carcara_GrasshopperGeometryToWKT_r02.ghuser` | ⬜ Todo |
-| 23 | CRC_WKTtoGrasshopperGeometry | 3 | `geometry/wkt.py` | `carcara_WKTtoGrasshopperGeometry_r02.ghuser` | ⬜ Todo |
+| 16 | CRC_ConnectionString | 1 | `db/connection.py` | `carcara_ConnectionString_r03.ghuser` | ✅ Done |
+| 17 | CRC_FindCorrectionParameters | 1 | `utils/correction.py` | `carcara_FindCorrectionParameters_r03.ghuser` | ⬜ Todo |
+| 18 | CRC_SQLComposer | 2 | `utils/sql_composer.py` | `carcara_SQLComposer_rev02.ghuser` | ⬜ Todo |
+| 19 | CRC_RunQuery | 2 | `db/query.py` | `carcara_RunODBCQuery_rev03.ghuser` | ⬜ Todo |
+| 20 | CRC_RunCommand | 2 | `db/query.py` | `carcara_RunODBCCommand_rev01.ghuser` | ⬜ Todo |
+| 21 | CRC_GrasshopperGeometryToWKT | 3 | `geometry/wkt.py` | `carcara_GrasshopperGeometryToWKT_r02.ghuser` | ⬜ Todo |
+| 22 | CRC_WKTtoGrasshopperGeometry | 3 | `geometry/wkt.py` | `carcara_WKTtoGrasshopperGeometry_r02.ghuser` | ⬜ Todo |
 
 #### 04.Dataviz (10)
 
 | # | Component | Exp | Core module | Legacy file | Status |
 |---|---|---|---|---|---|
-| 24 | CRC_CurveDisplay | 1 | `geometry/wkt.py` | `carcara_CurveDisplay_r02.ghuser` | ⬜ Todo |
+| 24 | CRC_CurveDisplay | 1 | `rhino/curve_display.cs` (C#) | `carcara_CurveDisplay_r02.ghuser` | ⬜ Todo |
 | 25 | CRC_PolylineToSVG | 2 | `svg/export.py` | `carcara_PolylineToSVG_r03.ghuser` | ⬜ Todo |
 | 26 | CRC_CircleToSVG | 2 | `svg/export.py` | `carcara_CircletoSVG_r03.ghuser` | ⬜ Todo |
 | 27 | CRC_NurbsToSVG | 2 | `svg/export.py` | `carcara_NurbsToSVG_rev03.ghuser` | ⬜ Todo |
@@ -681,7 +695,9 @@ Within each subcategory, ordered by exposure (`1` first). Global `#` runs across
 | 32 | CRC_Heatmap | 3 | `viz/heatmap.py` | `carcara_Heatmap_rev00.ghuser` | ⬜ Todo |
 | 33 | CRC_SaveSVG | 4 | `svg/save.py` | `carcara_SaveSVG_r03.ghuser` | ⬜ Todo |
 
-Counts: **01.Modeling 6 · 02.Queries 9 · 03.Utilities 8 · 04.Dataviz 10 = 33.**
+Counts: **01.Modeling 6 · 02.Queries 9 · 03.Utilities 7 · 04.Dataviz 10 = 32.**
+
+> **Note:** `CRC_SRID` (legacy `carcara_SRID_r00.ghuser`) is a native GH ValueList component — not a Python script component. It will be created manually and is not part of the componentizer build pipeline.
 
 > Exposure values are sourced from the legacy `.ghuser` (captured per subcategory in
 > `carcara-old/ghuser-metadata/`; decoded scripts and `_interface.txt` hook files are linked
@@ -691,36 +707,46 @@ Counts: **01.Modeling 6 · 02.Queries 9 · 03.Utilities 8 · 04.Dataviz 10 = 33.
 
 - **01.Modeling** — modeling tasks for urban models. Rhino-heavy: keep pure algorithm (on
   coordinate tuples) in `crc_modules/geometry/`; isolate unavoidable RhinoCommon (mesh build,
-  curve offset, containment) in `crc_modules/rhino/`.
+  curve offset, containment) in `crc_modules/rhino/`. **`CRC_OffsetPython` and `CRC_BuildingMeshes`
+  are fully Rhino-dependent — their core logic lives in `crc_modules/rhino/`.**
 - **02.Queries** — DBMS comms, read + write, geometry + alphanumeric. Every component takes
   `CString` + `CToggle`. Geometry-returning queries live here (DB ops that return geometry),
-  including the geometry write `CRC_CreateShapefile`.
+  including the geometry write `CRC_CreateShapefile` (which INSERTs geometries with Cx/Cy correction).
 - **03.Utilities** — helpers used alongside 02.Queries: the connection-string builder
-  (`CRC_ConnectionString`, which *produces* the `CString`), the generic ODBC query/command
-  runners, the SQL composer, geometry⇄WKT conversion, SRID lookup, and the
-  coordinate-correction false origin.
+  (`CRC_ConnectionString`, which *produces* the `CString`), the generic query/command
+  runners (`CRC_RunQuery`, `CRC_RunCommand`), the SQL composer (free-form substring replace),
+  geometry⇄WKT conversion, and the coordinate-correction false origin tools.
 - **04.Dataviz** — data visualizations rendered on screen and exportable as SVG (SVG export is
-  folded into Dataviz, as in the legacy plugin). `CRC_CurveDisplay` is a Rhino-viewport preview.
+  folded into Dataviz, as in the legacy plugin). `CRC_CurveDisplay` is a C# Rhino-viewport preview.
+  Chart components output SVG files via matplotlib.
 
-> **Engine / reuse pattern (from legacy).** `CRC_RunODBCQuery` / `CRC_RunODBCCommand` (03.Utilities)
+> **Engine / reuse pattern (from legacy).** `CRC_RunQuery` / `CRC_RunCommand` (03.Utilities)
 > are the generic primitives — reimplement as thin GH wrappers over `run_query` / `run_command`.
-> Keep the legacy `RunODBC*` names even though the driver is now `psycopg2`, not ODBC. Every
-> higher-level query component builds its SQL by placeholder substitution (`CRC_SQLComposer` →
-> `utils/sql_composer.py`) and runs it through the same engine — port the legacy SQL templates
-> verbatim into the matching `crc_modules` functions.
+> Every higher-level query component builds its SQL by placeholder substitution
+> (`CRC_SQLComposer` → `utils/sql_composer.py`) and runs it through the same engine — port the
+> legacy SQL templates verbatim into the matching `crc_modules` functions.
+> **`CRC_QueryValues` is NOT a raw-SQL runner** (that is `CRC_RunQuery`): it takes
+> `CString, CToggle, schema, table, column, N` where `N` is a **string** that replaces NULL
+> values in the returned column (legacy input "Null Itens"), builds its SELECT internally,
+> and outputs the column's values + report.
 
 > **Coordinate correction.** The three geometry **reads** (`CRC_GeometryEntities`,
 > `CRC_GeometriesWithSpatialFilter`, `CRC_ValuesWithSpatialFilter`) take `Cx` + `Cy` **text**
 > inputs and **subtract** the false origin in SQL via `utils/correction.py`; the geometry **write**
-> `CRC_CreateShapefile` **adds** it back. `CRC_FindCorrectionParameters` (03.Utilities) computes the
-> `(Cx, Cy)` for a study area — **confirmed a coordinate tool** (not color), module
-> `utils/correction.py`. Never `float()` Cx/Cy. See
-> [Coordinate Correction](#coordinate-correction-projected-coordinates--false-origin).
+> `CRC_CreateShapefile` **adds** it back. `CRC_FindCorrectionParameters` (03.Utilities) finds a
+> feature by `Column` = `Value` (both optional — omitted: first row of the table), auto-detects
+> the geometry column, computes its centroid, and returns the centroid coordinates as **text**
+> `(Cx, Cy)` — it does NOT take x_col/y_col. Module `utils/correction.py`. Never `float()` Cx/Cy.
+> See [Coordinate Correction](#coordinate-correction-projected-coordinates--false-origin).
 
-> **Module vs subcategory are independent.** `CRC_ConnectionString` and the `CRC_RunODBC*` pair
+> **Geometry column detection.** Spatial query components auto-detect the geometry column
+> (PostGIS `geometry_columns` view) instead of requiring hardcoded names. Helper in
+> `utils/correction.py` or `db/spatial_query.py`.
+
+> **Module vs subcategory are independent.** `CRC_ConnectionString` and the `CRC_Run*` pair
 > live in `db/` but sit in 03.Utilities; `CRC_SQLComposer` lives in `utils/` and sits in
 > 03.Utilities; `CRC_ColorCalculator` lives in `utils/color.py` but sits in 01.Modeling;
-> `CRC_CurveDisplay` uses `geometry/wkt.py` but sits in 04.Dataviz. Set `subcategory` from this
+> `CRC_CurveDisplay` is C# in `rhino/` but sits in 04.Dataviz. Set `subcategory` from this
 > table, not from the module path.
 
 ### Inventory cross-check

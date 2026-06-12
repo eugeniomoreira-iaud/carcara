@@ -18,11 +18,11 @@ the only place allowed to `import Rhino`.
 > |---|---|---|---|
 > | `CRC_WKTtoGrasshopperGeometry` | 03.Utilities | `geometry/wkt.py` | **this phase** |
 > | `CRC_GrasshopperGeometryToWKT` | 03.Utilities | `geometry/wkt.py` | **this phase** |
-> | `CRC_GeometryEntities` | 02.Queries | `db/spatial_query.py` | Phase 05 (it's a DB geometry **download** — ST_MakePoint from coord columns + PK — not a WKT classifier) |
+> | `CRC_GeometryEntities` | 02.Queries | `db/spatial_query.py` | Phase 05 (it's a DB geometry **download** — auto-detected geometry column + PK — not a WKT classifier) |
 > | `CRC_PointInsidePolygon` | 01.Modeling | `geometry/polylabel.py` | Phase 08 |
 > | `CRC_SortByContainer` | 01.Modeling | `geometry/containment.py` | Phase 08 |
 > | `CRC_IdentifyDuplicatePolylines` | 01.Modeling | `geometry/duplicates.py` | Phase 08 |
-> | `CRC_CurveDisplay` | 04.Dataviz | `geometry/wkt.py` (display) | Phase 10 |
+> | `CRC_CurveDisplay` | 04.Dataviz | `rhino/curve_display.cs` (C#) | Phase 10 |
 
 > **Coordinate correction does NOT live here (see CLAUDE.md → Coordinate Correction).**
 > The two converters are **correction-free**. By the time WKT reaches the converter it is

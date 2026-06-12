@@ -2,103 +2,190 @@
 
 ## Goal
 
-Write back to PostGIS and export to shapefile. This is the most destructive
-phase so far — we make sure both DB-side writes and file-system writes are
-covered by tests and an opt-in `run` guard before any GH component lands.
+Write back to PostGIS from Grasshopper. This is the most destructive phase so
+far — both DB-side writes are covered by tests and an opt-in `CToggle` guard
+before any GH component lands.
+
+> **CRC_CreateShapefile is NOT a file export.** The name is historical. Legacy
+> behavior (confirmed): it **INSERTs geometries into an existing PostGIS table**
+> with the false-origin correction applied in SQL. There is no shapefile, no
+> GeoPandas, no Fiona, no out_path, no .shp/.dbf/.shx/.prj.
 
 Components delivered:
 
-| Component               | Purpose                                                  |
-|-------------------------|----------------------------------------------------------|
-| `CRC_CreateTable`       | `CREATE TABLE` (optionally with PostGIS geometry column) |
-| `CRC_CreateShapefile`   | Export a SELECT result to a `.shp` on disk               |
+| Component               | Purpose                                                       |
+|-------------------------|---------------------------------------------------------------|
+| `CRC_CreateTable`       | `CREATE TABLE` with columns (optionally a geometry column).   |
+| `CRC_CreateShapefile`   | INSERT WKT geometries into an existing PostGIS table,         |
+|                         | adding the false-origin correction back in SQL.               |
 
-## Inputs you must give me
+---
 
-For each legacy file, the usual rundown:
+## Legacy interface (decoded — read-only reference)
 
-1. `carcara_CreateTable_r03.ghuser`
-2. `carcara_CreateShapefile_r03.ghuser`
+**CRC_CreateTable** (`carcara-old/ghuser-metadata/scripts/CreateTable_interface.txt`):
 
-Specifically I need to know:
+- Inputs: `Connection String` (CString), `Connection Toggle` (CToggle),
+  `list of columns`, `variable types` (parallel list of type strings),
+  `schema`, `table name`, `replace table` (bool — DROP IF EXISTS before CREATE),
+  `values` (initial row data to insert, optional).
+- No output parameters are named in the decoded hook params (the two unnamed
+  `CustomName: CustomNickName` entries are placeholder artifacts). Spec two
+  outputs in the rebuild: `affected` (int) and `report` (str).
+- Internal wiring: `SQL Composer` + `Run ODBC Command` (no geometry column in
+  CreateTable — geometry is separate from CreateShapefile).
 
-- **CreateTable** — does the legacy take column-name list + column-type list
-  as two parallel lists? Or one combined string? Does it create a geometry
-  column and how is the geom type chosen (POINT / POLYGON / MULTIPOLYGON)?
-  Does it create a PRIMARY KEY?
-- **CreateShapefile** — what does the legacy use to write the shapefile?
-  PostGIS's `pgsql2shp` CLI? Python `pyshp` / `fiona`? The new
-  implementation will use **GeoPandas + Fiona** if available, or fall back
-  to `psycopg2 + shapely + shapefile` (pyshp). Tell me your preference
-  before I lock that in. Default: GeoPandas if importable, pyshp fallback.
-- Does CreateShapefile take a SQL query, or a table name + filter? Both?
+**CRC_CreateShapefile** (`carcara-old/ghuser-metadata/scripts/CreateShapefile_interface.txt`):
 
-Also: a test DB **where you are OK with new tables being created and
-dropped**. Do not point this at production data.
+- Inputs: `Connection String` (CString), `Connection Toggle` (CToggle),
+  `geometry` (list of WKT geometry strings), `SRID`,
+  `variable types` (column type list), `schema`, `table name`,
+  `replace table` (bool), `list of columns`, `values` (attribute values),
+  `Correction X` (Cx), `Correction Y` (Cy).
+- No named output params in the decoded hook params (same placeholder artifact).
+  Spec one output in the rebuild: `report` (str, feedback string).
+- Internal wiring: `Grasshopper Geometry to WKT` + `SQL Composer` +
+  `Run ODBC Command`. Confirms geometry is INSERTed, not exported to file.
+
+---
 
 ## Steps
 
-> **Credential model:** both components take `CString` + `CToggle` and decode with
-> `crc_modules.db.connection.parse_connection_string(CString)` before calling the
-> functions below. See Phase 03/04 for the DB-component `code.py` pattern.
+> **Credential model:** both components take `CString` + `CToggle` and decode
+> with `crc_modules.db.connection.parse_connection_string(CString)` before
+> calling the functions below. See Phase 03/04 for the DB-component `code.py`
+> pattern.
 
-> **Coordinate correction — the WRITE side (see CLAUDE.md → Coordinate Correction).**
-> `CRC_CreateShapefile` writes GH geometry (which is **local**, near the Rhino origin)
-> back to PostGIS, so it must **add** the false origin to restore projected coordinates:
-> `ST_Translate(ST_GeomFromText('<local_wkt>', SRID), Cx, Cy)`. It takes `Cx`/`Cy` as
-> numeric **text** (default `"0"`), applied in SQL via `utils/correction.py` —
-> **never `float()`**. Use the **same `Cx`/`Cy`** that were used to read the data so the
-> round-trip is exact. (Legacy `CreateShapefile` exposes these as `_cX`/`_cY`.) Plain
-> `CRC_CreateTable` writes alphanumeric columns only and needs no correction.
+> **Coordinate correction — the WRITE side (see CLAUDE.md → Coordinate
+> Correction).** `CRC_CreateShapefile` writes GH geometry (which is **local**,
+> near the Rhino origin) back to PostGIS, so it must **add** the false origin
+> to restore projected coordinates:
+> `ST_Translate(ST_GeomFromText('<local_wkt>', SRID), Cx, Cy)`.
+> It takes `Cx`/`Cy` as numeric **text** (default `"0"`), applied in SQL via
+> `utils/correction.py` — **never `float()`**. Use the **same `Cx`/`Cy`**
+> that were used to read the data so the round-trip is exact. (Legacy
+> `CreateShapefile` exposes these as `Correction X`/`Correction Y`.)
+> Plain `CRC_CreateTable` writes alphanumeric columns only and needs no
+> correction.
 
 1. **Implement `carcara/crc_modules/db/writer.py`**:
+
    ```python
    def create_table(cstring: str,
-                    schema: str, table: str,
-                    columns: list[tuple[str, str]],
+                    schema: str,
+                    table: str,
+                    columns: list,       # list of (name: str, type: str) tuples
                     geom_column: str | None = None,
                     geom_type: str | None = None,
                     srid: int = 4326,
-                    if_not_exists: bool = True) -> int
+                    replace_table: bool = False) -> int:
+       """
+       Execute CREATE TABLE (optionally preceded by DROP TABLE IF EXISTS when
+       replace_table=True). Returns cur.rowcount (DDL typically returns -1;
+       coerce to 0 in the GH layer). Uses psycopg2.sql.Identifier and
+       SQL.format for every name — never f-string interpolation of identifiers.
+       If geom_column and geom_type are provided, adds a PostGIS geometry
+       column: <geom_column> geometry(<geom_type>, <srid>).
+       Raises psycopg2.Error on failure.
+       """
 
-   def export_shapefile(cstring: str,
-                        sql: str, geom_column: str, srid: int,
-                        out_path: str,
-                        cx: str = "0", cy: str = "0") -> int
+   def insert_geometries(cstring: str,
+                         schema: str,
+                         table: str,
+                         geom_column: str,
+                         wkt_list: list,      # list of local WKT strings
+                         srid: int,
+                         cx: str = "0",
+                         cy: str = "0",
+                         column_names: list | None = None,
+                         values: list | None = None) -> int:
+       """
+       INSERT WKT geometries into an existing PostGIS table, applying the
+       false-origin add-back in SQL:
+           ST_Translate(ST_GeomFromText(%s, %s), cx, cy)
+       cx and cy are validated as numeric text by validate_offset() and
+       embedded verbatim into the SQL — NEVER passed as %s bind parameters
+       and NEVER parsed with float().
+       Returns number of rows inserted.
+       Raises psycopg2.Error on failure.
+       """
    ```
-   - `create_table` returns affected rowcount (`-1` for DDL on most drivers,
-     we coerce to `0`). Uses `psycopg2.sql.Identifier` and `SQL.format` for
-     every name — never f-string interpolation of identifiers.
-   - `export_shapefile` runs `sql` (must include `ST_AsBinary(geom)` or the
-     function adds it), iterates rows, writes to `.shp`/`.dbf`/`.shx`/`.prj`.
-     Returns count of features written.
-   - Both raise on failure; the component layer catches.
+
+   - `create_table`: uses `psycopg2.sql.Identifier` and `SQL.format` for
+     every name. Commits on success. Returns `cur.rowcount`.
+   - `insert_geometries`: calls `validate_offset(cx)` and `validate_offset(cy)`
+     from `utils.correction`. Builds the INSERT with the geometry expression
+     inline (not as a bind parameter). Uses `executemany` for batch insert.
+     Commits on success. Returns row count.
 
 2. **Tests** `tests/test_writer.py`:
-   - `create_table`: mock `psycopg2.connect`; assert the produced SQL
-     contains `CREATE TABLE`, properly quoted identifiers, the geometry
-     column declared as `geometry(<type>, <srid>)`, and `IF NOT EXISTS`
-     when requested.
-   - `export_shapefile`: mock the connection and the shapefile writer;
-     assert the right files are created at `out_path`.
+   - `create_table`: mock `psycopg2.connect`; assert produced SQL contains
+     `CREATE TABLE`, properly quoted identifiers (schema + table + column
+     names), and — when `geom_column` is provided — a `geometry(<type>,<srid>)`
+     declaration. Assert `DROP TABLE IF EXISTS` appears when
+     `replace_table=True`.
+   - `insert_geometries` with correction:
+     - With `cx="500000"`, `cy="9500000"`, assert the INSERT SQL contains
+       `ST_Translate(ST_GeomFromText(%s, %s), 500000, 9500000)` with the Cx/Cy
+       as **text literals** in the SQL string, not as `%s` bind slots.
+     - Assert `validate_offset` is called and `float()` is never called on
+       cx/cy (check no `float(cx)` / `float(cy)` in the source).
+     - Assert `psycopg2.Error` propagates on connection failure.
+   - `insert_geometries` no-correction: with `cx="0"`, `cy="0"`, assert the
+     `ST_Translate` still appears (translation by zero is fine; it keeps the
+     SQL consistent) or that the zero case is handled cleanly.
 
 3. **GH bundles**:
-   - `CRC_CreateTable/` (02.Queries) — inputs: `CString`, `CToggle` + `schema`,
-     `table`, `column_names` (list of str), `column_types` (list of str),
-     `geom_column` (str, optional), `geom_type` (str, optional),
-     `srid` (int, default 4326), `if_not_exists` (bool, default True).
-     Outputs: `affected`, `report`.
-   - `CRC_CreateShapefile/` — inputs: `CString`, `CToggle` + `sql`,
-     `geom_column`, `srid`, `out_path`, plus `Cx` (str, `"0"`), `Cy` (str, `"0"`)
-     for the false-origin add-back when writing GH-local geometry. Outputs:
-     `feature_count`, `report`. `Cx`/`Cy` are `typeHintID: "str"`.
 
-4. **Defensive wiring**: in `code.py` for both, the `CToggle` boolean is the
-   only thing that triggers a write. Set the "not yet run" report string
-   to something explicit like `"Set CToggle=True to CREATE the table. This is
-   destructive."`
+   `CRC_CreateTable/` (subcategory `02.Queries`) — inputs:
+   - `CString` (`str`, `item`), `CToggle` (`bool`, `item`)
+   - `schema` (`str`, `item`), `table` (`str`, `item`)
+   - `column_names` (`str`, `list` — list of column name strings)
+   - `column_types` (`str`, `list` — list of SQL type strings, parallel)
+   - `geom_column` (`str`, `item`, optional — name of geometry column to add)
+   - `geom_type` (`str`, `item`, optional — e.g. `"POLYGON"`, `"POINT"`)
+   - `srid` (`int`, `item`, default `4326`)
+   - `replace_table` (`bool`, `item`, default `False` — DROP IF EXISTS first)
 
-5. **Build & install**.
+   Outputs:
+   - `affected` (int, the DDL rowcount coerced: `-1 → 0`)
+   - `report` (str, feedback string, format: `"success: true\nRows Affected: N"`)
+
+   Default "not yet run" report: `"Set CToggle=True to CREATE the table. This
+   operation is destructive if replace_table=True."`.
+
+   `CRC_CreateShapefile/` (subcategory `02.Queries`) — inputs:
+   - `CString` (`str`, `item`), `CToggle` (`bool`, `item`)
+   - `schema` (`str`, `item`), `table` (`str`, `item`)
+   - `geom_column` (`str`, `item` — name of the target geometry column)
+   - `geometry` (`str`, `list` — list of local WKT strings from GH)
+   - `srid` (`int`, `item`, default `4326`)
+   - `Cx` (`str`, `item`, default `"0"`, description: `"Correction X — false origin (numeric text)"`)
+   - `Cy` (`str`, `item`, default `"0"`, description: `"Correction Y — false origin (numeric text)"`)
+   - `column_names` (`str`, `list`, optional — attribute column names)
+   - `values` (`str`, `tree`, optional — attribute values parallel to geometry)
+   - `replace_table` (`bool`, `item`, default `False`)
+
+   Outputs:
+   - `report` (str, feedback string, format: `"success: true\nRows Affected: N"`)
+
+   Default "not yet run" report: `"Set CToggle=True to INSERT geometries. This
+   operation writes to the database."`.
+
+   `Cx`/`Cy` are `typeHintID: "str"` — never `float`/`int`.
+
+4. **Defensive wiring**: both components guard all execution behind
+   `if CToggle:`. On failure, `report` contains the exception message verbatim.
+   On DDL success where rowcount is `-1`, the GH layer coerces to `0` and
+   formats `"success: true\nRows Affected: 0"`.
+
+5. **Build & install**:
+   ```powershell
+   python build_userobjects.py
+   powershell -ExecutionPolicy Bypass -File .\deploy.ps1
+   ```
+
+---
 
 ## Tests
 
@@ -106,37 +193,59 @@ dropped**. Do not point this at production data.
 pytest tests/test_writer.py -v
 ```
 
+---
+
 ## Grasshopper checkpoint
 
 > **This phase mutates your test database.** Use a throwaway DB or schema.
 
-**CRC_CreateTable** — point at a test schema. Wire `column_names =
-["id","name","value"]`, `column_types = ["serial","text","double precision"]`,
-`geom_column = "geom"`, `geom_type = "POINT"`, `srid = 4326`. Flip `CToggle`.
-Then verify with `CRC_QueryTableNames` from Phase 04 that the table is
-listed. Re-run with same name and `if_not_exists=True`: no error, no rows.
+**CRC_CreateTable** — point at a test schema. Wire:
+- `column_names = ["name", "value"]`
+- `column_types = ["text", "double precision"]`
+- `geom_column = "geom"`, `geom_type = "POLYGON"`, `srid = 4326`
+- `replace_table = False`
 
-**CRC_CreateShapefile** — point at a table that already has data and
-geometry. Provide a writeable `out_path` (`C:\temp\carcara_test.shp`).
-Flip `CToggle`. Verify on disk that `.shp/.dbf/.shx/.prj` exist and the
-feature count matches the source table. Open in QGIS to confirm geometry
-renders.
+Flip `CToggle`. Expect `report = "success: true\nRows Affected: 0"` (DDL).
+Verify with `CRC_QueryTableNames` (Phase 04) that the table is listed. Re-run
+with same name and `replace_table=False`: expect no error. Re-run with
+`replace_table=True`: table is dropped and recreated.
 
-Then induce failures (read-only path, wrong SRID, table missing) and
-confirm `report` shows the error cleanly.
+**CRC_CreateShapefile** (geometry INSERT round-trip with Phase 05):
+
+1. Read geometries from a test table using `CRC_GeometryEntities` (Phase 05)
+   with `Cx="500000"`, `Cy="9500000"` (or whatever matches your test area).
+   Note the returned WKT values (these are in local coordinates).
+2. Wire those WKT values into `CRC_CreateShapefile`, pointing at a throwaway
+   target table (create it first with `CRC_CreateTable`). Use the **same**
+   `Cx="500000"`, `Cy="9500000"`.
+3. Flip `CToggle`. Expect `report = "success: true\nRows Affected: N"`.
+4. Read back using `CRC_GeometryEntities` with the same Cx/Cy. The returned
+   WKT should match the original (round-trip check).
+
+Then induce failures (wrong schema, table missing, invalid Cx format like
+`"abc"`) and confirm `report` shows the error cleanly and the component does
+not red-bubble.
 
 Save canvases as `tests/_manual/smoke_writer_*.gh`.
+
+---
 
 ## Commit
 
 ```
-feat(db): add writer module + CRC_CreateTable + CRC_CreateShapefile
+feat(db): add writer module + CRC_CreateTable + CRC_CreateShapefile (INSERT, not file export)
 ```
+
+---
 
 ## Done when
 
-- [ ] `carcara/crc_modules/db/writer.py` exists with both functions, identifier-safe.
-- [ ] `CRC_CreateShapefile` adds `Cx`/`Cy` in SQL (text, no `float()`); round-trip with Phase 05 read confirmed.
-- [ ] `tests/test_writer.py` covers DDL shape and shapefile write call.
+- [ ] `carcara/crc_modules/db/writer.py` exists with `create_table` and
+      `insert_geometries`, identifier-safe.
+- [ ] `CRC_CreateShapefile` INSERTs geometries; adds `Cx`/`Cy` in SQL (text,
+      no `float()`); round-trip with Phase 05 read confirmed on canvas.
+- [ ] `report` format is `"success: true\nRows Affected: N"` for both components.
+- [ ] `tests/test_writer.py` covers DDL shape, INSERT SQL correction signs,
+      and identifier quoting.
 - [ ] Both GH bundles built and validated against a real test DB.
 - [ ] Statuses flipped to ✅ Done in `CLAUDE.md`.

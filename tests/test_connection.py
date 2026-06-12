@@ -3,17 +3,23 @@ import pytest
 from crc_modules.db.connection import (
     build_connection_string,
     parse_connection_string,
+    test_connection as check_connection,
 )
 
 
 def test_build_connection_string():
     cstring = build_connection_string("localhost", 5432, "mydb", "user", "pw")
-    assert cstring == "host=localhost port=5432 dbname=mydb user=user password=pw"
+    # Password is encoded (obfuscated), never plain text on the wire.
+    assert cstring.startswith("host=localhost port=5432 dbname=mydb user=user password=")
+    assert "password=pw" not in cstring
+    assert parse_connection_string(cstring)["password"] == "pw"
 
 
 def test_build_connection_string_with_special_chars():
     cstring = build_connection_string("my.host", 5433, "my db", "my user", "p@ss w:rd")
-    assert cstring == "host=my.host port=5433 dbname=my db user=my user password=p@ss w:rd"
+    assert cstring.startswith("host=my.host port=5433 dbname=my db user=my user password=")
+    assert "p@ss w:rd" not in cstring
+    assert parse_connection_string(cstring)["password"] == "p@ss w:rd"
 
 
 def test_parse_connection_string():
@@ -47,10 +53,10 @@ def test_round_trip():
 
 
 def test_test_connection_success():
-    from crc_modules.db.connection import _test_connection_cstring as test_connection_cstring
     with patch("crc_modules.db.connection.psycopg2.connect") as mock_connect:
         mock_connect.return_value = MagicMock()
-        ok, msg = test_connection_cstring("host=localhost port=5432 dbname=db user=user password=pw")
+        cstring = build_connection_string("localhost", 5432, "db", "user", "pw")
+        ok, msg = check_connection(cstring)
         assert ok is True
         assert msg == "Connection successful"
         mock_connect.assert_called_once_with(
@@ -59,10 +65,10 @@ def test_test_connection_success():
 
 
 def test_test_connection_failure():
-    from crc_modules.db.connection import _test_connection_cstring as test_connection_cstring
     with patch("crc_modules.db.connection.psycopg2.connect") as mock_connect:
         mock_connect.side_effect = Exception("Connection refused")
-        ok, msg = test_connection_cstring("host=localhost port=5432 dbname=db user=user password=pw")
+        cstring = build_connection_string("localhost", 5432, "db", "user", "pw")
+        ok, msg = check_connection(cstring)
         assert ok is False
         assert "Connection refused" in msg
 
@@ -73,10 +79,10 @@ def test_test_connection_failure():
     'could not translate host name "badhost" to address: Name or service not known',
 ])
 def test_connection_failure_messages(exc_msg):
-    from crc_modules.db.connection import _test_connection_cstring as test_connection_cstring
     with patch("crc_modules.db.connection.psycopg2.connect") as mock_connect:
         mock_connect.side_effect = Exception(exc_msg)
-        ok, msg = test_connection_cstring("host=localhost port=5432 dbname=db user=user password=pw")
+        cstring = build_connection_string("localhost", 5432, "db", "user", "pw")
+        ok, msg = check_connection(cstring)
         assert ok is False
         assert exc_msg in msg
 
