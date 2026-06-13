@@ -26,7 +26,8 @@
     ],
     "outputParameters": [
       { "name": "values", "description": "Values as DataTree (by column)" },
-      { "name": "report", "description": "Status message" }
+      { "name": "report", "description": "Status message" },
+      { "name": "queries", "description": "All SQL statements executed against the database (structured)" }
     ]
   }
 }

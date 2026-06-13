@@ -13,9 +13,14 @@ for _b in _bases:
     if os.path.isdir(_b) and _b not in sys.path:
         sys.path.insert(0, _b)
 
+try:
+    ghenv.Component.Message = "v{{version}} - {{date}}"
+except Exception:
+    pass
+
 from crc_modules.db.query import run_query, _query_values_sql
 
-rows, columns, report = [], [], "Set 'CToggle' to True to execute"
+rows, columns, report, queries = [], [], "Set 'CToggle' to True to execute", ""
 
 if CToggle:
     try:
@@ -44,7 +49,7 @@ if CToggle:
         sql = "SELECT {} FROM {}".format(select_clause, target)
         
         _rows, columns = run_query(CString, sql)
-        
+
         # Output as Grasshopper DataTree: each row is a branch, items are column values in order
         from Grasshopper import DataTree
         from Grasshopper.Kernel.Data import GH_Path
@@ -54,7 +59,9 @@ if CToggle:
             for val in row:
                 tree.Add(str(val), path)
         rows = tree
-        
+
+        executed_sql = [sql]
         report = "OK – {} rows, {} columns returned".format(len(_rows), len(columns))
+        queries = "\n\n".join("-- query {}\n{}".format(i + 1, s) for i, s in enumerate(executed_sql))
     except Exception as e:
         report = "ERROR: {}".format(e)

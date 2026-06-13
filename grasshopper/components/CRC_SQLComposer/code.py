@@ -12,6 +12,11 @@ for _b in _bases:
     if os.path.isdir(_b) and _b not in sys.path:
         sys.path.insert(0, _b)
 
+try:
+    ghenv.Component.Message = "v{{version}} - {{date}}"
+except Exception:
+    pass
+
 from crc_modules.utils.sql_composer import compose
 
 stmt, report, out = "", "", ""

@@ -669,8 +669,8 @@ Within each subcategory, ordered by exposure (`1` first). Global `#` runs across
 | 11 | CRC_GeometryEntities | 2 | `db/spatial_query.py` | `carcara_GeometryEntities_r03.ghuser` | ✅ Done |
 | 12 | CRC_GeometriesWithSpatialFilter | 2 | `db/spatial_query.py` + `db/connection.py` | `carcara_GeometriesWithSpatialFilter_r03.ghuser` | ✅ Done |
 | 13 | CRC_ValuesWithSpatialFilter | 2 | `db/spatial_query.py` + `db/connection.py` | `carcara_ValuesWithSpatialFilter_rev03.ghuser` | ✅ Done |
-| 14 | CRC_CreateTable | 3 | `db/writer.py` | `carcara_CreateTable_r03.ghuser` | ⬜ Todo |
-| 15 | CRC_CreateShapefile | 3 | `db/writer.py` | `carcara_CreateShapefile_r03.ghuser` | ⬜ Todo |
+| 14 | CRC_CreateTable | 3 | `db/writer.py` | `carcara_CreateTable_r03.ghuser` | ✅ Done |
+| 15 | CRC_CreateShapefile | 3 | `db/writer.py` | `carcara_CreateShapefile_r03.ghuser` | ✅ Done |
 
 #### 03.Utilities (7)
 

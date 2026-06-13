@@ -20,7 +20,8 @@ def _get_connection(cstring: str):
     )
 
 
-def detect_geometry_columns(cstring: str, schema: str, table: str) -> list:
+def detect_geometry_columns(cstring: str, schema: str, table: str,
+                            sql_log: Optional[list] = None) -> list:
     """Return all geometry/geography column names for a table, ordered by ordinal position."""
     sql = psycopg2.sql.SQL("""
         SELECT column_name
@@ -36,6 +37,8 @@ def detect_geometry_columns(cstring: str, schema: str, table: str) -> list:
         conn = _get_connection(cstring)
         try:
             with conn.cursor() as cur:
+                if sql_log is not None:
+                    sql_log.append(cur.mogrify(sql).decode("utf-8", "replace"))
                 cur.execute(sql)
                 return [r[0] for r in cur.fetchall()]
         finally:
@@ -44,13 +47,15 @@ def detect_geometry_columns(cstring: str, schema: str, table: str) -> list:
         return []
 
 
-def detect_geometry_column(cstring: str, schema: str, table: str) -> Optional[str]:
+def detect_geometry_column(cstring: str, schema: str, table: str,
+                           sql_log: Optional[list] = None) -> Optional[str]:
     """Return the geometry column name for a table, or None if not found."""
-    cols = detect_geometry_columns(cstring, schema, table)
+    cols = detect_geometry_columns(cstring, schema, table, sql_log)
     return cols[0] if cols else None
 
 
-def detect_primary_key(cstring: str, schema: str, table: str) -> Optional[str]:
+def detect_primary_key(cstring: str, schema: str, table: str,
+                       sql_log: Optional[list] = None) -> Optional[str]:
     """Return the primary key column name for a table, or None if not found."""
     sql = psycopg2.sql.SQL("""
         SELECT kcu.column_name
@@ -70,6 +75,8 @@ def detect_primary_key(cstring: str, schema: str, table: str) -> Optional[str]:
         conn = _get_connection(cstring)
         try:
             with conn.cursor() as cur:
+                if sql_log is not None:
+                    sql_log.append(cur.mogrify(sql).decode("utf-8", "replace"))
                 cur.execute(sql)
                 row = cur.fetchone()
                 return row[0] if row else None
@@ -92,9 +99,10 @@ def _build_spatial_filter_expr(geom_col: str, filter_wkt: str, cx: str, cy: str,
     The filter geometry (already local) is pushed to projected CRS with +cx, +cy."""
     cx = validate_offset(cx)
     cy = validate_offset(cy)
-    func_name = "ST_Intersects" if func == 0 else "ST_Contains"
     filter_geom = f"ST_Translate(ST_GeomFromText({_quote_literal(filter_wkt)}, {srid}), {cx}, {cy})"
-    return f"{func_name}({geom_col}, {filter_geom})"
+    if func == 0:
+        return f"ST_Intersects({geom_col}, {filter_geom})"
+    return f"ST_Contains({filter_geom}, {geom_col})"
 
 
 def _quote_literal(value: str) -> str:
@@ -110,6 +118,7 @@ def get_geometries(
     cy: str = "0",
     where: Optional[str] = None,
     srid: int = 4326,
+    sql_log: Optional[list] = None,
 ) -> Tuple[List[str], List[Union[int, None]]]:
     """
     Returns (wkt_geometries, primary_keys).
@@ -117,11 +126,11 @@ def get_geometries(
     Builds ST_AsText(ST_Translate(<geom_expr>, -Cx, -Cy)) ordered by PK.
     If no PK exists, returns NULL for pk.
     """
-    geom_col = detect_geometry_column(cstring, schema, table)
+    geom_col = detect_geometry_column(cstring, schema, table, sql_log)
     if not geom_col:
         raise ValueError(f"No geometry column found for {schema}.{table}")
 
-    pk_col = detect_primary_key(cstring, schema, table)
+    pk_col = detect_primary_key(cstring, schema, table, sql_log)
 
     geom_expr = _build_geometry_expr(f'"{geom_col}"', cx, cy, srid)
 
@@ -144,6 +153,8 @@ def get_geometries(
     conn = _get_connection(cstring)
     try:
         with conn.cursor() as cur:
+            if sql_log is not None:
+                sql_log.append(cur.mogrify(sql).decode("utf-8", "replace"))
             cur.execute(sql)
             rows = cur.fetchall()
             wkt_list = [row[0] for row in rows]
@@ -163,6 +174,7 @@ def get_geometries_with_spatial_filter(
     srid: int = 4326,
     sql_filter: Optional[str] = None,
     func: int = 0,
+    sql_log: Optional[list] = None,
 ) -> Tuple[List[str], List[Union[int, None]]]:
     """
     SELECT geometries translated to local (-Cx, -Cy), filtered by a GH-drawn
@@ -172,11 +184,11 @@ def get_geometries_with_spatial_filter(
         AND (sql_filter)
     Auto-detects geometry column and PK. Returns (wkt_list, pk_list).
     """
-    geom_col = detect_geometry_column(cstring, schema, table)
+    geom_col = detect_geometry_column(cstring, schema, table, sql_log)
     if not geom_col:
         raise ValueError(f"No geometry column found for {schema}.{table}")
 
-    pk_col = detect_primary_key(cstring, schema, table)
+    pk_col = detect_primary_key(cstring, schema, table, sql_log)
 
     geom_expr = _build_geometry_expr(f'"{geom_col}"', cx, cy, srid)
     spatial_filter = _build_spatial_filter_expr(f'"{geom_col}"', filter_wkt, cx, cy, srid, func)
@@ -203,6 +215,8 @@ def get_geometries_with_spatial_filter(
     conn = _get_connection(cstring)
     try:
         with conn.cursor() as cur:
+            if sql_log is not None:
+                sql_log.append(cur.mogrify(sql).decode("utf-8", "replace"))
             cur.execute(sql)
             rows = cur.fetchall()
             wkt_list = [row[0] for row in rows]
@@ -223,17 +237,18 @@ def get_values_with_spatial_filter(
     srid: int = 4326,
     sql_filter: Optional[str] = None,
     func: int = 0,
+    sql_log: Optional[list] = None,
 ) -> Tuple[List[Tuple], List[str]]:
     """
     SELECT attribute columns for rows matching spatial filter.
     Same spatial filter logic as get_geometries_with_spatial_filter.
     Returns (rows, column_names).
     """
-    geom_col = detect_geometry_column(cstring, schema, table)
+    geom_col = detect_geometry_column(cstring, schema, table, sql_log)
     if not geom_col:
         raise ValueError(f"No geometry column found for {schema}.{table}")
 
-    pk_col = detect_primary_key(cstring, schema, table)
+    pk_col = detect_primary_key(cstring, schema, table, sql_log)
 
     col_list = ", ".join(f'"{c}"' for c in columns)
     spatial_filter = _build_spatial_filter_expr(f'"{geom_col}"', filter_wkt, cx, cy, srid, func)
@@ -258,6 +273,8 @@ def get_values_with_spatial_filter(
     conn = _get_connection(cstring)
     try:
         with conn.cursor() as cur:
+            if sql_log is not None:
+                sql_log.append(cur.mogrify(sql).decode("utf-8", "replace"))
             cur.execute(sql)
             col_names = [desc[0] for desc in cur.description]
             rows = cur.fetchall()

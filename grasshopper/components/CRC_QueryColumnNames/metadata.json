@@ -19,7 +19,8 @@
     "outputParameters": [
       { "name": "columns", "description": "List of column names" },
       { "name": "types", "description": "List of column data types" },
-      { "name": "report", "description": "Status message" }
+      { "name": "report", "description": "Status message" },
+      { "name": "queries", "description": "All SQL statements executed against the database (structured)" }
     ]
   }
 }

@@ -17,7 +17,8 @@
     ],
     "outputParameters": [
       { "name": "tables", "description": "List of table names" },
-      { "name": "report", "description": "Status message" }
+      { "name": "report", "description": "Status message" },
+      { "name": "queries", "description": "All SQL statements executed against the database (structured)" }
     ]
   }
 }

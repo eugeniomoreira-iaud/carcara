@@ -21,7 +21,8 @@
     "outputParameters": [
       { "name": "rows", "description": "Returned rows as strings" },
       { "name": "columns", "description": "Column names" },
-      { "name": "report", "description": "Status message" }
+      { "name": "report", "description": "Status message" },
+      { "name": "queries", "description": "All SQL statements executed against the database (structured)" }
     ]
   }
 }

@@ -7,6 +7,7 @@ import sys
 import tempfile
 import urllib.request, urllib.parse, urllib.error
 import zipfile
+from datetime import datetime
 from io import BytesIO
 
 import clr
@@ -19,6 +20,7 @@ CPY_VER = "3.-1"
 TEMPLATE_VER = re.compile("{{version}}")
 TEMPLATE_NAME = re.compile("{{name}}")
 TEMPLATE_GHUSER_NAME = re.compile("{{ghuser_name}}")
+TEMPLATE_DATE = re.compile("{{date}}")
 
 TYPES_MAP = dict(
     none="6a184b65-baa3-42d1-a548-3915b401de53",
@@ -207,6 +209,7 @@ def replace_templates(code, version, name, ghuser_name):
 
     code = TEMPLATE_NAME.sub(name, code)
     code = TEMPLATE_GHUSER_NAME.sub(ghuser_name, code)
+    code = TEMPLATE_DATE.sub(datetime.now().strftime("%Y/%m/%d"), code)
 
     return code
 

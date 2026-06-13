@@ -16,7 +16,8 @@
     ],
     "outputParameters": [
       { "name": "schemas", "description": "List of schema names" },
-      { "name": "report", "description": "Status message" }
+      { "name": "report", "description": "Status message" },
+      { "name": "queries", "description": "All SQL statements executed against the database (structured)" }
     ]
   }
 }

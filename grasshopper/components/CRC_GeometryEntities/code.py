@@ -19,6 +19,11 @@ for _b in _bases:
     if os.path.isdir(_b) and _b not in sys.path:
         sys.path.insert(0, _b)
 
+try:
+    ghenv.Component.Message = "v{{version}} - {{date}}"
+except Exception:
+    pass
+
 import Grasshopper
 from Grasshopper.Kernel.Data import GH_Path
 from Grasshopper import DataTree
@@ -27,7 +32,7 @@ from shapely import wkt as shapely_wkt
 from crc_modules.db.spatial_query import get_geometries, detect_geometry_columns
 from crc_modules.rhino.wkt_conversion import wkt_to_rhino
 
-geometry, pk, report = DataTree[object](), DataTree[object](), "Set 'CToggle' to True to execute"
+geometry, pk, report, queries = DataTree[object](), DataTree[object](), "Set 'CToggle' to True to execute", ""
 
 if CToggle:
     try:
@@ -39,9 +44,10 @@ if CToggle:
         cx = str(Cx) if Cx else "0"
         cy = str(Cy) if Cy else "0"
 
-        geom_cols = detect_geometry_columns(CString, schema, table)
+        executed_sql = []
+        geom_cols = detect_geometry_columns(CString, schema, table, sql_log=executed_sql)
 
-        wkt_list, pk_list = get_geometries(CString, schema, table, cx=cx, cy=cy)
+        wkt_list, pk_list = get_geometries(CString, schema, table, cx=cx, cy=cy, sql_log=executed_sql)
 
         built = null_wkt = failed = 0
         sample_fail = ""
@@ -87,5 +93,6 @@ if CToggle:
         )
         if sample_fail:
             report += "\n  sample unconvertible WKT: {}...".format(sample_fail)
+        queries = "\n\n".join("-- query {}\n{}".format(i + 1, s) for i, s in enumerate(executed_sql))
     except Exception as e:
         report = f"ERROR: {e}"

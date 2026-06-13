@@ -14,6 +14,11 @@ for _b in _bases:
     if os.path.isdir(_b) and _b not in sys.path:
         sys.path.insert(0, _b)
 
+try:
+    ghenv.Component.Message = "v{{version}} - {{date}}"
+except Exception:
+    pass
+
 import Grasshopper
 from Grasshopper.Kernel.Data import GH_Path
 from Grasshopper import DataTree
@@ -21,7 +26,7 @@ from Grasshopper import DataTree
 from crc_modules.db.spatial_query import get_values_with_spatial_filter
 from crc_modules.rhino.wkt_conversion import rh_geometry_to_wkt
 
-values, report = DataTree[object](), "Set 'CToggle' to True to execute"
+values, report, queries = DataTree[object](), "Set 'CToggle' to True to execute", ""
 
 if CToggle:
     try:
@@ -53,9 +58,10 @@ if CToggle:
         if not filter_wkt:
             raise ValueError("Failed to convert spatial filter geometry to WKT")
 
+        executed_sql = []
         rows, col_names = get_values_with_spatial_filter(
             CString, schema, table, col_list, filter_wkt,
-            cx=cx, cy=cy, srid=srid, sql_filter=sql_filter, func=func
+            cx=cx, cy=cy, srid=srid, sql_filter=sql_filter, func=func, sql_log=executed_sql
         )
 
         # Apply NULL replacement if specified
@@ -71,5 +77,6 @@ if CToggle:
                     values.Add(str(val) if val is not None else "", path)
 
         report = f"OK – {len(rows)} rows, {len(col_names)} columns returned"
+        queries = "\n\n".join("-- query {}\n{}".format(i + 1, s) for i, s in enumerate(executed_sql))
     except Exception as e:
         report = f"ERROR: {e}"

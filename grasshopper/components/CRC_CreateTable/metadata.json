@@ -1,0 +1,30 @@
+{
+  "name": "CreateTable",
+  "nickname": "CrtTbl",
+  "category": "Carcara",
+  "subcategory": "02.Queries",
+  "description": "CREATE TABLE in PostGIS, optionally with a geometry column. Destructive when replace_table=True.",
+  "exposure": 4,
+  "instanceGuid": "e5f6a7b8-c9d0-1234-ef01-567890123456",
+  "ghpython": {
+    "isAdvancedMode": false,
+    "marshalGuids": true,
+    "iconDisplay": 0,
+    "inputParameters": [
+      { "name": "CString", "description": "Connection string with encoded password", "typeHintID": "str", "scriptParamAccess": "item" },
+      { "name": "CToggle", "description": "Set True to CREATE the table (destructive if replace_table)", "typeHintID": "bool", "scriptParamAccess": "item" },
+      { "name": "schema", "description": "Target schema", "typeHintID": "str", "scriptParamAccess": "item" },
+      { "name": "table", "description": "Table name to create", "typeHintID": "str", "scriptParamAccess": "item" },
+      { "name": "column_names", "description": "Column names", "typeHintID": "str", "scriptParamAccess": "list" },
+      { "name": "column_types", "description": "SQL types parallel to column_names (e.g. text, double precision)", "typeHintID": "str", "scriptParamAccess": "list" },
+      { "name": "geom_column", "description": "Optional geometry column name to add", "typeHintID": "str", "scriptParamAccess": "item" },
+      { "name": "geom_type", "description": "Optional geometry type (POLYGON, POINT, ...)", "typeHintID": "str", "scriptParamAccess": "item" },
+      { "name": "srid", "description": "SRID for the geometry column (default 4326)", "typeHintID": "int", "scriptParamAccess": "item" },
+      { "name": "replace_table", "description": "DROP TABLE IF EXISTS before CREATE (destructive)", "typeHintID": "bool", "scriptParamAccess": "item" }
+    ],
+    "outputParameters": [
+      { "name": "affected", "description": "Rows affected (DDL coerced -1 to 0)" },
+      { "name": "report", "description": "Status message" }
+    ]
+  }
+}

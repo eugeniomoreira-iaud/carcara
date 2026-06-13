@@ -360,7 +360,7 @@ class TestGetGeometriesWithSpatialFilter:
         assert "9500000" in all_sql, f"Cy not in filter SQL: {all_sql}"
 
     def test_func_parameter_chooses_predicate(self):
-        """func=1 -> ST_Contains; default (0) -> ST_Intersects."""
+        """func=1 -> ST_Contains(filter, geom) — filter is FIRST arg."""
         cstring = "host=localhost port=5432 dbname=db user=u password=pw"
         mock_gc, captured = make_spatial_query_mocks()
         with patch("crc_modules.db.spatial_query.psycopg2.connect", mock_gc), \
@@ -372,10 +372,18 @@ class TestGetGeometriesWithSpatialFilter:
                 filter_wkt="POLYGON ((0 0, 1 0, 1 1, 0 1))",
                 func=1)
 
-        assert "ST_CONTAINS" in " ".join(captured).upper()
+        all_sql = " ".join(captured)
+        upper = all_sql.upper()
+        assert "ST_CONTAINS" in upper
+        # ST_Contains(filter_expr, geom_col): filter (ST_Translate(ST_GeomFromText(...))) must come before geom col
+        contains_pos = upper.find("ST_CONTAINS(")
+        translate_pos = upper.find("ST_TRANSLATE(ST_GEOMFROMTEXT(")
+        assert translate_pos > contains_pos, (
+            f"ST_Translate(ST_GeomFromText(...)) must be FIRST arg of ST_Contains. SQL: {all_sql}"
+        )
 
     def test_func_default_is_intersects(self):
-        """Default function (func=0 or omitted) should use ST_Intersects."""
+        """Default function (func=0): ST_Intersects(geom_col, filter) — geom col is FIRST arg."""
         cstring = "host=localhost port=5432 dbname=db user=u password=pw"
         mock_gc, captured = make_spatial_query_mocks()
         with patch("crc_modules.db.spatial_query.psycopg2.connect", mock_gc), \
@@ -387,7 +395,16 @@ class TestGetGeometriesWithSpatialFilter:
                 filter_wkt="POLYGON ((0 0, 1 0, 1 1, 0 1))",
                 func=0)
 
-        assert "ST_INTERSECTS" in " ".join(captured).upper()
+        all_sql = " ".join(captured)
+        upper = all_sql.upper()
+        assert "ST_INTERSECTS" in upper
+        # ST_Intersects(geom_col, filter_expr): geom col ("geom") must come before ST_Translate(ST_GeomFromText(
+        intersects_pos = upper.find("ST_INTERSECTS(")
+        translate_pos = upper.find("ST_TRANSLATE(ST_GEOMFROMTEXT(")
+        # geom col sits right after ST_INTERSECTS( open paren — translate comes after the comma
+        assert intersects_pos < translate_pos, (
+            f"geom_col must be FIRST arg of ST_Intersects. SQL: {all_sql}"
+        )
 
     def test_extra_sql_filter_anded(self):
         """Extra sql_filter is ANDed into WHERE."""
@@ -481,3 +498,102 @@ class TestMultipartSplitting:
     def test_identifier_quoting_with_special_chars(self):
         """Pass a table/column name with special chars; assert quoting."""
         pass
+
+
+# ── sql_log population tests ───────────────────────────────────────────────
+
+def _make_fetchall_conn_with_mogrify(fetchall_result, mogrify_bytes=b"SELECT 1"):
+    """Return a mock connection whose cursor supports mogrify (returns bytes)."""
+    cur = MagicMock()
+    cur.fetchall.return_value = fetchall_result
+    cur.mogrify.return_value = mogrify_bytes
+    cur.__enter__ = lambda s: cur
+    cur.__exit__ = MagicMock(return_value=False)
+    conn_out = MagicMock()
+    conn_out.cursor.return_value = cur
+    return conn_out
+
+
+class TestSqlLogDetectGeometryColumns:
+    def test_sql_log_appended_when_passed(self):
+        cstring = "host=localhost port=5432 dbname=db user=u password=pw"
+        conn_out = _make_fetchall_conn_with_mogrify([("geom",)])
+        log = []
+        with patch("crc_modules.db.spatial_query.psycopg2.connect", return_value=conn_out):
+            result = detect_geometry_columns(cstring, "public", "buildings", sql_log=log)
+        assert result == ["geom"]
+        assert len(log) == 1
+        assert "SELECT 1" in log[0]
+
+    def test_sql_log_not_modified_when_none(self):
+        """Default sql_log=None must not raise or pollute anything."""
+        cstring = "host=localhost port=5432 dbname=db user=u password=pw"
+        conn_out = _make_fetchall_conn_with_mogrify([("geom",)])
+        with patch("crc_modules.db.spatial_query.psycopg2.connect", return_value=conn_out):
+            result = detect_geometry_columns(cstring, "public", "buildings")
+        assert result == ["geom"]
+
+
+class TestSqlLogGetGeometries:
+    def _make_3call_side_effect(self):
+        """Build a side_effect for psycopg2.connect that handles 3 consecutive calls:
+        1. detect_geometry_columns (fetchall -> [("geom",)])
+        2. detect_primary_key     (fetchone -> ("gid",))
+        3. main SELECT            (fetchall -> [("POINT (0 0)", 1)])
+        All cursors have mogrify returning b"SELECT 1".
+        """
+        call_n = [0]
+
+        def side_effect(*args, **kwargs):
+            n = call_n[0]
+            call_n[0] += 1
+            cur = MagicMock()
+            cur.mogrify.return_value = b"SELECT 1"
+            cur.__enter__ = lambda s: cur
+            cur.__exit__ = MagicMock(return_value=False)
+            if n == 0:
+                cur.fetchall.return_value = [("geom",)]
+            elif n == 1:
+                cur.fetchone.return_value = ("gid",)
+                cur.fetchall.return_value = [("gid",)]
+            else:
+                cur.fetchall.return_value = [("POINT (0 0)", 1)]
+                cur.description = [("geom", None, None, None, None, None, None),
+                                   ("pk", None, None, None, None, None, None)]
+            conn_out = MagicMock()
+            conn_out.cursor.return_value = cur
+            return conn_out
+
+        return side_effect
+
+    def test_get_geometries_sql_log_has_3_entries(self):
+        """get_geometries with sql_log must yield 3 entries:
+        detect_geometry_columns + detect_primary_key + main SELECT."""
+        cstring = "host=localhost port=5432 dbname=db user=u password=pw"
+        log = []
+        with patch("crc_modules.db.spatial_query.psycopg2.connect",
+                   side_effect=self._make_3call_side_effect()), \
+             patch("crc_modules.db.spatial_query.parse_connection_string",
+                   return_value={"host": "localhost", "port": 5432,
+                                 "dbname": "db", "user": "u", "password": "pw"}):
+            wkt, pk = get_geometries(cstring, "public", "buildings", sql_log=log)
+
+        assert wkt == ["POINT (0 0)"]
+        assert pk == [1]
+        assert len(log) == 3, f"Expected 3 log entries, got {len(log)}: {log}"
+        for entry in log:
+            assert isinstance(entry, str)
+            assert "SELECT 1" in entry
+
+    def test_get_geometries_no_sql_log_still_works(self):
+        """sql_log=None (default) must not change return values."""
+        cstring = "host=localhost port=5432 dbname=db user=u password=pw"
+        with patch("crc_modules.db.spatial_query.psycopg2.connect",
+                   side_effect=self._make_3call_side_effect()), \
+             patch("crc_modules.db.spatial_query.parse_connection_string",
+                   return_value={"host": "localhost", "port": 5432,
+                                 "dbname": "db", "user": "u", "password": "pw"}):
+            wkt, pk = get_geometries(cstring, "public", "buildings")
+
+        assert wkt == ["POINT (0 0)"]
+        assert pk == [1]

@@ -14,6 +14,11 @@ for _b in _bases:
     if os.path.isdir(_b) and _b not in sys.path:
         sys.path.insert(0, _b)
 
+try:
+    ghenv.Component.Message = "v{{version}} - {{date}}"
+except Exception:
+    pass
+
 import Grasshopper
 from Grasshopper.Kernel.Data import GH_Path
 from Grasshopper import DataTree
@@ -21,7 +26,7 @@ from Grasshopper import DataTree
 from crc_modules.db.spatial_query import get_geometries_with_spatial_filter, detect_geometry_columns
 from crc_modules.rhino.wkt_conversion import wkt_to_rhino, rh_geometry_to_wkt
 
-geometry, pk, report = DataTree[object](), DataTree[object](), "Set 'CToggle' to True to execute"
+geometry, pk, report, queries = DataTree[object](), DataTree[object](), "Set 'CToggle' to True to execute", ""
 
 if CToggle:
     try:
@@ -43,11 +48,12 @@ if CToggle:
         if not filter_wkt:
             raise ValueError("Failed to convert spatial filter geometry to WKT")
 
-        geom_cols = detect_geometry_columns(CString, schema, table)
+        executed_sql = []
+        geom_cols = detect_geometry_columns(CString, schema, table, sql_log=executed_sql)
 
         wkt_list, pk_list = get_geometries_with_spatial_filter(
             CString, schema, table, filter_wkt,
-            cx=cx, cy=cy, srid=srid, sql_filter=sql_filter, func=func
+            cx=cx, cy=cy, srid=srid, sql_filter=sql_filter, func=func, sql_log=executed_sql
         )
 
         built = null_wkt = failed = 0
@@ -94,5 +100,6 @@ if CToggle:
         )
         if sample_fail:
             report += "\n  sample unconvertible WKT: {}...".format(sample_fail)
+        queries = "\n\n".join("-- query {}\n{}".format(i + 1, s) for i, s in enumerate(executed_sql))
     except Exception as e:
         report = f"ERROR: {e}"

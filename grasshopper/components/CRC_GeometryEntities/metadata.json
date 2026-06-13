@@ -21,7 +21,8 @@
     "outputParameters": [
       { "name": "geometry", "description": "Geometry list as DataTree" },
       { "name": "pk", "description": "Primary keys as DataTree" },
-      { "name": "report", "description": "Status message" }
+      { "name": "report", "description": "Status message" },
+      { "name": "queries", "description": "All SQL statements executed against the database (structured)" }
     ]
   }
 }
