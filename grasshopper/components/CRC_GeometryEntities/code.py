@@ -24,7 +24,7 @@ from Grasshopper.Kernel.Data import GH_Path
 from Grasshopper import DataTree
 from shapely import wkt as shapely_wkt
 
-from crc_modules.db.spatial_query import get_geometries
+from crc_modules.db.spatial_query import get_geometries, detect_geometry_columns
 from crc_modules.rhino.wkt_conversion import wkt_to_rhino
 
 geometry, pk, report = DataTree[object](), DataTree[object](), "Set 'CToggle' to True to execute"
@@ -39,30 +39,53 @@ if CToggle:
         cx = str(Cx) if Cx else "0"
         cy = str(Cy) if Cy else "0"
 
+        geom_cols = detect_geometry_columns(CString, schema, table)
+
         wkt_list, pk_list = get_geometries(CString, schema, table, cx=cx, cy=cy)
 
-        # Convert WKT to Rhino geometry, split multi-part on same branch
+        built = null_wkt = failed = 0
+        sample_fail = ""
         for i, (wkt_str, pk_val) in enumerate(zip(wkt_list, pk_list)):
             path = GH_Path(i)
-
             if not wkt_str or not wkt_str.strip():
+                null_wkt += 1
                 if pk_val is not None:
                     pk.Add(pk_val, path)
                 continue
-
             rh_geoms = wkt_to_rhino(wkt_str)
-
             if isinstance(rh_geoms, list):
-                # Multi-part: each member on same branch
+                added = 0
                 for rh_geom in rh_geoms:
                     if rh_geom is not None:
                         geometry.Add(rh_geom, path)
                         pk.Add(pk_val, path)
+                        added += 1
+                if added:
+                    built += 1
+                else:
+                    failed += 1
+                    if not sample_fail:
+                        sample_fail = wkt_str[:60]
             elif rh_geoms is not None:
                 geometry.Add(rh_geoms, path)
-                # PK value goes once on the branch for single-part too
                 pk.Add(pk_val, path)
+                built += 1
+            else:
+                failed += 1
+                if not sample_fail:
+                    sample_fail = wkt_str[:60]
 
-        report = f"OK – {len(wkt_list)} rows returned"
+        report = (
+            "OK\n"
+            "  rows: {}\n"
+            "  geometries built: {}\n"
+            "  null WKT: {}\n"
+            "  unconvertible: {}\n"
+            "  geom columns detected: {}".format(
+                len(wkt_list), built, null_wkt, failed,
+                ", ".join(geom_cols) if geom_cols else "(none)")
+        )
+        if sample_fail:
+            report += "\n  sample unconvertible WKT: {}...".format(sample_fail)
     except Exception as e:
         report = f"ERROR: {e}"

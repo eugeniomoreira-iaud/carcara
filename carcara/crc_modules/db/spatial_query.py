@@ -20,14 +20,14 @@ def _get_connection(cstring: str):
     )
 
 
-def detect_geometry_column(cstring: str, schema: str, table: str) -> Optional[str]:
-    """Return the geometry column name for a table, or None if not found."""
+def detect_geometry_columns(cstring: str, schema: str, table: str) -> list:
+    """Return all geometry/geography column names for a table, ordered by ordinal position."""
     sql = psycopg2.sql.SQL("""
-        SELECT f_geometry_column
-        FROM geometry_columns
-        WHERE f_table_schema = {schema}
-          AND f_table_name = {table}
-        LIMIT 1
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_schema = {schema} AND table_name = {table}
+          AND udt_name IN ('geometry', 'geography')
+        ORDER BY ordinal_position
     """).format(
         schema=psycopg2.sql.Literal(schema),
         table=psycopg2.sql.Literal(table),
@@ -37,12 +37,17 @@ def detect_geometry_column(cstring: str, schema: str, table: str) -> Optional[st
         try:
             with conn.cursor() as cur:
                 cur.execute(sql)
-                row = cur.fetchone()
-                return row[0] if row else None
+                return [r[0] for r in cur.fetchall()]
         finally:
             conn.close()
     except Exception:
-        return None
+        return []
+
+
+def detect_geometry_column(cstring: str, schema: str, table: str) -> Optional[str]:
+    """Return the geometry column name for a table, or None if not found."""
+    cols = detect_geometry_columns(cstring, schema, table)
+    return cols[0] if cols else None
 
 
 def detect_primary_key(cstring: str, schema: str, table: str) -> Optional[str]:

@@ -4,6 +4,7 @@ import psycopg2
 from decimal import Decimal
 from crc_modules.db.spatial_query import (
     detect_geometry_column,
+    detect_geometry_columns,
     detect_primary_key,
     get_geometries,
     get_geometries_with_spatial_filter,
@@ -30,6 +31,19 @@ def make_detection_conn(fetchone_result):
     """Return a mock connection that returns fetchone_result on cursor.fetchone()."""
     cur = MagicMock()
     cur.fetchone.return_value = fetchone_result
+    # fetchall mirrors fetchone: wrap single row in list, or empty list for None
+    cur.fetchall.return_value = [fetchone_result] if fetchone_result is not None else []
+    cur.__enter__ = lambda s: cur
+    cur.__exit__ = MagicMock(return_value=False)
+    conn_out = MagicMock()
+    conn_out.cursor.return_value = cur
+    return conn_out
+
+
+def make_fetchall_conn(fetchall_result):
+    """Return a mock connection that returns fetchall_result on cursor.fetchall()."""
+    cur = MagicMock()
+    cur.fetchall.return_value = fetchall_result
     cur.__enter__ = lambda s: cur
     cur.__exit__ = MagicMock(return_value=False)
     conn_out = MagicMock()
@@ -82,22 +96,60 @@ class TestTranslateExpr:
             translate_expr("geom_col", "0", "0", "to_nowhere")
 
 
-# ── detect_geometry_column ─────────────────────────────────────────────────
+# ── detect_geometry_columns (plural) ──────────────────────────────────────
+
+class TestDetectGeometryColumns:
+    def test_returns_all_names_in_order(self):
+        cstring = "host=localhost port=5432 dbname=db user=u password=pw"
+        conn_out = make_fetchall_conn([("geom",), ("centroid",)])
+        with patch("crc_modules.db.spatial_query.psycopg2.connect", return_value=conn_out):
+            result = detect_geometry_columns(cstring, "public", "buildings")
+            assert result == ["geom", "centroid"]
+
+    def test_empty_table_returns_empty_list(self):
+        cstring = "host=localhost port=5432 dbname=db user=u password=pw"
+        conn_out = make_fetchall_conn([])
+        with patch("crc_modules.db.spatial_query.psycopg2.connect", return_value=conn_out):
+            result = detect_geometry_columns(cstring, "public", "no_geom_table")
+            assert result == []
+
+    def test_geography_type_detected(self):
+        cstring = "host=localhost port=5432 dbname=db user=u password=pw"
+        conn_out = make_fetchall_conn([("geog",)])
+        with patch("crc_modules.db.spatial_query.psycopg2.connect", return_value=conn_out):
+            result = detect_geometry_columns(cstring, "public", "geo_table")
+            assert result == ["geog"]
+
+    def test_exception_returns_empty_list(self):
+        cstring = "host=localhost port=5432 dbname=db user=u password=pw"
+        with patch("crc_modules.db.spatial_query.psycopg2.connect", side_effect=Exception("DB error")):
+            result = detect_geometry_columns(cstring, "public", "any_table")
+            assert result == []
+
+
+# ── detect_geometry_column (singular, delegates to plural) ─────────────────
 
 class TestDetectGeometryColumn:
-    def test_found(self):
+    def test_returns_first_column(self):
         cstring = "host=localhost port=5432 dbname=db user=u password=pw"
-        conn_out = make_detection_conn(("geom",))
+        conn_out = make_fetchall_conn([("geom",), ("centroid",)])
         with patch("crc_modules.db.spatial_query.psycopg2.connect", return_value=conn_out):
             result = detect_geometry_column(cstring, "public", "buildings")
             assert result == "geom"
 
-    def test_not_found(self):
+    def test_not_found_returns_none(self):
         cstring = "host=localhost port=5432 dbname=db user=u password=pw"
-        conn_out = make_detection_conn(None)
+        conn_out = make_fetchall_conn([])
         with patch("crc_modules.db.spatial_query.psycopg2.connect", return_value=conn_out):
             result = detect_geometry_column(cstring, "public", "no_geom_table")
             assert result is None
+
+    def test_geography_detection(self):
+        cstring = "host=localhost port=5432 dbname=db user=u password=pw"
+        conn_out = make_fetchall_conn([("geog",)])
+        with patch("crc_modules.db.spatial_query.psycopg2.connect", return_value=conn_out):
+            result = detect_geometry_column(cstring, "public", "geo_table")
+            assert result == "geog"
 
 
 # ── detect_primary_key ─────────────────────────────────────────────────────
@@ -132,9 +184,9 @@ def make_spatial_query_mocks(geo_col="geom", pk_col="gid",
     def make_geo_connection(n):
         """Return a MagicMock that acts as psycopg2.connect for each call n."""
         if n == 0:
-            # geometry_columns lookup
+            # information_schema.columns lookup (detect_geometry_columns uses fetchall)
             cur = MagicMock()
-            cur.fetchone.return_value = (geo_col,)
+            cur.fetchall.return_value = [(geo_col,)] if geo_col else []
             ctx = MagicMock()
             ctx.__enter__ = lambda s: cur
             ctx.__exit__ = MagicMock(return_value=False)

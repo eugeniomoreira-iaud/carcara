@@ -51,123 +51,166 @@ def _shapely_to_rhino(shp_geom):
 
     geom_type = shp_geom.geom_type
 
-    # ---- POINT -----------------------------------------------------------
+    def _ring_to_curve(ring):
+        coords = _extract_coords(ring)
+        if len(coords) < 2:
+            return None
+        poly = rg.Polyline()
+        for c in coords:
+            poly.Add(c[0], c[1], c[2])
+        if poly.Count >= 2:
+            first, last = poly[0], poly[poly.Count - 1]
+            if first.DistanceTo(last) > 0:
+                poly.Add(first.X, first.Y, first.Z)
+        return rg.PolylineCurve(poly)
+
+    def _polygon_curves(poly_geom):
+        out = []
+        ext = _ring_to_curve(poly_geom.exterior)
+        if ext is not None:
+            out.append(ext)
+        for interior in poly_geom.interiors:
+            ic = _ring_to_curve(interior)
+            if ic is not None:
+                out.append(ic)
+        return out
+
     if geom_type == "Point":
         return rg.Point3d(*_to_coords(shp_geom.coords[0]))
+    if geom_type == "MultiPoint":
+        return [rg.Point3d(*_to_coords(m.coords[0])) for m in shp_geom.geoms]
 
-    if geom_type in ("MultiPoint",):
-        pts = []
-        for member in shp_geom.geoms:  # noqa: F821
-            c = _to_coords(member.coords[0])
-            p = rg.Point3d(*c)
-            if p is not None:
-                pts.append(p)
-        return pts
-
-    # ---- LINE STRING -----------------------------------------------------
     if geom_type == "LineString":
         coords = _extract_coords(shp_geom)
-        if len(coords) >= 2:
-            pts = [rg.Point3d(*c) for c in coords]
-            pline = rg.Polyline(pts)
-            curve = rg.PolylineCurve(pline)
-            if curve and curve.IsValid:
-                return curve
+        if len(coords) < 2:
             return None
-
+        poly = rg.Polyline()
+        for c in coords:
+            poly.Add(c[0], c[1], c[2])
+        return rg.PolylineCurve(poly)
     if geom_type == "MultiLineString":
-        return [_shapely_to_rhino(member) for member in shp_geom.geoms]  # noqa: F821
+        out = []
+        for m in shp_geom.geoms:
+            c = _shapely_to_rhino(m)
+            if c is not None:
+                out.append(c)
+        return out
 
-    # ---- POLYGON ---------------------------------------------------------
     if geom_type == "Polygon":
-        coords = _extract_coords(shp_geom.exterior)
-        if len(coords) >= 4:
-            pts = [rg.Point3d(*c) for c in coords]
-            pline = rg.Polyline(pts)
-            curve = rg.PolylineCurve(pline)
-            if curve and curve.IsValid:
-                return curve
-            return None
-
+        return _polygon_curves(shp_geom)
     if geom_type == "MultiPolygon":
-        return [_shapely_to_rhino(member) for member in shp_geom.geoms]  # noqa: F821
+        out = []
+        for m in shp_geom.geoms:
+            out.extend(_polygon_curves(m))
+        return out
 
     if geom_type == "GeometryCollection":
-        return [_shapely_to_rhino(member) for member in shp_geom.geoms if _shapely_to_rhino(member)]
+        out = []
+        for m in shp_geom.geoms:
+            r = _shapely_to_rhino(m)
+            if isinstance(r, list):
+                out.extend(r)
+            elif r is not None:
+                out.append(r)
+        return out
 
     return None
 
 
+def _fmt_coords(pts):
+    """Return (coord_string, z_tag). z_tag=' Z' when any point has nonzero Z, else ''."""
+    pts = list(pts)
+    has_z = any(abs(p.Z) > 1e-9 for p in pts)
+    if has_z:
+        return ", ".join(f"{p.X} {p.Y} {p.Z}" for p in pts), " Z"
+    return ", ".join(f"{p.X} {p.Y}" for p in pts), ""
+
+
 def rh_geometry_to_wkt(geom):
-    """Convert a Rhino geometry to a WKT string (2D — Y omitted from WKT coords).
+    """Convert a Rhino geometry to a WKT string (3D when Z nonzero, else 2D).
 
     Accepts Point3d, Point, Line, LineCurve, Polyline, PolylineCurve, Curve, Brep, Mesh.
     Returns None when the input cannot be converted.
     """
     import Rhino
+    import scriptcontext as sc
     rg = Rhino.Geometry
 
+    # ghdoc-hinted inputs deliver referenced geometry as System.Guid
+    if str(type(geom)).endswith("System.Guid'>"):
+        rh_obj = sc.doc.Objects.Find(geom)
+        geom = rh_obj.Geometry if rh_obj else None
+    if geom is None:
+        return None
+
     if isinstance(geom, rg.Point3d):
-        return f"POINT ({geom.X} {geom.Y})"
+        coords, z = _fmt_coords([geom])
+        return f"POINT{z} ({coords})"
     elif isinstance(geom, rg.Point):
-        return f"POINT ({geom.Location.X} {geom.Location.Y})"
+        coords, z = _fmt_coords([geom.Location])
+        return f"POINT{z} ({coords})"
     elif isinstance(geom, rg.Line):
-        return f"LINESTRING ({geom.From.X} {geom.From.Y}, {geom.To.X} {geom.To.Y})"
+        coords, z = _fmt_coords([geom.From, geom.To])
+        return f"LINESTRING{z} ({coords})"
     elif isinstance(geom, rg.LineCurve):
-        t0 = geom.Domain.Min
-        t1 = geom.Domain.Max
-        p0 = geom.PointAt(t0)
-        p1 = geom.PointAt(t1)
-        return f"LINESTRING ({p0.X} {p0.Y}, {p1.X} {p1.Y})"
+        p0 = geom.PointAt(geom.Domain.Min)
+        p1 = geom.PointAt(geom.Domain.Max)
+        coords, z = _fmt_coords([p0, p1])
+        return f"LINESTRING{z} ({coords})"
     elif isinstance(geom, rg.Polyline):
         if len(geom) == 0:
             return None
-        coords = ", ".join(f"{p.X} {p.Y}" for p in geom)
-        return f"POLYGON (({coords}))" if geom.IsClosed else f"LINESTRING ({coords})"
+        coords, z = _fmt_coords(geom)
+        return f"POLYGON{z} (({coords}))" if geom.IsClosed else f"LINESTRING{z} ({coords})"
     elif isinstance(geom, rg.PolylineCurve):
-        poly = rg.Polyline()
-        geom.TryGetPolyline(poly)
-        if len(poly) == 0:
+        ok, poly = geom.TryGetPolyline()
+        if not ok or len(poly) == 0:
             return None
-        coords = ", ".join(f"{p.X} {p.Y}" for p in poly)
-        return f"POLYGON (({coords}))" if poly.IsClosed else f"LINESTRING ({coords})"
+        coords, z = _fmt_coords(poly)
+        return f"POLYGON{z} (({coords}))" if poly.IsClosed else f"LINESTRING{z} ({coords})"
     elif isinstance(geom, rg.Curve):
         # Try polyline extraction first (fastest path for polylines/arcs etc.)
-        poly = rg.Polyline()
-        if geom.TryGetPolyline(poly) and len(poly) > 0:
-            coords = ", ".join(f"{p.X} {p.Y}" for p in poly)
-            return f"POLYGON (({coords}))" if poly.IsClosed else f"LINESTRING ({coords})"
+        ok, poly = geom.TryGetPolyline()
+        if ok and len(poly) > 0:
+            coords, z = _fmt_coords(poly)
+            return f"POLYGON{z} (({coords}))" if poly.IsClosed else f"LINESTRING{z} ({coords})"
         # Fallback: approximate with many sample points
-        pts = geom.DivideByLength(1.0, True)
-        if pts:
-            coords = ", ".join(f"{pt.X} {pt.Y}" for pt in pts)
-            return f"LINESTRING ({coords})"
+        params = geom.DivideByLength(1.0, True)
+        if params:
+            pts = [geom.PointAt(t) for t in params]
+            if geom.IsClosed:
+                pts.append(pts[0])
+            coords, z = _fmt_coords(pts)
+            if geom.IsClosed:
+                return f"POLYGON{z} (({coords}))"
+            return f"LINESTRING{z} ({coords})"
     elif isinstance(geom, rg.Brep):
         for face in geom.Faces:
             loop = face.OuterLoop
             if loop:
                 crv = loop.To3dCurve()
                 if crv:
-                    poly_out = rg.Polyline()
-                    if crv.TryGetPolyline(poly_out) and len(poly_out) > 0:
-                        coords = ", ".join(f"{p.X} {p.Y}" for p in poly_out)
-                        return f"POLYGON (({coords}))"
+                    ok, poly_out = crv.TryGetPolyline()
+                    if ok and len(poly_out) > 0:
+                        coords, z = _fmt_coords(poly_out)
+                        return f"POLYGON{z} (({coords}))"
         # Edge fallback
         edges = geom.GetEdges()
         if edges:
-            pts_coords = []
+            pts_list = []
             for e in edges:
-                pts_coords.append(f"{e.PointAtStart.X} {e.PointAtStart.Y}")
-            pts_coords.append(f"{e.PointAtEnd.X} {e.PointAtEnd.Y}")
-            if len(pts_coords) >= 4:
-                return f"POLYGON (({', '.join(pts_coords)}))"
+                pts_list.append(e.PointAtStart)
+            pts_list.append(e.PointAtEnd)
+            if len(pts_list) >= 4:
+                coords, z = _fmt_coords(pts_list)
+                return f"POLYGON{z} (({coords}))"
     elif isinstance(geom, rg.Mesh):
         outlines = rg.Mesh.GetOutlines(geom)
         if outlines and len(outlines) > 0:
             for crv in outlines:
-                poly_out = rg.Polyline()
-                if crv.TryGetPolyline(poly_out) and len(poly_out) > 0:
-                    coords = ", ".join(f"{p.X} {p.Y}" for p in poly_out)
-                    return f"POLYGON (({coords}))"
+                ok, poly_out = crv.TryGetPolyline()
+                if ok and len(poly_out) > 0:
+                    coords, z = _fmt_coords(poly_out)
+                    return f"POLYGON{z} (({coords}))"
 
     return None
