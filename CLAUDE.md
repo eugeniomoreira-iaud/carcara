@@ -488,10 +488,12 @@ Full details, install matrix, troubleshooting, and CI snippets are in [`specs/co
 ### Running the build
 
 ```powershell
-python build_userobjects.py
+conda run -n carcara python build_userobjects.py
 ```
 
 Run from the repository root. Output: `carcara/userobjects/*.ghuser` (committed).
+
+> **Environment note:** On Windows PowerShell, the `python` command resolves to the Windows Store stub unless the conda `carcara` environment is activated. Always prefix with `conda run -n carcara` (or use the full interpreter path). See [`specs/python-execution.md`](specs/python-execution.md) for details.
 
 Installing is **one** copy: the whole deployable `carcara/` folder → the
 UserObjects folder. It carries the `crc_modules` package, the built
@@ -506,7 +508,7 @@ Copying only the `.ghuser` gives `No module named 'crc_modules'` — ship the
 whole folder.
 
 ```powershell
-python make_release.py    # build + stamp version.txt
+conda run -n carcara python make_release.py    # build + stamp version.txt
 powershell -ExecutionPolicy Bypass -File .\deploy.ps1
 ```
 
@@ -549,8 +551,8 @@ requests
 
 All dependencies must be installable via pip into the Rhino 8 CPython environment. Verify with:
 
-```bash
-python -c "import psycopg2, shapely, svgwrite, matplotlib; print('OK')"
+```powershell
+conda run -n carcara python -c "import psycopg2, shapely, svgwrite, matplotlib; print('OK')"
 ```
 
 ***
@@ -560,10 +562,12 @@ python -c "import psycopg2, shapely, svgwrite, matplotlib; print('OK')"
 All tests live in `tests/` and run with standard pytest. Tests must not require a running database — use mocking for DB calls.
 
 ```bash
-pytest tests/ -v
+conda run -n carcara pytest tests/ -v
 ```
 
 Run from the repository root.
+
+> **Environment note:** On Windows PowerShell, the `python` command resolves to the Windows Store stub unless the conda `carcara` environment is activated. Always prefix with `conda run -n carcara` (or use the full interpreter path). See [`specs/python-execution.md`](specs/python-execution.md) for details.
 
 ### Test file naming
 
@@ -661,10 +665,10 @@ Within each subcategory, ordered by exposure (`1` first). Global `#` runs across
 | 7 | CRC_QuerySchemaNames | 1 | `db/query.py` | `carcara_QuerySchemaNames_r03.ghuser` | ✅ Done |
 | 8 | CRC_QueryTableNames | 1 | `db/query.py` | `carcara_QueryTableNames_rev03.ghuser` | ✅ Done |
 | 9 | CRC_QueryColumnNames | 1 | `db/query.py` | `carcara_QueryColumnNames_rev03.ghuser` | ✅ Done |
-| 10 | CRC_QueryValues | 1 | `db/query.py` | `carcara_QueryValues_rev03.ghuser` | ⬜ Todo |
-| 11 | CRC_GeometryEntities | 2 | `db/spatial_query.py` | `carcara_GeometryEntities_r03.ghuser` | ⬜ Todo |
-| 12 | CRC_GeometriesWithSpatialFilter | 2 | `db/spatial_query.py` | `carcara_GeometriesWithSpatialFilter_r03.ghuser` | ⬜ Todo |
-| 13 | CRC_ValuesWithSpatialFilter | 2 | `db/spatial_query.py` | `carcara_ValuesWithSpatialFilter_rev03.ghuser` | ⬜ Todo |
+| 10 | CRC_QueryValues | 1 | `db/query.py` + `db/spatial_query.py` | `carcara_QueryValues_rev03.ghuser` | ✅ Done |
+| 11 | CRC_GeometryEntities | 2 | `db/spatial_query.py` | `carcara_GeometryEntities_r03.ghuser` | ✅ Done |
+| 12 | CRC_GeometriesWithSpatialFilter | 2 | `db/spatial_query.py` + `db/connection.py` | `carcara_GeometriesWithSpatialFilter_r03.ghuser` | ✅ Done |
+| 13 | CRC_ValuesWithSpatialFilter | 2 | `db/spatial_query.py` + `db/connection.py` | `carcara_ValuesWithSpatialFilter_rev03.ghuser` | ✅ Done |
 | 14 | CRC_CreateTable | 3 | `db/writer.py` | `carcara_CreateTable_r03.ghuser` | ⬜ Todo |
 | 15 | CRC_CreateShapefile | 3 | `db/writer.py` | `carcara_CreateShapefile_r03.ghuser` | ⬜ Todo |
 
@@ -674,7 +678,7 @@ Within each subcategory, ordered by exposure (`1` first). Global `#` runs across
 |---|---|---|---|---|---|
 | 16 | CRC_ConnectionString | 1 | `db/connection.py` | `carcara_ConnectionString_r03.ghuser` | ✅ Done |
 | 17 | CRC_FindCorrectionParameters | 1 | `utils/correction.py` | `carcara_FindCorrectionParameters_r03.ghuser` | ⬜ Todo |
-| 18 | CRC_SQLComposer | 2 | `utils/sql_composer.py` | `carcara_SQLComposer_rev02.ghuser` | ⬜ Todo |
+| 18 | CRC_SQLComposer | 2 | `utils/sql_composer.py` | `carcara_SQLComposer_rev02.ghuser` | ✅ Done |
 | 19 | CRC_RunQuery | 2 | `db/query.py` | `carcara_RunODBCQuery_rev03.ghuser` | ⬜ Todo |
 | 20 | CRC_RunCommand | 2 | `db/query.py` | `carcara_RunODBCCommand_rev01.ghuser` | ⬜ Todo |
 | 21 | CRC_GrasshopperGeometryToWKT | 3 | `geometry/wkt.py` | `carcara_GrasshopperGeometryToWKT_r02.ghuser` | ⬜ Todo |

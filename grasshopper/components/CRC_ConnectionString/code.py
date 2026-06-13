@@ -23,7 +23,7 @@ import scriptcontext
 import Eto.Drawing as drawing
 import Eto.Forms as forms
 
-from crc_modules.db.connection import build_connection_string, _test_connection_cstring as test_connection
+from crc_modules.db.connection import build_connection_string, test_connection
 
 CString, ok, report = "", False, "Set 'CToggle' to True to connect"
 

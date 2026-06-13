@@ -1,5 +1,6 @@
 import psycopg2
 import psycopg2.extras
+from typing import Optional
 
 from .connection import parse_connection_string
 
@@ -98,7 +99,7 @@ def _list_columns(schema: str, table: str) -> str:
     """.format(schema=_quote_literal(schema), table=_quote_literal(table)).strip()
 
 
-def _query_values_sql(schema: str, table: str, column: str, null_val: str = "", limit: int | None = None) -> str:
+def _query_values_sql(schema: str, table: str, column: str, null_val: str = "", limit: Optional[int] = None) -> str:
     """
     Build SELECT query for a single column with optional NULL replacement and LIMIT.
     Identifiers and literals are escaped locally — no connection needed to compose.

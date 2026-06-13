@@ -1,0 +1,32 @@
+{
+  "name": "ValuesWithSpatialFilter",
+  "nickname": "ValSptFlt",
+  "category": "Carcara",
+  "subcategory": "02.Queries",
+  "description": "Returns column values for geometries intersecting a spatial filter boundary with coordinate correction.",
+  "exposure": 2,
+  "instanceGuid": "c3d4e5f6-a7b8-9012-cdef-345678901234",
+  "ghpython": {
+    "isAdvancedMode": false,
+    "marshalGuids": true,
+    "iconDisplay": 0,
+    "inputParameters": [
+      { "name": "CString", "description": "Connection string with encoded password", "typeHintID": "str", "scriptParamAccess": "item" },
+      { "name": "CToggle", "description": "Set True to execute", "typeHintID": "bool", "scriptParamAccess": "item" },
+      { "name": "schema", "description": "Schema where the table is located", "typeHintID": "str", "scriptParamAccess": "item" },
+      { "name": "table", "description": "Table to be queried", "typeHintID": "str", "scriptParamAccess": "item" },
+      { "name": "columns", "description": "List of column names to query", "typeHintID": "str", "scriptParamAccess": "list" },
+      { "name": "N", "description": "Value to replace NULL items with", "typeHintID": "str", "scriptParamAccess": "item" },
+      { "name": "spatial_filter", "description": "Grasshopper geometry to act as spatial filter", "typeHintID": "ghdoc", "scriptParamAccess": "item" },
+      { "name": "SRID", "description": "Spatial reference identifier for the spatial filter (default 4326)", "typeHintID": "int", "scriptParamAccess": "item" },
+      { "name": "function", "description": "Filter function: 0 = ST_Intersects, else = ST_Contains", "typeHintID": "int", "scriptParamAccess": "item" },
+      { "name": "Cx", "description": "Correction X (false origin) - default 0", "typeHintID": "str", "scriptParamAccess": "item" },
+      { "name": "Cy", "description": "Correction Y (false origin) - default 0", "typeHintID": "str", "scriptParamAccess": "item" },
+      { "name": "sql_filter", "description": "Optional extra WHERE clause", "typeHintID": "str", "scriptParamAccess": "item" }
+    ],
+    "outputParameters": [
+      { "name": "values", "description": "Values as DataTree (by column)" },
+      { "name": "report", "description": "Status message" }
+    ]
+  }
+}

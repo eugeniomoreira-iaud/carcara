@@ -12,7 +12,7 @@ Components delivered (3, all subcategory **02.Queries**):
 | Component                          | Purpose                                                      |
 |------------------------------------|--------------------------------------------------------------|
 | `CRC_GeometryEntities`             | Download all geometries + PKs from a table (no spatial filter). |
-| `CRC_GeometriesWithSpatialFilter`  | SELECT geometries within a spatial filter + optional WHERE.  |
+| `CRC_GeometriesWithSpatialFilter`  | SELECT geometries within a spatial filter. Should use a similar base to `CRC_GeometryEntities`, with a where clause that receives a closed polygon or list of polygons as spatial filter. Check legacy for specificities.  |
 | `CRC_ValuesWithSpatialFilter`      | SELECT attribute values matching a spatial filter.           |
 
 > Geometry columns are **auto-detected** from the PostGIS `geometry_columns`
