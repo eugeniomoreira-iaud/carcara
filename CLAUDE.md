@@ -74,6 +74,15 @@ carcara/                              ← Repository root
 │   ├── componentizer.md            ← Componentizer build pipeline reference
 │   └── ghuser-decoding.md          ← How to decode legacy .ghuser binaries (CPython only)
 │
+├── docs/                           ← Reports, design notes, branding assets.
+│   ├── current-vs-legacy-component-report.md
+│   └── assets/logo_carcara.png
+│
+├── tools/                          ← Dev utilities (not shipped).
+│   └── decode_ghuser.py            ← Canonical legacy .ghuser decoder (stdlib only)
+│
+├── implementation/                 ← Phase-by-phase rebuild plans (00–12) + _archive/
+│
 ├── tests/                          ← pytest (imports crc_modules.*); never touches the rhino submodule
 │   ├── test_connection.py
 │   ├── test_query.py

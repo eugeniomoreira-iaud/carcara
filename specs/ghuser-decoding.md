@@ -179,7 +179,7 @@ for the inner deflate stream, use a **300-byte probe window** for the candidate 
 (not 200). Some embedded archives have high compression ratios and require at least 250
 compressed bytes before the output grows past the 100-byte detection threshold.
 
-Components already decoded by `decode_legacy_ghuser.py` (like Heatmap, LinePlot,
+Components already decoded by `tools/decode_ghuser.py` (like Heatmap, LinePlot,
 ScatterPlot) happen to have `ClusterDocument` bytes that propagate into the outer inflate
 output, so the old direct-search path found them. The remaining 24 components only expose
 the inner archive via the `Object` chunk; they are silent to a `ClusterDocument` scan of

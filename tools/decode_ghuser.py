@@ -11,7 +11,7 @@ Outputs go to carcara-old/ghuser-metadata/scripts/:
 Stdlib only — no Rhino, no GH_IO.dll. Never writes into carcara-old/carcara/.
 
 Usage (from repo root):
-    python decode_legacy_ghuser.py
+    python tools/decode_ghuser.py
 """
 
 import base64

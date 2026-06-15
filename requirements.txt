@@ -1,0 +1,11 @@
+# Runtime (required by end users / Rhino 8 CPython)
+psycopg2>=2.9
+shapely>=2.0
+svgwrite>=1.4
+matplotlib>=3.7
+
+# Development (build, tests, decoding tools)
+python-dotenv
+pytest
+pythonnet>=3.0
+requests
