@@ -15,7 +15,7 @@ for _b in _bases:
         sys.path.insert(0, _b)
 
 try:
-    ghenv.Component.Message = "v{{version}}"
+    ghenv.Component.Message = "v{{version}} - {{date}}"
 except Exception:
     pass
 

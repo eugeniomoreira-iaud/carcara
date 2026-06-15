@@ -71,10 +71,10 @@ def main():
         print(f"  Expected at: {VENDOR_COMPONENTIZER}/componentize_cpy.py")
         sys.exit(1)
     try:
-        from componentize_curvedisplay import create_curvedisplay_ghuser
+        from componentize_cs import create_curvedisplay_cs_ghuser
     except ImportError as exc:
-        print(f"ERROR: Cannot import CurveDisplay builder: {exc}")
-        print(f"  Expected at: {VENDOR_COMPONENTIZER}/componentize_curvedisplay.py")
+        print(f"ERROR: Cannot import C# CurveDisplay builder: {exc}")
+        print(f"  Expected at: {VENDOR_COMPONENTIZER}/componentize_cs.py")
         sys.exit(1)
 
     version = args.version or read_version()
@@ -101,18 +101,24 @@ def main():
     for name in bundles:
         source = os.path.join(COMPONENTS_DIR, name)
         target = os.path.join(DIST_DIR, name + ".ghuser")
-        if not os.path.isfile(os.path.join(source, "code.py")):
-            # C#-only bundles are not built by the Python componentizer.
+        has_py = os.path.isfile(os.path.join(source, "code.py"))
+        has_cs = os.path.isfile(os.path.join(source, "code.cs"))
+        if name == "CRC_CurveDisplay":
+            # C# Script component — built by the dedicated C# builder.
+            try:
+                create_curvedisplay_cs_ghuser(source, target, version)
+                results.append(("OK", name, target))
+            except Exception as exc:
+                results.append(("FAIL", name, str(exc)))
+        elif not has_py:
+            # No code.py and not a known C# bundle → skip.
             results.append(("SKIP", name, "no code.py (non-Python bundle)"))
-            continue
-        try:
-            if name == "CRC_CurveDisplay":
-                create_curvedisplay_ghuser(source, target, version)
-            else:
+        else:
+            try:
                 create_ghuser_component(source, target, version)
-            results.append(("OK", name, target))
-        except Exception as exc:
-            results.append(("FAIL", name, str(exc)))
+                results.append(("OK", name, target))
+            except Exception as exc:
+                results.append(("FAIL", name, str(exc)))
 
     ok = [r for r in results if r[0] == "OK"]
     fail = [r for r in results if r[0] == "FAIL"]

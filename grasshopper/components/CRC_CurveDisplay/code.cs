@@ -50,7 +50,7 @@ public class Script_Instance : GH_ScriptInstance
     // Override component attributes
     Component.Name = "Curve Display";
     Component.NickName = "CrvDpl.cs";
-    Component.Message = "v02_2025/02/25";
+    Component.Message = "v{{version}} - {{date}}";
     Component.Description = "This component creates a custom preview on Rhino's screen allowing control of the lineweights";
 
     // Update input parameter descriptions
