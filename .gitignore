@@ -116,3 +116,26 @@ vendor/ghio/
 
 # Credential scripts (never commit these)
 _obsolete/test_*.py
+
+# OS junk
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Editor swap / backup / scratch
+*.swp
+*.swo
+*~
+*.bak
+*.orig
+*.tmp
+
+# IDEs (keep the shared VS Code settings, ignore per-user IDE files)
+.idea/
+.vscode/*
+!.vscode/settings.json
+
+# Local Claude Code settings (machine-specific permissions; never commit)
+.claude/settings.local.json
