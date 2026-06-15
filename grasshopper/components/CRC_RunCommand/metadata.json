@@ -1,0 +1,22 @@
+{
+  "name": "RunCommand",
+  "nickname": "RC",
+  "category": "Carcara",
+  "subcategory": "03.Utilities",
+  "description": "Runs a SQL DDL/DML command (non-SELECT) against a PostGIS database and returns execution feedback.",
+  "exposure": 4,
+  "instanceGuid": "c4d5e6f7-a8b9-0123-cdef-123456789012",
+  "ghpython": {
+    "isAdvancedMode": false,
+    "marshalGuids": true,
+    "iconDisplay": 0,
+    "inputParameters": [
+      { "name": "CString", "description": "Connection string with encoded password",        "typeHintID": "str",  "scriptParamAccess": "item" },
+      { "name": "CToggle", "description": "Set True to execute",                            "typeHintID": "bool", "scriptParamAccess": "item" },
+      { "name": "sql",     "description": "SQL DDL/DML command to execute (non-SELECT)",    "typeHintID": "str",  "scriptParamAccess": "item" }
+    ],
+    "outputParameters": [
+      { "name": "report", "description": "Execution feedback: 'success: true\\nRows Affected: N' or error details" }
+    ]
+  }
+}

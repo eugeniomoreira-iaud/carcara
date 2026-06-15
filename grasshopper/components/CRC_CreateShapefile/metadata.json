@@ -4,7 +4,7 @@
   "category": "Carcara",
   "subcategory": "02.Queries",
   "description": "INSERT WKT geometries into an existing PostGIS table, adding the false-origin correction back in SQL. (Not a file export.)",
-  "exposure": 4,
+  "exposure": 8,
   "instanceGuid": "f6a7b8c9-d0e1-2345-f012-678901234567",
   "ghpython": {
     "isAdvancedMode": false,

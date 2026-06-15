@@ -1,0 +1,21 @@
+{
+  "name": "CurveDisplay",
+  "nickname": "CrvDpl.cs",
+  "category": "Carcara",
+  "subcategory": "04.Dataviz",
+  "description": "Custom preview: control lineweight, color, and dash pattern on Rhino viewport curves.",
+  "exposure": 2,
+  "instanceGuid": "d4e1f6a2-7b83-4c50-9e1d-3a8c2f0b6d44",
+  "ghpython": {
+    "isAdvancedMode": true,
+    "marshalGuids": true,
+    "iconDisplay": 0,
+    "inputParameters": [
+      { "name": "Curve",  "description": "Curves to preview",                                                   "typeHintID": "curve", "scriptParamAccess": "item" },
+      { "name": "Width",  "description": "Width of the curves",                                                  "typeHintID": "int",   "scriptParamAccess": "item" },
+      { "name": "Colour", "description": "Color of the curves",                                                  "typeHintID": "colour","scriptParamAccess": "item" },
+      { "name": "Dash",   "description": "Dash pattern: space-separated values for dash and gap (e.g. '2 1')",   "typeHintID": "ghdoc", "scriptParamAccess": "item", "optional": true }
+    ],
+    "outputParameters": []
+  }
+}

@@ -114,7 +114,7 @@ Outputs: none — viewport preview only (overrides `DrawViewportWires`).
   "category": "Carcara",
   "subcategory": "04.Dataviz",
   "description": "Custom preview: control lineweight, color, and dash pattern on Rhino viewport curves.",
-  "exposure": 1,
+  "exposure": 2,
   "ghpython": {
     "isAdvancedMode": true,
     "marshalGuids": true,

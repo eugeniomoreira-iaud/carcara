@@ -1,0 +1,118 @@
+"""CRC_NurbsToSVG: Convert Grasshopper NURBS curves to SVG <path> element strings."""
+import sys
+import os
+
+# Make crc_modules importable from GHPython environment.
+_bases = []
+_appdata = os.environ.get("APPDATA")
+if _appdata:
+    _bases.append(os.path.join(_appdata, "Grasshopper", "UserObjects", "carcara"))
+_bases.append(os.path.join(
+    os.path.expanduser("~"), "Library", "Application Support", "McNeel",
+    "Rhinoceros", "8.0", "Plug-ins", "Grasshopper", "UserObjects", "carcara"))
+for _b in _bases:
+    if os.path.isdir(_b) and _b not in sys.path:
+        sys.path.insert(0, _b)
+
+try:
+    ghenv.Component.Message = "v{{version}}"
+except Exception:
+    pass
+
+import Rhino.Geometry as rg
+
+from crc_modules.svg.export import nurbs_to_svg
+
+DEFAULT_SAMPLES = 50
+
+svg_code = []
+report = "Provide NURBS curves on input 'n'."
+
+try:
+    if not n:
+        report = "No curves provided on input 'n'."
+    else:
+        # Determine canvas anchor and height for Y-flip
+        anchor_x = 0.0
+        anchor_y = 0.0
+        canvas_h = 0.0
+
+        if canvas is not None:
+            try:
+                bbox = canvas.BoundingBox
+                anchor_x = bbox.Min.X
+                anchor_y = bbox.Min.Y
+                canvas_h = bbox.Max.Y - bbox.Min.Y
+            except Exception:
+                pass
+
+        if canvas_h == 0.0:
+            combined = rg.BoundingBox.Empty
+            for crv in n:
+                if crv is None:
+                    continue
+                if hasattr(crv, 'GetBoundingBox'):
+                    combined = rg.BoundingBox.Union(combined, crv.GetBoundingBox(False))
+            if combined.IsValid:
+                anchor_x = combined.Min.X
+                anchor_y = combined.Min.Y
+                canvas_h = combined.Max.Y - combined.Min.Y
+
+        def _get(lst, i, default):
+            if lst is None:
+                return default
+            if isinstance(lst, (list, tuple)):
+                if len(lst) == 0:
+                    return default
+                return lst[i] if i < len(lst) else lst[-1]
+            return lst
+
+        elements = []
+        ok = failed = 0
+        for i, crv in enumerate(n):
+            if crv is None:
+                failed += 1
+                continue
+            try:
+                sample_count = int(_get(s, i, DEFAULT_SAMPLES) or DEFAULT_SAMPLES)
+                if sample_count < 2:
+                    sample_count = 2
+
+                # Sample curve at equal parameter intervals
+                domain = crv.Domain
+                t_start = domain.Min
+                t_end = domain.Max
+                pts_rhino = []
+                for j in range(sample_count):
+                    t = t_start + (t_end - t_start) * j / (sample_count - 1)
+                    pt = crv.PointAt(t)
+                    pts_rhino.append(pt)
+
+                # Y-flip
+                pts_svg = [
+                    (pt.X - anchor_x, canvas_h - (pt.Y - anchor_y))
+                    for pt in pts_rhino
+                ]
+
+                stroke_val = str(_get(sc, i, "none") or "none")
+                sw_val = float(_get(sw, i, 0) or 0)
+                fill_val = str(_get(f, i, "none") or "none")
+
+                elem = nurbs_to_svg(
+                    pts_svg,
+                    stroke=stroke_val,
+                    stroke_width=sw_val,
+                    fill=fill_val,
+                )
+                elements.append(elem)
+                ok += 1
+            except Exception as e:
+                failed += 1
+
+        svg_code = elements
+        report = "OK – {} element(s) generated".format(ok)
+        if failed:
+            report += ", {} failed".format(failed)
+
+except Exception as e:
+    report = "ERROR: {}".format(e)

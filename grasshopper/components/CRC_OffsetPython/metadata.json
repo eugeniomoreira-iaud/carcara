@@ -1,0 +1,23 @@
+{
+  "name": "OffsetPython",
+  "nickname": "OffPy",
+  "category": "Carcara",
+  "subcategory": "01.Modeling",
+  "description": "Offsets planar polylines using given distances and a corner style mapping.",
+  "exposure": 2,
+  "instanceGuid": "b2c3d4e5-f6a7-8901-bcde-f01234567891",
+  "ghpython": {
+    "isAdvancedMode": false,
+    "marshalGuids": true,
+    "iconDisplay": 0,
+    "inputParameters": [
+      { "name": "Crv",    "description": "Planar polylines to offset",                                      "typeHintID": "curve", "scriptParamAccess": "tree" },
+      { "name": "Dist",   "description": "Offset distances. Single value applies to all; list is cyclic.",   "typeHintID": "float", "scriptParamAccess": "tree" },
+      { "name": "CStyle", "description": "Corner style: 0=None, 1=Sharp (default), 2=Round, 3=Smooth, 4=Chamfer", "typeHintID": "int",   "scriptParamAccess": "item" }
+    ],
+    "outputParameters": [
+      { "name": "out",    "description": "Processing log" },
+      { "name": "OffCrv", "description": "Offset curves. Failed offsets return None at same branch/index." }
+    ]
+  }
+}

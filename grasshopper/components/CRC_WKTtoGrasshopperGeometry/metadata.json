@@ -1,0 +1,21 @@
+{
+  "name": "WKTtoGrasshopperGeometry",
+  "nickname": "wktToGH",
+  "category": "Carcara",
+  "subcategory": "03.Utilities",
+  "description": "Converts Well-Known Text (WKT) strings into Grasshopper geometry. Real multipart members share a branch; singles get their own branch. No coordinate correction (WKT is already local).",
+  "exposure": 8,
+  "instanceGuid": "b7e21c3a-9d44-4c18-8f2a-1a6e0c5d7e10",
+  "ghpython": {
+    "isAdvancedMode": false,
+    "marshalGuids": true,
+    "iconDisplay": 0,
+    "inputParameters": [
+      { "name": "WKT_geom", "description": "List of WKT strings to convert to Grasshopper geometry", "typeHintID": "str", "scriptParamAccess": "list" }
+    ],
+    "outputParameters": [
+      { "name": "geom", "description": "Converted Grasshopper geometry as DataTree" },
+      { "name": "report", "description": "Status message" }
+    ]
+  }
+}

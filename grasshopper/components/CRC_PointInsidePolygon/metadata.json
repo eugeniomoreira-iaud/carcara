@@ -1,0 +1,26 @@
+{
+  "name": "PointInsidePolygon",
+  "nickname": "Pt_Plg",
+  "category": "Carcara",
+  "subcategory": "01.Modeling",
+  "description": "Finds a point inside a polygon. Tries the centroid first. If it doesn't work, implements a polylabel algorithm to find the pole of inaccessibility.",
+  "exposure": 2,
+  "instanceGuid": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+  "ghpython": {
+    "isAdvancedMode": false,
+    "marshalGuids": true,
+    "iconDisplay": 0,
+    "inputParameters": [
+      {
+        "name": "pol",
+        "description": "Polygons to be processed.",
+        "typeHintID": "ghdoc",
+        "scriptParamAccess": "item"
+      }
+    ],
+    "outputParameters": [
+      { "name": "pt",     "description": "Resultant point guaranteed to be inside the polygon." },
+      { "name": "report", "description": "Status message." }
+    ]
+  }
+}

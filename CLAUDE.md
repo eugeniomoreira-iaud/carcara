@@ -639,8 +639,9 @@ and one or more functions in `crc_modules/`. The `Legacy file` column points to 
 `.ghuser` in `carcara-old/carcara/` that must be reimplemented.
 
 The `subcategory` field in each `metadata.json` must be one of exactly: **`01.Modeling`**,
-**`02.Queries`**, **`03.Utilities`**, **`04.Dataviz`**. **Exposure** controls toolbar placement:
-`1` = primary (dropdown front), `2` = secondary, `3` = tertiary/obscure. Values marked `?` are
+**`02.Queries`**, **`03.Utilities`**, **`04.Dataviz`**. **Exposure** controls toolbar placement
+using the GH_IO enum: `2` = primary (dropdown front), `4` = secondary, `8` = tertiary,
+`16` = quaternary/obscure. Values marked `?` are
 not yet recovered — **read them from the legacy `.ghuser` before building** and fill in.
 
 ### Master component map (grouped by subcategory)
@@ -651,53 +652,53 @@ Within each subcategory, ordered by exposure (`1` first). Global `#` runs across
 
 | # | Component | Exp | Core module | Legacy file | Status |
 |---|---|---|---|---|---|
-| 1 | CRC_BuildingMeshes | 1 | `rhino/building_mesh.py` | `carcara_BuildingMeshes_r03.ghuser` | ⬜ Todo |
-| 2 | CRC_IdentifyDuplicatePolylines | 1 | `geometry/duplicates.py` | `carcara_IdentifyDuplicatePolylines_r03.ghuser` | ⬜ Todo |
-| 3 | CRC_OffsetPython | 1 | `rhino/offset.py` | `carcara_OffsetPython_r03.ghuser` | ⬜ Todo |
-| 4 | CRC_PointInsidePolygon | 1 | `geometry/polylabel.py` | `carcara_PointInsidePolygon_rev03.ghuser` | ⬜ Todo |
-| 5 | CRC_SortByContainer | 1 | `geometry/containment.py` | `carcara_SortByContainer_rev03.ghuser` | ⬜ Todo |
-| 6 | CRC_ColorCalculator | 2 | `utils/color.py` | `carcara_ColorCalculator_r00.ghuser` | ⬜ Todo |
+| 1 | CRC_BuildingMeshes | 2 | `rhino/building_mesh.py` | `carcara_BuildingMeshes_r03.ghuser` | ✅ Done |
+| 2 | CRC_IdentifyDuplicatePolylines | 2 | `geometry/duplicates.py` | `carcara_IdentifyDuplicatePolylines_r03.ghuser` | ✅ Done |
+| 3 | CRC_OffsetPython | 2 | `rhino/offset.py` | `carcara_OffsetPython_r03.ghuser` | ✅ Done |
+| 4 | CRC_PointInsidePolygon | 2 | `geometry/polylabel.py` | `carcara_PointInsidePolygon_rev03.ghuser` | ✅ Done |
+| 5 | CRC_SortByContainer | 2 | `geometry/containment.py` | `carcara_SortByContainer_rev03.ghuser` | ✅ Done |
+| 6 | CRC_ColorCalculator | 4 | `utils/color.py` | `carcara_ColorCalculator_r00.ghuser` | ✅ Done |
 
 #### 02.Queries (9)
 
 | # | Component | Exp | Core module | Legacy file | Status |
 |---|---|---|---|---|---|
-| 7 | CRC_QuerySchemaNames | 1 | `db/query.py` | `carcara_QuerySchemaNames_r03.ghuser` | ✅ Done |
-| 8 | CRC_QueryTableNames | 1 | `db/query.py` | `carcara_QueryTableNames_rev03.ghuser` | ✅ Done |
-| 9 | CRC_QueryColumnNames | 1 | `db/query.py` | `carcara_QueryColumnNames_rev03.ghuser` | ✅ Done |
-| 10 | CRC_QueryValues | 1 | `db/query.py` + `db/spatial_query.py` | `carcara_QueryValues_rev03.ghuser` | ✅ Done |
-| 11 | CRC_GeometryEntities | 2 | `db/spatial_query.py` | `carcara_GeometryEntities_r03.ghuser` | ✅ Done |
-| 12 | CRC_GeometriesWithSpatialFilter | 2 | `db/spatial_query.py` + `db/connection.py` | `carcara_GeometriesWithSpatialFilter_r03.ghuser` | ✅ Done |
-| 13 | CRC_ValuesWithSpatialFilter | 2 | `db/spatial_query.py` + `db/connection.py` | `carcara_ValuesWithSpatialFilter_rev03.ghuser` | ✅ Done |
-| 14 | CRC_CreateTable | 3 | `db/writer.py` | `carcara_CreateTable_r03.ghuser` | ✅ Done |
-| 15 | CRC_CreateShapefile | 3 | `db/writer.py` | `carcara_CreateShapefile_r03.ghuser` | ✅ Done |
+| 7 | CRC_QuerySchemaNames | 2 | `db/query.py` | `carcara_QuerySchemaNames_r03.ghuser` | ✅ Done |
+| 8 | CRC_QueryTableNames | 2 | `db/query.py` | `carcara_QueryTableNames_rev03.ghuser` | ✅ Done |
+| 9 | CRC_QueryColumnNames | 2 | `db/query.py` | `carcara_QueryColumnNames_rev03.ghuser` | ✅ Done |
+| 10 | CRC_QueryValues | 2 | `db/query.py` + `db/spatial_query.py` | `carcara_QueryValues_rev03.ghuser` | ✅ Done |
+| 11 | CRC_GeometryEntities | 4 | `db/spatial_query.py` | `carcara_GeometryEntities_r03.ghuser` | ✅ Done |
+| 12 | CRC_GeometriesWithSpatialFilter | 4 | `db/spatial_query.py` + `db/connection.py` | `carcara_GeometriesWithSpatialFilter_r03.ghuser` | ✅ Done |
+| 13 | CRC_ValuesWithSpatialFilter | 4 | `db/spatial_query.py` + `db/connection.py` | `carcara_ValuesWithSpatialFilter_rev03.ghuser` | ✅ Done |
+| 14 | CRC_CreateTable | 8 | `db/writer.py` | `carcara_CreateTable_r03.ghuser` | ✅ Done |
+| 15 | CRC_CreateShapefile | 8 | `db/writer.py` | `carcara_CreateShapefile_r03.ghuser` | ✅ Done |
 
 #### 03.Utilities (7)
 
 | # | Component | Exp | Core module | Legacy file | Status |
 |---|---|---|---|---|---|
-| 16 | CRC_ConnectionString | 1 | `db/connection.py` | `carcara_ConnectionString_r03.ghuser` | ✅ Done |
-| 17 | CRC_FindCorrectionParameters | 1 | `utils/correction.py` | `carcara_FindCorrectionParameters_r03.ghuser` | ⬜ Todo |
-| 18 | CRC_SQLComposer | 2 | `utils/sql_composer.py` | `carcara_SQLComposer_rev02.ghuser` | ✅ Done |
-| 19 | CRC_RunQuery | 2 | `db/query.py` | `carcara_RunODBCQuery_rev03.ghuser` | ⬜ Todo |
-| 20 | CRC_RunCommand | 2 | `db/query.py` | `carcara_RunODBCCommand_rev01.ghuser` | ⬜ Todo |
-| 21 | CRC_GrasshopperGeometryToWKT | 3 | `geometry/wkt.py` | `carcara_GrasshopperGeometryToWKT_r02.ghuser` | ⬜ Todo |
-| 22 | CRC_WKTtoGrasshopperGeometry | 3 | `geometry/wkt.py` | `carcara_WKTtoGrasshopperGeometry_r02.ghuser` | ⬜ Todo |
+| 16 | CRC_ConnectionString | 2 | `db/connection.py` | `carcara_ConnectionString_r03.ghuser` | ✅ Done |
+| 17 | CRC_FindCorrectionParameters | 2 | `utils/correction.py` | `carcara_FindCorrectionParameters_r03.ghuser` | ✅ Done |
+| 18 | CRC_SQLComposer | 4 | `utils/sql_composer.py` | `carcara_SQLComposer_rev02.ghuser` | ✅ Done |
+| 19 | CRC_RunQuery | 4 | `db/query.py` | `carcara_RunODBCQuery_rev03.ghuser` | ✅ Done |
+| 20 | CRC_RunCommand | 4 | `db/query.py` | `carcara_RunODBCCommand_rev01.ghuser` | ✅ Done |
+| 21 | CRC_GrasshopperGeometryToWKT | 8 | `geometry/wkt.py` | `carcara_GrasshopperGeometryToWKT_r02.ghuser` | ✅ Done |
+| 22 | CRC_WKTtoGrasshopperGeometry | 8 | `geometry/wkt.py` | `carcara_WKTtoGrasshopperGeometry_r02.ghuser` | ✅ Done |
 
 #### 04.Dataviz (10)
 
 | # | Component | Exp | Core module | Legacy file | Status |
 |---|---|---|---|---|---|
-| 24 | CRC_CurveDisplay | 1 | `rhino/curve_display.cs` (C#) | `carcara_CurveDisplay_r02.ghuser` | ⬜ Todo |
-| 25 | CRC_PolylineToSVG | 2 | `svg/export.py` | `carcara_PolylineToSVG_r03.ghuser` | ⬜ Todo |
-| 26 | CRC_CircleToSVG | 2 | `svg/export.py` | `carcara_CircletoSVG_r03.ghuser` | ⬜ Todo |
-| 27 | CRC_NurbsToSVG | 2 | `svg/export.py` | `carcara_NurbsToSVG_rev03.ghuser` | ⬜ Todo |
-| 28 | CRC_TextToSVG | 2 | `svg/export.py` | `carcara_TextToSVG_rev03.ghuser` | ⬜ Todo |
-| 29 | CRC_Histogram | 3 | `viz/histogram.py` | `carcara_Histogram_r01.ghuser` | ⬜ Todo |
-| 30 | CRC_ScatterPlot | 3 | `viz/scatter.py` | `carcara_ScatterPlot_r03.ghuser` | ⬜ Todo |
-| 31 | CRC_LinePlot | 3 | `viz/lineplot.py` | `carcara_LinePlot_r00.ghuser` | ⬜ Todo |
-| 32 | CRC_Heatmap | 3 | `viz/heatmap.py` | `carcara_Heatmap_rev00.ghuser` | ⬜ Todo |
-| 33 | CRC_SaveSVG | 4 | `svg/save.py` | `carcara_SaveSVG_r03.ghuser` | ⬜ Todo |
+| 24 | CRC_CurveDisplay | 2 | `rhino/curve_display.py` (Python SDK-mode) | `carcara_CurveDisplay_r02.ghuser` | ✅ Done |
+| 25 | CRC_PolylineToSVG | 4 | `svg/export.py` | `carcara_PolylineToSVG_r03.ghuser` | ✅ Done |
+| 26 | CRC_CircleToSVG | 4 | `svg/export.py` | `carcara_CircletoSVG_r03.ghuser` | ✅ Done |
+| 27 | CRC_NurbsToSVG | 4 | `svg/export.py` | `carcara_NurbsToSVG_rev03.ghuser` | ✅ Done |
+| 28 | CRC_TextToSVG | 4 | `svg/export.py` | `carcara_TextToSVG_rev03.ghuser` | ✅ Done |
+| 29 | CRC_Histogram | 8 | `viz/histogram.py` | `carcara_Histogram_r01.ghuser` | ✅ Done |
+| 30 | CRC_ScatterPlot | 8 | `viz/scatter.py` | `carcara_ScatterPlot_r03.ghuser` | ✅ Done |
+| 31 | CRC_LinePlot | 8 | `viz/lineplot.py` | `carcara_LinePlot_r00.ghuser` | ✅ Done |
+| 32 | CRC_Heatmap | 8 | `viz/heatmap.py` | `carcara_Heatmap_rev00.ghuser` | ✅ Done |
+| 33 | CRC_SaveSVG | 16 | `svg/save.py` | `carcara_SaveSVG_r03.ghuser` | ✅ Done |
 
 Counts: **01.Modeling 6 · 02.Queries 9 · 03.Utilities 7 · 04.Dataviz 10 = 32.**
 

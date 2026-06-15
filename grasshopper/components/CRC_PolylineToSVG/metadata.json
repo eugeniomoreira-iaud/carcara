@@ -1,0 +1,26 @@
+{
+  "name": "PolylineToSVG",
+  "nickname": "PolySVG",
+  "category": "Carcara",
+  "subcategory": "04.Dataviz",
+  "description": "Converts Grasshopper polylines/polygons to SVG <polyline>/<polygon> element strings. Closed polylines emit <polygon>; open polylines emit <polyline>. Coordinates are transformed from Rhino Y-up to SVG Y-down using the canvas anchor.",
+  "exposure": 4,
+  "instanceGuid": "b1c2d3e4-f5a6-7890-bcde-f12345678901",
+  "ghpython": {
+    "isAdvancedMode": false,
+    "marshalGuids": true,
+    "iconDisplay": 0,
+    "inputParameters": [
+      { "name": "p",      "description": "Polyline geometry or list of polylines",                                "typeHintID": "ghdoc", "scriptParamAccess": "list" },
+      { "name": "sc",     "description": "Stroke color (CSS string or list). Default: 'none'",                   "typeHintID": "str",   "scriptParamAccess": "list" },
+      { "name": "sw",     "description": "Stroke width or list of stroke widths. Default: 0",                    "typeHintID": "float", "scriptParamAccess": "list" },
+      { "name": "f",      "description": "Fill color (CSS string or list). Default: 'none'",                     "typeHintID": "str",   "scriptParamAccess": "list" },
+      { "name": "canvas", "description": "Rectangle defining the SVG canvas (optional; uses bounding box if not provided)", "typeHintID": "ghdoc", "scriptParamAccess": "item" },
+      { "name": "dash",   "description": "Stroke dash pattern or list (e.g. '5,5'). Default: '' (solid)",        "typeHintID": "str",   "scriptParamAccess": "list" }
+    ],
+    "outputParameters": [
+      { "name": "svg_code", "description": "SVG element string(s) for each polyline" },
+      { "name": "report",   "description": "Status message" }
+    ]
+  }
+}

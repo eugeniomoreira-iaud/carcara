@@ -1,0 +1,32 @@
+{
+  "name": "ColorCalculator",
+  "nickname": "ColorCalc",
+  "category": "Carcara",
+  "subcategory": "01.Modeling",
+  "description": "Calculates colors for mesh volumes based on numerical values. Supports continuous gradients, fixed class count, or custom class boundaries. Generates legend geometry.",
+  "exposure": 4,
+  "instanceGuid": "b3c4d5e6-f7a8-9012-bcde-f12345678901",
+  "ghpython": {
+    "isAdvancedMode": false,
+    "marshalGuids": true,
+    "iconDisplay": 0,
+    "inputParameters": [
+      { "name": "val",     "description": "Tree of values for color mapping. One value per mesh.",                                                                                     "typeHintID": "ghdoc", "scriptParamAccess": "tree" },
+      { "name": "col",     "description": "Color gradient or list of colors (min 2, default: Ladybug gradient).",                                                                     "typeHintID": "ghdoc", "scriptParamAccess": "list" },
+      { "name": "cls",     "description": "Number of classes (int, 0=continuous) OR list of class boundary floats e.g. [0,5,10].",                                                   "typeHintID": "ghdoc", "scriptParamAccess": "list" },
+      { "name": "lin",     "description": "True=linear intervals, False=percentile-based (default: True).",                                                                           "typeHintID": "bool",  "scriptParamAccess": "item" },
+      { "name": "leg_cfg", "description": "Legend config as 'key: value' pairs (title, min, max, segments, decimals, vertical, seg_height, seg_width, text_height, scale, etc.).", "typeHintID": "str",   "scriptParamAccess": "item" },
+      { "name": "leg_pln", "description": "Base plane for legend positioning (default: World XY).",                                                                                   "typeHintID": "ghdoc", "scriptParamAccess": "item" }
+    ],
+    "outputParameters": [
+      { "name": "out",     "description": "Processing log" },
+      { "name": "col",     "description": "Tree of colors for each value (structure matches input values)" },
+      { "name": "leg_geo", "description": "Legend gradient bar mesh (with vertex colors)" },
+      { "name": "txt_loc", "description": "Text anchor points (title first, then value labels)" },
+      { "name": "txt_con", "description": "Text strings (title first, then per legend bin)" },
+      { "name": "txt_siz", "description": "Text heights (title first, then labels)" },
+      { "name": "stats",   "description": "Statistical summary (min, max, mean, median, valid count)" },
+      { "name": "report",  "description": "Status message" }
+    ]
+  }
+}

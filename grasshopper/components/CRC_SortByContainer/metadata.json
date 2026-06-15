@@ -1,0 +1,35 @@
+{
+  "name": "SortByContainer",
+  "nickname": "Srt_Ctn",
+  "category": "Carcara",
+  "subcategory": "01.Modeling",
+  "description": "Sorts a list of points by a list of containers. Output tree always matches curve count with empty branches for curves containing no points.",
+  "exposure": 2,
+  "instanceGuid": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+  "ghpython": {
+    "isAdvancedMode": false,
+    "marshalGuids": true,
+    "iconDisplay": 0,
+    "inputParameters": [
+      {
+        "name": "crv",
+        "description": "List of planar curves to be used as containers.",
+        "typeHintID": "ghdoc",
+        "scriptParamAccess": "list"
+      },
+      {
+        "name": "pt",
+        "description": "List of points to order by the containers. If your objects are not points, create a set of ones to associate with. TIP: if you have a set of polylines, you should use the 'Point Inside Polygon' component.",
+        "typeHintID": "ghdoc",
+        "scriptParamAccess": "list"
+      }
+    ],
+    "outputParameters": [
+      {
+        "name": "i",
+        "description": "Indexes of the list of points sorted by the containers. Each branch corresponds to one curve (empty if no points contained). Use with 'List Item' component to sort original lists."
+      },
+      { "name": "report", "description": "Status message." }
+    ]
+  }
+}

@@ -30,7 +30,7 @@ Components delivered (5, all subcategory **01.Modeling**):
 
 For `CRC_BuildingMeshes`:
 
-- A polygon dataset (with optional `height` attribute) from PostGIS that you can feed
+- A rhino/grasshopper polygon dataset (with optional `height` attribute) that you can feed
   into the component on the canvas.
 
 Everything else is already resolved from the legacy decoded scripts — see Steps below.
@@ -140,7 +140,7 @@ Pure-Python. Port behavior from the legacy decoded scripts (`Pt_Plg.py`, `Srt_Ct
 ```
 Inputs:  Crv (Curve, tree), Dist (float, tree), CStyle (int, item, optional)
 Outputs: out (str), OffCrv (Curve, tree)
-subcategory: 01.Modeling, exposure: 1
+subcategory: 01.Modeling, exposure: 2
 ```
 
 `code.py` handles: DataTree branch iteration, distance fan-out (cyclic mapping when counts
@@ -152,7 +152,7 @@ to `out`. No `CToggle` on this component — it runs on data arrival (matches le
 ```
 Inputs:  BdgFp (Polyline, tree), BdgH (float, tree)
 Outputs: out (str), GrdF (Mesh, tree), LatF (Mesh, tree), RftF (Mesh, tree)
-subcategory: 01.Modeling, exposure: 1
+subcategory: 01.Modeling, exposure: 2
 scriptParamAccess: "tree" for all three mesh outputs
 ```
 

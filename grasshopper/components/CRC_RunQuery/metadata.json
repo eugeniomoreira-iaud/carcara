@@ -1,0 +1,24 @@
+{
+  "name": "RunQuery",
+  "nickname": "RQ",
+  "category": "Carcara",
+  "subcategory": "03.Utilities",
+  "description": "Runs a raw SQL SELECT against a PostGIS database and returns results as a DataTree organised by column.",
+  "exposure": 4,
+  "instanceGuid": "b3c4d5e6-f7a8-9012-bcde-f12345678901",
+  "ghpython": {
+    "isAdvancedMode": false,
+    "marshalGuids": true,
+    "iconDisplay": 0,
+    "inputParameters": [
+      { "name": "CString",  "description": "Connection string with encoded password", "typeHintID": "str",  "scriptParamAccess": "item" },
+      { "name": "CToggle",  "description": "Set True to execute",                     "typeHintID": "bool", "scriptParamAccess": "item" },
+      { "name": "sql",      "description": "SQL SELECT statement to execute",          "typeHintID": "str",  "scriptParamAccess": "item" }
+    ],
+    "outputParameters": [
+      { "name": "rows",    "description": "DataTree of results organised by column (branch i = column i values)", "scriptParamAccess": "tree" },
+      { "name": "columns", "description": "DataTree of column names mirroring rows structure (branch i = column i name)", "scriptParamAccess": "tree" },
+      { "name": "report",  "description": "Status message" }
+    ]
+  }
+}

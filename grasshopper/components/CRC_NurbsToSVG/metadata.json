@@ -1,0 +1,26 @@
+{
+  "name": "NurbsToSVG",
+  "nickname": "NurbsSVG",
+  "category": "Carcara",
+  "subcategory": "04.Dataviz",
+  "description": "Converts Grasshopper NURBS curves to SVG <path> elements via linear-segment approximation at a configurable sample count (default 50). Coordinates are transformed from Rhino Y-up to SVG Y-down using the canvas anchor.",
+  "exposure": 4,
+  "instanceGuid": "d3e4f5a6-b7c8-9012-defa-123456789003",
+  "ghpython": {
+    "isAdvancedMode": false,
+    "marshalGuids": true,
+    "iconDisplay": 0,
+    "inputParameters": [
+      { "name": "n",      "description": "NURBS curve or list of curves",                                         "typeHintID": "ghdoc", "scriptParamAccess": "list" },
+      { "name": "s",      "description": "Sample count per curve (default 50). Higher = smoother",                "typeHintID": "int",   "scriptParamAccess": "list" },
+      { "name": "sc",     "description": "Stroke color (CSS string or list). Default: 'none'",                   "typeHintID": "str",   "scriptParamAccess": "list" },
+      { "name": "sw",     "description": "Stroke width or list of stroke widths. Default: 0",                    "typeHintID": "float", "scriptParamAccess": "list" },
+      { "name": "f",      "description": "Fill color (CSS string or list). Default: 'none'",                     "typeHintID": "str",   "scriptParamAccess": "list" },
+      { "name": "canvas", "description": "Rectangle defining the SVG canvas (optional; uses bounding box if not provided)", "typeHintID": "ghdoc", "scriptParamAccess": "item" }
+    ],
+    "outputParameters": [
+      { "name": "svg_code", "description": "SVG element string(s) for each curve" },
+      { "name": "report",   "description": "Status message" }
+    ]
+  }
+}

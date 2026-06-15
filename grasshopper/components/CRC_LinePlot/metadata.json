@@ -1,0 +1,43 @@
+{
+  "name": "LinePlot",
+  "nickname": "LinePlt",
+  "category": "Carcara",
+  "subcategory": "04.Dataviz",
+  "description": "Line chart from X/Y lists or DataTrees (one series per branch); renders as Rhino geometry and optionally exports as SVG.",
+  "exposure": 8,
+  "instanceGuid": "c4d5e6f7-a8b9-0123-cdef-ab3456789012",
+  "ghpython": {
+    "isAdvancedMode": false,
+    "marshalGuids": true,
+    "iconDisplay": 0,
+    "inputParameters": [
+      { "name": "cv",      "description": "Canvas rectangle (default 100x100 at origin)",              "typeHintID": "ghdoc", "scriptParamAccess": "item" },
+      { "name": "x",       "description": "X coordinates (flat list = 1 series; DataTree = multi)",    "typeHintID": "float", "scriptParamAccess": "list" },
+      { "name": "y",       "description": "Y coordinates (same shape as x)",                           "typeHintID": "float", "scriptParamAccess": "list" },
+      { "name": "nx",      "description": "Number of X-axis labels (default 5)",                       "typeHintID": "int",   "scriptParamAccess": "item" },
+      { "name": "ny",      "description": "Number of Y-axis labels (default 5)",                       "typeHintID": "int",   "scriptParamAccess": "item" },
+      { "name": "d",       "description": "Decimal places for labels (default 1)",                     "typeHintID": "int",   "scriptParamAccess": "item" },
+      { "name": "ext",     "description": "Axis extension beyond canvas (default 0)",                  "typeHintID": "float", "scriptParamAccess": "item" },
+      { "name": "dist",    "description": "Label distance from axis (default 10)",                     "typeHintID": "float", "scriptParamAccess": "item" },
+      { "name": "mx",      "description": "Left margin as % of X range (default 0)",                  "typeHintID": "float", "scriptParamAccess": "item" },
+      { "name": "my",      "description": "Bottom margin as % of Y range (default 0)",                "typeHintID": "float", "scriptParamAccess": "item" },
+      { "name": "gx",      "description": "Draw vertical grid lines at X labels (default False)",      "typeHintID": "bool",  "scriptParamAccess": "item" },
+      { "name": "gy",      "description": "Draw horizontal grid lines at Y labels (default False)",    "typeHintID": "bool",  "scriptParamAccess": "item" },
+      { "name": "OutPath", "description": "File path for SVG export (include .svg extension)",         "typeHintID": "str",   "scriptParamAccess": "item" },
+      { "name": "CToggle", "description": "Set True to save SVG file",                               "typeHintID": "bool",  "scriptParamAccess": "item" }
+    ],
+    "outputParameters": [
+      { "name": "out",      "description": "Processing log / status message" },
+      { "name": "lines",    "description": "Line chart polylines (PolylineCurve), one per series" },
+      { "name": "axes",     "description": "X and Y axis lines (Line)" },
+      { "name": "x_pts",   "description": "X-axis label anchor points (Point3d)" },
+      { "name": "x_txt",   "description": "X-axis label text strings" },
+      { "name": "y_pts",   "description": "Y-axis label anchor points (Point3d)" },
+      { "name": "y_txt",   "description": "Y-axis label text strings" },
+      { "name": "grid_x",  "description": "Vertical grid lines (Line)" },
+      { "name": "grid_y",  "description": "Horizontal grid lines (Line)" },
+      { "name": "svg_code","description": "Complete SVG document string" },
+      { "name": "svg_path","description": "Path to saved SVG file" }
+    ]
+  }
+}

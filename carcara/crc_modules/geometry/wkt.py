@@ -1,5 +1,6 @@
 from shapely import wkt as shapely_wkt
-from shapely.geometry import BaseGeometry
+from shapely.geometry import MultiPoint, MultiLineString, MultiPolygon
+from shapely.geometry.base import BaseGeometry
 from typing import List, Tuple, Union
 
 
@@ -36,3 +37,38 @@ def split_multipart_wkt(wkt_str: str) -> List[str]:
 def is_multipart_wkt(wkt_str: str) -> bool:
     """Check if WKT is a MULTI* type."""
     return wkt_str.strip().upper().startswith("MULTI")
+
+
+def classify_wkt(wkt_str: str) -> str:
+    """Return the WKT geometry type token in uppercase.
+
+    e.g. 'POINT', 'LINESTRING', 'POLYGON', 'MULTIPOINT',
+    'MULTILINESTRING', 'MULTIPOLYGON', 'GEOMETRYCOLLECTION'.
+    """
+    return wkt_to_shapely(wkt_str).geom_type.upper()
+
+
+def combine_to_multipart(wkt_list: List[str]) -> str:
+    """Merge a list of uniform single-part WKTs into one MULTI* WKT.
+
+    All inputs must be the same base type (all Point, all LineString,
+    or all Polygon). Raises ValueError on mixed or unsupported types.
+    """
+    if not wkt_list:
+        raise ValueError("combine_to_multipart: empty input")
+
+    geoms = [wkt_to_shapely(w) for w in wkt_list]
+    types = {g.geom_type for g in geoms}
+    if len(types) != 1:
+        raise ValueError("combine_to_multipart: mixed geometry types: %s" % types)
+
+    base = types.pop()
+    if base == "Point":
+        multi = MultiPoint(geoms)
+    elif base == "LineString":
+        multi = MultiLineString(geoms)
+    elif base == "Polygon":
+        multi = MultiPolygon(geoms)
+    else:
+        raise ValueError("combine_to_multipart: cannot multipart type '%s'" % base)
+    return shapely_to_wkt(multi)

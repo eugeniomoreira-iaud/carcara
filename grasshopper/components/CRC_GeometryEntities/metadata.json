@@ -4,7 +4,7 @@
   "category": "Carcara",
   "subcategory": "02.Queries",
   "description": "Draws the geometric entities from a given table with coordinate correction (false origin).",
-  "exposure": 2,
+  "exposure": 4,
   "instanceGuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "ghpython": {
     "isAdvancedMode": false,

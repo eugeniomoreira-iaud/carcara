@@ -69,7 +69,7 @@ names and behavior are confirmed. Proceed directly to Steps.
 
    **`metadata.json`** — exact inputs/outputs from the legacy source (`sql`,
    `var`, `val` in; `out`, `stmt` out), subcategory `03.Utilities`, category
-   `Carcara`, exposure `2`:
+   `Carcara`, exposure `4`:
 
    ```json
    {
@@ -78,7 +78,7 @@ names and behavior are confirmed. Proceed directly to Steps.
      "category": "Carcara",
      "subcategory": "03.Utilities",
      "description": "Generates SQL statements by replacing variable placeholders with corresponding values.",
-     "exposure": 2,
+     "exposure": 4,
      "ghpython": {
        "isAdvancedMode": false,
        "marshalGuids": true,

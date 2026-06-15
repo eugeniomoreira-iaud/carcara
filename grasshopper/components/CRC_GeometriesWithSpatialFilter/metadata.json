@@ -4,7 +4,7 @@
   "category": "Carcara",
   "subcategory": "02.Queries",
   "description": "Returns geometries from a table filtered by a spatial boundary with coordinate correction.",
-  "exposure": 2,
+  "exposure": 4,
   "instanceGuid": "b2c3d4e5-f6a7-8901-bcde-f23456789013",
   "ghpython": {
     "isAdvancedMode": false,

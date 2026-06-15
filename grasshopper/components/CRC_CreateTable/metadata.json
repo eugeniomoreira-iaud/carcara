@@ -4,7 +4,7 @@
   "category": "Carcara",
   "subcategory": "02.Queries",
   "description": "CREATE TABLE in PostGIS, optionally with a geometry column. Destructive when replace_table=True.",
-  "exposure": 4,
+  "exposure": 8,
   "instanceGuid": "e5f6a7b8-c9d0-1234-ef01-567890123456",
   "ghpython": {
     "isAdvancedMode": false,

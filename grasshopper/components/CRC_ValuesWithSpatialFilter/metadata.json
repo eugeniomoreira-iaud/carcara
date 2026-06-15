@@ -4,7 +4,7 @@
   "category": "Carcara",
   "subcategory": "02.Queries",
   "description": "Returns column values for geometries intersecting a spatial filter boundary with coordinate correction.",
-  "exposure": 2,
+  "exposure": 4,
   "instanceGuid": "c3d4e5f6-a7b8-9012-cdef-345678901234",
   "ghpython": {
     "isAdvancedMode": false,

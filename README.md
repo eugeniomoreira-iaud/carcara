@@ -59,25 +59,31 @@ Each component's `code.py` puts `…\UserObjects\carcara` on `sys.path` (no
 
 ## Install (end users)
 
-Two bootstrap installers delivered in a `.gh` with `Boolean Toggle` triggers,
-run once per machine in order:
+Open **`grasshopper/installer/`** in your file browser and drag the `.gh` file
+onto the Grasshopper canvas. It contains two `Boolean Toggle`-triggered
+installers — run them once per machine in order:
 
 1. **`install_python_libs.py`** — pip-installs runtime deps
    (`psycopg2`, `shapely`, `svgwrite`, `matplotlib`) into Rhino 8 CPython.
-2. **`install_carcara.py`** — downloads the repo zip and copies
-   `carcara/` → `UserObjects/carcara/`. Repo/branch is a prominent constant at
-   the top of the file:
-   ```python
-   GITHUB_REPO = "eugeniomoreira-iaud/carcara"
-   GITHUB_BRANCH = "master"
-   ```
-   Does a version check (remote vs installed `version.txt`), keeps a timestamped
-   zip backup, and rolls back on failure.
+2. **`install_carcara.py`** — downloads the repo zip from
+   `eugeniomoreira-iaud/carcara` (master branch) and copies
+   `carcara/` → `UserObjects/carcara/`. Does a version check against the
+   installed `version.txt`, keeps a timestamped backup, and rolls back on
+   failure.
+
+After step 2, Rhino's Grasshopper toolbar will show the **Carcara** ribbon with
+32 built components across four subcategories (01.Modeling · 02.Queries ·
+03.Utilities · 04.Dataviz). The built `.ghuser` files committed to
+`carcara/userobjects/` are what the installer copies — no compilation step
+needed on the user machine.
 
 Both installers are **self-contained** (no `import crc_modules`) since they run
 before the package exists.
 
 ## Develop
+
+Full spec: [`CLAUDE.md`](CLAUDE.md) (architecture, component inventory, API contracts, rules).
+Per-phase implementation plans: [`implementation/`](implementation/).
 
 ```powershell
 pytest tests/ -v                              # run tests (import crc_modules)

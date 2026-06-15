@@ -70,6 +70,12 @@ def main():
         print(f"ERROR: Cannot import componentizer: {exc}")
         print(f"  Expected at: {VENDOR_COMPONENTIZER}/componentize_cpy.py")
         sys.exit(1)
+    try:
+        from componentize_curvedisplay import create_curvedisplay_ghuser
+    except ImportError as exc:
+        print(f"ERROR: Cannot import CurveDisplay builder: {exc}")
+        print(f"  Expected at: {VENDOR_COMPONENTIZER}/componentize_curvedisplay.py")
+        sys.exit(1)
 
     version = args.version or read_version()
 
@@ -96,12 +102,14 @@ def main():
         source = os.path.join(COMPONENTS_DIR, name)
         target = os.path.join(DIST_DIR, name + ".ghuser")
         if not os.path.isfile(os.path.join(source, "code.py")):
-            # C#-only bundles (e.g. CRC_CurveDisplay/code.cs) are not built by the
-            # Python componentizer — their .ghuser is produced separately.
+            # C#-only bundles are not built by the Python componentizer.
             results.append(("SKIP", name, "no code.py (non-Python bundle)"))
             continue
         try:
-            create_ghuser_component(source, target, version)
+            if name == "CRC_CurveDisplay":
+                create_curvedisplay_ghuser(source, target, version)
+            else:
+                create_ghuser_component(source, target, version)
             results.append(("OK", name, target))
         except Exception as exc:
             results.append(("FAIL", name, str(exc)))

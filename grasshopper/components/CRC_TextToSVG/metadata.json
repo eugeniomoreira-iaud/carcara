@@ -1,0 +1,27 @@
+{
+  "name": "TextToSVG",
+  "nickname": "TxtSVG",
+  "category": "Carcara",
+  "subcategory": "04.Dataviz",
+  "description": "Converts text strings with Point3d or Plane insertion to SVG <text> elements. Plane input yields rotation from the plane X-axis angle. Justification 1–9 maps to SVG text-anchor/dominant-baseline pairs.",
+  "exposure": 4,
+  "instanceGuid": "e4f5a6b7-c8d9-0123-efab-234567890104",
+  "ghpython": {
+    "isAdvancedMode": false,
+    "marshalGuids": true,
+    "iconDisplay": 0,
+    "inputParameters": [
+      { "name": "t",      "description": "Text string(s) to render",                                             "typeHintID": "str",   "scriptParamAccess": "list" },
+      { "name": "pt",     "description": "Insertion point(s) or plane(s) for text (Point3d or Plane)",           "typeHintID": "ghdoc", "scriptParamAccess": "list" },
+      { "name": "ff",     "description": "Font family (default 'Arial')",                                        "typeHintID": "str",   "scriptParamAccess": "item" },
+      { "name": "fs",     "description": "Font size in pixels (default 12)",                                     "typeHintID": "float", "scriptParamAccess": "item" },
+      { "name": "fC",     "description": "Fill color (default 'black')",                                         "typeHintID": "str",   "scriptParamAccess": "item" },
+      { "name": "canvas", "description": "Rectangle defining the SVG canvas (optional)",                         "typeHintID": "ghdoc", "scriptParamAccess": "item" },
+      { "name": "j",      "description": "Justification 1–9 (1=TL 2=TC 3=TR 4=ML 5=MC 6=MR 7=BL 8=BC 9=BR). Default 6", "typeHintID": "int", "scriptParamAccess": "list" }
+    ],
+    "outputParameters": [
+      { "name": "svg_code", "description": "SVG element string(s) for each text entry" },
+      { "name": "report",   "description": "Status message" }
+    ]
+  }
+}
