@@ -94,7 +94,7 @@ carcara/                              ← Repository root
 │
 ├── vendor/                         ← componentizer + GH_IO.dll (build toolchain)
 │
-├── carcara-old/                    ← LEGACY. Read-only reference of the original plugin.
+├── legacy-0.4.0-beta.2/             ← LEGACY. Read-only reference of the original plugin.
 │   ├── carcara/
 │   │   ├── modules/                ← Old monolithic Python modules (charts, dataviz, geometry, odbc)
 │   │   └── *.ghuser                ← Original .ghuser components — the rebuild target list
@@ -110,14 +110,14 @@ carcara/                              ← Repository root
 
 ***
 
-## Legacy Reference: `carcara-old/`
+## Legacy Reference: `legacy-0.4.0-beta.2/`
 
-`carcara-old/` is the **frozen previous version** of the plugin. Treat it as read-only documentation, never as code to import or edit.
+`legacy-0.4.0-beta.2/` is the **frozen previous version** of the plugin. Treat it as read-only documentation, never as code to import or edit.
 
-- **Purpose**: source of truth for behavior, inputs, outputs, and nicknames of every original component. When rebuilding a component, open the matching `.ghuser` in `carcara-old/carcara/` to confirm parameter names and semantics.
-- **Do not**: edit, delete, move, or import from `carcara-old/`. Do not run its modules. Do not rebuild against its code.
+- **Purpose**: source of truth for behavior, inputs, outputs, and nicknames of every original component. When rebuilding a component, open the matching `.ghuser` in `legacy-0.4.0-beta.2/carcara/` to confirm parameter names and semantics.
+- **Do not**: edit, delete, move, or import from `legacy-0.4.0-beta.2/`. Do not run its modules. Do not rebuild against its code.
 - **Do**: extract metadata, inspect inputs/outputs, and port logic into the new layered architecture under `release/crc_modules/` + `build/components/`.
-- **Decoded reference layer — `carcara-old/ghuser-metadata/`**: all 33 legacy `.ghuser` files have been decoded. The artifacts live here and are the preferred starting point for any component rebuild:
+- **Decoded reference layer — `legacy-0.4.0-beta.2/ghuser-metadata/`**: all 33 legacy `.ghuser` files have been decoded. The artifacts live here and are the preferred starting point for any component rebuild:
   - `01.Modeling.md`, `02.Queries.md`, `03.Utilities.md`, `04.Dataviz.md` — per-subcategory capture docs: component tables, input/output hook params, general logic descriptions, and links to decoded scripts.
   - `scripts/` — 51 canonical decoded source files. Naming conventions: `<Name>.py` (per-component script), `<Name>_interface.txt` (cluster hook params + internal component list for the 19 cluster-based components), `CRC_<Name>.py` (hand-captured wiring reconstruction for the 9 query components), and shared engine scripts (`RunODBCQuery.py`, `SQLComposer.py`, `GrasshopperGeometryToWKT.py`, etc.) deduped to one canonical copy each. `CurveDisplay` is C#.
   - **Before rebuilding a component**: read the matching capture `.md` entry and linked decoded script first. Do not attempt to re-decode the binary `.ghuser` unless verification is needed.
@@ -127,11 +127,11 @@ carcara/                              ← Repository root
 
 ## Rebuild Mandate: Every Legacy `.ghuser` Must Be Reimplemented
 
-Every `.ghuser` file present in `carcara-old/carcara/` must be rebuilt under the new architecture before the rebuild is considered complete. No legacy `.ghuser` is shipped as-is.
+Every `.ghuser` file present in `legacy-0.4.0-beta.2/carcara/` must be rebuilt under the new architecture before the rebuild is considered complete. No legacy `.ghuser` is shipped as-is.
 
 ### Process per component
 
-1. Identify the legacy file in `carcara-old/carcara/carcara_<Name>_*.ghuser`.
+1. Identify the legacy file in `legacy-0.4.0-beta.2/carcara/carcara_<Name>_*.ghuser`.
 2. Locate the matching row in the [Component Inventory](#component-inventory) below.
 3. Implement the domain logic in the correct `release/crc_modules/` submodule.
 4. Write tests in `tests/` (mock all DB calls).
@@ -143,7 +143,7 @@ Every `.ghuser` file present in `carcara-old/carcara/` must be rebuilt under the
 
 - Every legacy `.ghuser` listed in the inventory has a ✅ Done row.
 - `release/userobjects/` contains the freshly built equivalent for every entry.
-- No file under `carcara-old/` is referenced from runtime code.
+- No file under `legacy-0.4.0-beta.2/` is referenced from runtime code.
 
 ***
 
@@ -654,7 +654,7 @@ build: update build_userobjects.py XML escaping
 
 All 33 components in one master map. Each maps to one bundle in `build/components/CRC_<Name>/`
 and one or more functions in `crc_modules/`. The `Legacy file` column points to the original
-`.ghuser` in `carcara-old/carcara/` that must be reimplemented.
+`.ghuser` in `legacy-0.4.0-beta.2/carcara/` that must be reimplemented.
 
 The `subcategory` field in each `metadata.json` must be one of exactly: **`01.Modeling`**,
 **`02.Queries`**, **`03.Utilities`**, **`04.Dataviz`**. **Exposure** controls toolbar placement
@@ -723,7 +723,7 @@ Counts: **01.Modeling 6 · 02.Queries 9 · 03.Utilities 7 · 04.Dataviz 10 = 32.
 > **Note:** `CRC_SRID` (legacy `carcara_SRID_r00.ghuser`) is a native GH ValueList component — not a Python script component. It will be created manually and is not part of the componentizer build pipeline.
 
 > Exposure values are sourced from the legacy `.ghuser` (captured per subcategory in
-> `carcara-old/ghuser-metadata/`; decoded scripts and `_interface.txt` hook files are linked
+> `legacy-0.4.0-beta.2/ghuser-metadata/`; decoded scripts and `_interface.txt` hook files are linked
 > from those docs). Confirm any that are still uncertain when porting.
 
 ### Subcategory notes
@@ -774,7 +774,7 @@ Counts: **01.Modeling 6 · 02.Queries 9 · 03.Utilities 7 · 04.Dataviz 10 = 32.
 
 ### Inventory cross-check
 
-The rebuild is **complete only when every legacy `.ghuser` in `carcara-old/carcara/` appears in one of the tables above with status ✅ Done**. If you discover a legacy file not listed here, add a row before starting work — do not silently skip a component.
+The rebuild is **complete only when every legacy `.ghuser` in `legacy-0.4.0-beta.2/carcara/` appears in one of the tables above with status ✅ Done**. If you discover a legacy file not listed here, add a row before starting work — do not silently skip a component.
 
 ***
 
@@ -792,8 +792,8 @@ When generating code for this repository, an AI agent must:
 8. **Do not modify `pyproject.toml`** unless adding a new dependency, and document why in the commit message.
 9. **Do not create `.ghuser` files manually.** They are always generated by `build_userobjects.py` (which wraps the `compas-actions.ghpython_components` componentizer and `GH_IO.dll`). A `.ghuser` is a **binary `GH_Archive`**, not a zip — never hand-craft one.
 10. **Match the commit message convention** defined in the Git section above.
-11. **Treat `carcara-old/` as read-only legacy.** Never import from it, never edit it, never delete it. Use it only to recover original behavior, inputs, outputs, and nicknames when rebuilding a component.
-12. **Rebuild every legacy `.ghuser`.** The end state of this project is that every file currently in `carcara-old/carcara/*.ghuser` has been reimplemented under `build/components/` and regenerated into `release/userobjects/` via `tools/build_userobjects.py`. No legacy `.ghuser` ships as-is.
+11. **Treat `legacy-0.4.0-beta.2/` as read-only legacy.** Never import from it, never edit it, never delete it. Use it only to recover original behavior, inputs, outputs, and nicknames when rebuilding a component.
+12. **Rebuild every legacy `.ghuser`.** The end state of this project is that every file currently in `legacy-0.4.0-beta.2/carcara/*.ghuser` has been reimplemented under `build/components/` and regenerated into `release/userobjects/` via `tools/build_userobjects.py`. No legacy `.ghuser` ships as-is.
 13. **Paths are repo-root relative.** There is no `carcara-rebuild/` directory anymore. All commands (`pytest`, `python tools/build_userobjects.py`, `pip install -e .`) run from the repository root.
 14. **Component layout is the componentizer bundle layout.** Each component is `build/components/CRC_<Name>/{metadata.json, code.py, icon.png}`. Flat, no subcategory subdirs. Subcategory is a metadata field. See [`specs/componentizer.md`](specs/componentizer.md) for the full schema and rationale.
 15. **Never `float()` the `Cx`/`Cy` correction values.** They are numeric **text**, applied as a false-origin shift **inside SQL** (`ST_Translate`), to avoid the precision loss that motivates the whole correction system. Validate them as numeric literals via `utils/correction.py`, then embed verbatim. See [Coordinate Correction](#coordinate-correction-projected-coordinates--false-origin).

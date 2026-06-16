@@ -1,14 +1,14 @@
-"""Decode every legacy .ghuser in carcara-old/carcara/ into readable sources.
+"""Decode every legacy .ghuser in legacy-0.4.0-beta.2/carcara/ into readable sources.
 
 Read-only inspection tool for the rebuild (see specs/ghuser-decoding.md).
-Outputs go to carcara-old/ghuser-metadata/scripts/:
+Outputs go to legacy-0.4.0-beta.2/ghuser-metadata/scripts/:
 
   <Name>.py             embedded script source (script components)
   <Name>_cluster_N.py   embedded scripts found inside a ClusterDocument
   <Name>_interface.txt  cluster hook params + internal component names
                         (written for clusters, including script-free ones)
 
-Stdlib only — no Rhino, no GH_IO.dll. Never writes into carcara-old/carcara/.
+Stdlib only — no Rhino, no GH_IO.dll. Never writes into legacy-0.4.0-beta.2/carcara/.
 
 Usage (from repo root):
     python tools/decode_ghuser.py
@@ -20,8 +20,8 @@ import zlib
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).parent
-LEGACY_DIR = REPO_ROOT / "carcara-old" / "carcara"
-OUT_DIR = REPO_ROOT / "carcara-old" / "ghuser-metadata" / "scripts"
+LEGACY_DIR = REPO_ROOT / "legacy-0.4.0-beta.2" / "carcara"
+OUT_DIR = REPO_ROOT / "legacy-0.4.0-beta.2" / "ghuser-metadata" / "scripts"
 
 PRINTABLE = re.compile(rb"[\x20-\x7e]{4,}")
 BASE64_RUN = re.compile(rb"[A-Za-z0-9+/=]{100,}")

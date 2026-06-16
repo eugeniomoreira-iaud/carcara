@@ -42,7 +42,7 @@ writes the **new Rhino 8 Script-component schema**:
   `ScriptParameterVersion=2`, and a per-input `ConverterData` (CLR type) sub-chunk.
 
 This is the same archive structure `componentize_cs.py` produces for C#, just with the Python
-taxon. The reference that proved it: `carcara-old/carcara/test-displaycurve.ghuser`.
+taxon. The reference that proved it: `legacy-0.4.0-beta.2/carcara/test-displaycurve.ghuser`.
 
 ---
 
@@ -246,5 +246,5 @@ Version `3.9.10`, `ScriptComponentVersion=3`, `Marsh*` keys present. If you inst
 - Routing: `tools/build_userobjects.py` (`is_advanced_mode`)
 - Draw helper: `release/crc_modules/rhino/preview.py`
 - Reference components: the SVG / chart / `CRC_ColorCalculator` bundles (full: outputs + preview), `CRC_CurveDisplay` (display-only)
-- Working hand-made reference archive: `carcara-old/carcara/test-displaycurve.ghuser`
+- Working hand-made reference archive: `legacy-0.4.0-beta.2/carcara/test-displaycurve.ghuser`
 - Build pipeline: [`componentizer.md`](componentizer.md) · decoding: [`ghuser-decoding.md`](ghuser-decoding.md)

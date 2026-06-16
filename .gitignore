@@ -7,8 +7,10 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+# NOTE: no `build/` here — `build/` is now a SOURCE dir (GH component bundles +
+# installer), renamed from `grasshopper/`. Packaging artifacts are covered by
+# dist/, sdist/, wheels/, *.egg-info below.
 .Python
-build/
 develop-eggs/
 dist/
 downloads/
@@ -109,6 +111,8 @@ venv.bak/
 # DO commit the built components shipped inside the deployable folder.
 !release/userobjects/
 !release/userobjects/*.ghuser
+# DO commit the end-user installer definition (bootstrap only — no DB credentials).
+!build/installer/carcara_setup_rev00.gh
 tests/_manual/
 
 # vendor: DLL is proprietary (copy from Rhino 8 or NuGet); componentizer is tracked

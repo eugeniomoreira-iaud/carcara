@@ -1,13 +1,13 @@
 # Decoding legacy `.ghuser` files (no Rhino required)
 
 How to recover component metadata, parameter names/descriptions, and embedded Python/C# source
-from the binary legacy `.ghuser` archives in `carcara-old/carcara/` using only CPython — no
+from the binary legacy `.ghuser` archives in `legacy-0.4.0-beta.2/carcara/` using only CPython — no
 Rhino, no Grasshopper, no `GH_IO.dll`. Verified working against the Carcara legacy set
 (ScatterPlot, LinePlot, Heatmap recovered with this technique, 2026-06-11).
 
 > Scope note: this is a **read-only inspection** technique for the rebuild. It never replaces
 > the build pipeline — new `.ghuser` files are still produced exclusively by
-> `build_userobjects.py` (see [`componentizer.md`](componentizer.md)). And `carcara-old/` stays
+> `build_userobjects.py` (see [`componentizer.md`](componentizer.md)). And `legacy-0.4.0-beta.2/` stays
 > untouched: copy bytes out, never write back.
 
 ---
@@ -73,7 +73,7 @@ def partial_inflate(buf, step=64):
             break
     return bytes(out)
 
-raw = open("carcara-old/carcara/carcara_<Name>_rXX.ghuser", "rb").read()
+raw = open("legacy-0.4.0-beta.2/carcara/carcara_<Name>_rXX.ghuser", "rb").read()
 archive = partial_inflate(raw)          # starts with b'\nUserObject\xff\xff\xff\xff'
 ```
 
@@ -243,7 +243,7 @@ ClusterDocument — because the misalignment occurs at every level.
 ## Where the results go
 
 Decoded sources and interfaces are pasted into the per-subcategory capture files in
-`carcara-old/ghuser-metadata/` (`01.Modeling.md` … `04.Dataviz.md`), which feed the
+`legacy-0.4.0-beta.2/ghuser-metadata/` (`01.Modeling.md` … `04.Dataviz.md`), which feed the
 [Component Inventory](../CLAUDE.md#component-inventory) and the rebuild. Paste scripts
 **verbatim**; for native-wiring clusters, record the hook table + a pseudocode block (see the
 `ScatterPlot` section of `04.Dataviz.md` for the reference format).

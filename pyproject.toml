@@ -6,6 +6,10 @@ build-backend = "setuptools.build_meta"
 name = "carcara"
 version = "0.5.0-beta.1"
 requires-python = ">=3.11"
+license = {text = "GPL-3.0-or-later"}
+classifiers = [
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+]
 dependencies = [
     "psycopg2>=2.9",
     "shapely>=2.0",
@@ -31,6 +35,6 @@ include = ["crc_modules*"]
 testpaths = ["tests"]
 # release/ is on sys.path so tests can `import crc_modules.*` without install.
 pythonpath = ["release"]
-norecursedirs = ["release*", "carcara-old*", "vendor*", "build*", "dist*", "__pycache__*"]
+norecursedirs = ["release*", "legacy-0.4.0-beta.2*", "vendor*", "build*", "dist*", "__pycache__*"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]

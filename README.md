@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/logo_carcara.png" width="300" alt="Carcara logo">
+  <img src="_logo_carcará.png" width="300" alt="Carcara logo">
 </p>
 
 <h1 align="center">Carcara</h1>
@@ -536,7 +536,7 @@ Assembles SVG element strings into a complete SVG document (viewBox from canvas 
 ├── docs/                               ← reports + branding assets
 ├── tools/                              ← dev utilities (decode_ghuser.py, build_userobjects.py, make_release.py, deploy.ps1)
 ├── vendor/                             ← componentizer + GH_IO.dll (build toolchain)
-├── carcara-old/                        ← LEGACY, read-only reference of the original plugin
+├── legacy-0.4.0-beta.2/                ← LEGACY, read-only reference of the original plugin
 ├── pyproject.toml  requirements.txt
 └── CLAUDE.md  README.md
 ```
@@ -550,21 +550,24 @@ a generic `import modules` in the Rhino session.
 
 ## Install (end users)
 
-Open **`build/installer/`** and drag the `.gh` file onto the Grasshopper
-canvas. It contains two `Boolean Toggle`-triggered installers — run them once per
-machine, in order:
+No git clone, no pip, no manual file copying. Three steps:
 
-1. **`install_python_libs.py`** — pip-installs runtime deps (`psycopg2`, `shapely`,
-   `svgwrite`, `matplotlib`) into Rhino 8 CPython.
-2. **`install_carcara.py`** — downloads the repo zip from
-   `eugeniomoreira-iaud/carcara` (master) and copies `release/` →
-   `UserObjects/carcara/`. Version-checks against the installed `version.txt`, keeps
-   a timestamped backup, and rolls back on failure.
+**1. Download the installer** — [**`carcara_setup_rev00.gh`**](https://github.com/eugeniomoreira-iaud/carcara/raw/master/build/installer/carcara_setup_rev00.gh)
+(direct download). This is a small Grasshopper definition that bootstraps the whole
+plugin.
 
-After step 2, restart Grasshopper — the **Carcara** ribbon appears with all
-components. The committed `.ghuser` files are copied as-is; no compilation on the
-user machine. Both installers are self-contained (no `import crc_modules`, since they
-run before the package exists).
+**2. Run it** — drag `carcara_setup_rev00.gh` onto the Grasshopper canvas. It contains
+the **Carcara installer** component (`install_carcara.py`). Set its `install` Boolean
+Toggle to **True**. The component downloads the latest release from
+`eugeniomoreira-iaud/carcara` (master), copies the `release/` folder →
+`UserObjects/carcara/`, version-checks against the installed `version.txt`, keeps a
+timestamped backup, and rolls back automatically on failure. The installer is
+self-contained (no `import crc_modules`, since it runs before the package exists).
+
+**3. Restart Grasshopper** — the **Carcara** ribbon appears with all 32 components.
+The committed `.ghuser` files are copied as-is; no compilation on the user machine.
+Third-party Python dependencies (`psycopg2`, `shapely`) install automatically on the
+first run of each component via Rhino 8's `# r:` package directive — no manual pip step.
 
 ### Deployed layout
 ```
@@ -633,3 +636,22 @@ were adopted (not its code). The COMPAS componentizer scripts are vendored under
 | Runtime deps | `psycopg2`, `shapely`, `svgwrite`, `matplotlib` |
 | Build/dev deps | `pythonnet`, `pytest`, `python-dotenv`, `requests` |
 | OS | Windows 10/11 (primary), macOS (secondary) |
+
+***
+
+## License
+
+Carcara is free software, licensed under the **GNU General Public License v3.0 or
+later** ([GPL-3.0-or-later](LICENSE)). Copyright © 2026 Eugenio Moreira.
+
+You may use, study, share, and modify it freely. In return the GPL requires that:
+
+- **Attribution is preserved** — keep the copyright and license notices on any copy.
+- **Derivatives stay free** — if you distribute Carcara or any work derived from it
+  (including a plugin that imports `crc_modules`), you must release it under the same
+  GPLv3 terms and make the complete source available.
+
+See the full terms in [`LICENSE`](LICENSE). The original 0.4.0 plugin was released by
+LED – UFC under the MIT License (preserved in
+[`legacy-0.4.0-beta.2/LICENSE`](legacy-0.4.0-beta.2/LICENSE)); MIT is GPL-compatible, so
+that legacy code may be incorporated under GPLv3.
