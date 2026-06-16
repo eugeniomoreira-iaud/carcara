@@ -107,12 +107,15 @@ def circle_to_svg(cx: float, cy: float, r: float, **style) -> str:
         cx: center X in SVG coords
         cy: center Y in SVG coords (Y-down, already flipped)
         r : radius
-        **style: stroke, stroke_width, fill, fill_opacity, stroke_opacity
+        **style: stroke, stroke_width, fill, fill_opacity, stroke_opacity, dash
 
     Returns:
         SVG element string.
     """
+    dash = style.pop("dash", "") or ""
     attrs = _style_attrs(**style)
+    if dash:
+        attrs += _attr("stroke-dasharray", dash)
     return '<circle cx="{cx}" cy="{cy}" r="{r}"{attrs}/>'.format(
         cx=round(cx, 4), cy=round(cy, 4), r=round(r, 4), attrs=attrs
     )

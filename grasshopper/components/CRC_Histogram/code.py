@@ -37,6 +37,7 @@ _BAR_EDGE  = sd.Color.Black
 _AXIS_CLR  = sd.Color.Black
 _GRID_CLR  = sd.Color.FromArgb(255, 204, 204, 204)   # #CCCCCC
 _TEXT_CLR  = sd.Color.Black
+GRID_DASH  = "2,2"
 
 
 class Histogram(component):
@@ -168,7 +169,7 @@ class Histogram(component):
                 ]
                 svg_elements.append(
                     polyline_to_svg(pts_svg, stroke="#CCCCCC",
-                                   stroke_width=0.5, fill="none"))
+                                   stroke_width=0.5, fill="none", dash=GRID_DASH))
 
             for (xp, yp), label in zip(result["x_pts"], result["x_txt"]):
                 svg_elements.append(
@@ -210,7 +211,7 @@ class Histogram(component):
 
             # Grid wires
             for ln in grid:
-                pv.add_curve(rg.LineCurve(ln), _GRID_CLR, _gw)
+                pv.add_curve(rg.LineCurve(ln), _GRID_CLR, _gw, dash=GRID_DASH)
 
             # X labels
             for pt, txt in zip(x_pts, x_txt):

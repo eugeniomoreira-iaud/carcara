@@ -95,6 +95,14 @@ class TestCircleToSvg:
         result = circle_to_svg(0, 0, 5)
         assert result.endswith("/>")
 
+    def test_dash_pattern_emitted(self):
+        result = circle_to_svg(0, 0, 10, stroke="black", dash="5,5")
+        assert 'stroke-dasharray="5,5"' in result
+
+    def test_no_dash_attr_when_absent(self):
+        result = circle_to_svg(0, 0, 10, stroke="black")
+        assert "stroke-dasharray" not in result
+
     def test_fractional_coords(self):
         result = circle_to_svg(12.3456789, 9.8765, 3.14159)
         assert "12.3457" in result  # rounded to 4 decimal places

@@ -47,7 +47,7 @@ def _get(seq, i, default):
 
 class NurbsToSVG(component):
 
-    def RunScript(self, nurbsCurves, sampleCount, strokeColor, strokeWidth, fillColor, canvas):
+    def RunScript(self, nurbsCurves, sampleCount, strokeColor, strokeWidth, fillColor, canvas, dashPattern):
         self.Message = "v{{component_version}}-{{date}}"
         svgCode = []
         report = "Provide NURBS curves on input 'nurbsCurves'."
@@ -124,6 +124,7 @@ class NurbsToSVG(component):
                         if sw_val <= 0:
                             sw_val = 1.0
                         fill_color = _get(fillColor, i, None)
+                        dash_val = _get(dashPattern, i, "") or ""
 
                         stroke_hex = color_to_hex(stroke_color) if stroke_color is not None else "#000000"
                         fill_hex = color_to_hex(fill_color) if fill_color is not None else "none"
@@ -133,6 +134,7 @@ class NurbsToSVG(component):
                             stroke=stroke_hex,
                             stroke_width=sw_val,
                             fill=fill_hex,
+                            dash=dash_val,
                         )
                         elements.append(elem)
                         ok += 1
@@ -140,7 +142,7 @@ class NurbsToSVG(component):
                         # Viewport preview — always draw; use stroke color or default black
                         _preview_clr = stroke_color if stroke_color is not None else Color.Black
                         _preview_w = max(1, int(sw_val)) if sw_val else 1
-                        pv.add_curve(crv, _preview_clr, _preview_w)
+                        pv.add_curve(crv, _preview_clr, _preview_w, dash=dash_val)
                         if fill_color is not None and crv.IsClosed:
                             pv.add_filled_curve(crv, fill_color)
 

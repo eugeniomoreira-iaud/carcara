@@ -45,7 +45,7 @@ def _get(seq, i, default):
 
 class CircleToSVG(component):
 
-    def RunScript(self, c, sc, sw, f, canvas):
+    def RunScript(self, c, sc, sw, f, canvas, dashPattern):
         self.Message = "v{{component_version}}-{{date}}"
         svgCode = []
         report = "Provide circles on input 'c'."
@@ -111,6 +111,7 @@ class CircleToSVG(component):
                         if sw_val <= 0:
                             sw_val = 1.0
                         fill_color = _get(f, i, None)
+                        dash_val = _get(dashPattern, i, "") or ""
 
                         stroke_hex = color_to_hex(stroke_color) if stroke_color is not None else "#000000"
                         fill_hex = color_to_hex(fill_color) if fill_color is not None else "none"
@@ -120,6 +121,7 @@ class CircleToSVG(component):
                             stroke=stroke_hex,
                             stroke_width=sw_val,
                             fill=fill_hex,
+                            dash=dash_val,
                         )
                         elements.append(elem)
                         ok += 1
@@ -128,7 +130,7 @@ class CircleToSVG(component):
                         crv = rg.ArcCurve(circ)
                         _preview_clr = stroke_color if stroke_color is not None else Color.Black
                         _preview_w = max(1, int(sw_val)) if sw_val else 1
-                        pv.add_curve(crv, _preview_clr, _preview_w)
+                        pv.add_curve(crv, _preview_clr, _preview_w, dash=dash_val)
                         # Circles are always closed
                         if fill_color is not None:
                             pv.add_filled_curve(crv, fill_color)

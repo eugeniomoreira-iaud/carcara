@@ -51,7 +51,7 @@ class PreviewPayload:
     """
 
     def __init__(self) -> None:
-        # (curve, System.Drawing.Color, int)
+        # (curve, System.Drawing.Color, int, dash_pattern|None)
         self._curves: list = []
         # Rhino.Geometry.Mesh (vertex-colored)
         self._meshes: list = []
@@ -77,7 +77,7 @@ class PreviewPayload:
     # Public add_* API
     # ------------------------------------------------------------------
 
-    def add_curve(self, curve, color, width: int = 1) -> None:
+    def add_curve(self, curve, color, width: int = 1, dash=None) -> None:
         """Store a wire curve to draw in ``DrawViewportWires``.
 
         Parameters
@@ -88,14 +88,40 @@ class PreviewPayload:
             A ``System.Drawing.Color`` value.
         width:
             Line width in pixels (default 1).
+        dash:
+            Optional dash pattern. Either a raw string (``"5,5"`` or ``"5 5"``)
+            or a pre-parsed ``list[float]``. ``None``/empty → solid line. The
+            dash is rendered geometrically at draw time by trimming the curve
+            into segments (same approach as ``CRC_CurveDisplay``), so on-screen
+            dashing matches the SVG ``stroke-dasharray`` output.
         """
         if curve is None or color is None:
             return
-        self._curves.append((curve, color, int(width)))
+        dash_pattern = self._coerce_dash(dash)
+        self._curves.append((curve, color, int(width), dash_pattern))
         try:
             self._union_bbox(curve.GetBoundingBox(False))
         except Exception:
             pass
+
+    @staticmethod
+    def _coerce_dash(dash):
+        """Normalise *dash* to a ``list[float]`` pattern or ``None``.
+
+        Accepts a raw dash string (CurveDisplay ``"5 5"`` or SVG ``"5,5"``) or an
+        already-parsed list. Invalid/empty input → ``None`` (solid). Parsing is
+        pure-Python (``parse_dash_pattern``), safe in a headless process.
+        """
+        if dash is None:
+            return None
+        if isinstance(dash, (list, tuple)):
+            vals = [float(v) for v in dash if v is not None]
+            return vals or None
+        try:
+            from crc_modules.geometry.dash import parse_dash_pattern  # noqa: PLC0415
+            return parse_dash_pattern(dash)
+        except Exception:
+            return None
 
     def add_filled_curve(self, closed_curve, fill_color) -> None:
         """Build a planar mesh from a closed curve and store it for mesh drawing.
@@ -239,8 +265,16 @@ class PreviewPayload:
         """
         for item in self._curves:
             try:
-                curve, color, width = item
-                args.Display.DrawCurve(curve, color, int(width))
+                curve, color, width, dash_pattern = item
+                width = int(width)
+                if dash_pattern:
+                    from crc_modules.rhino.curve_display import (  # noqa: PLC0415
+                        apply_dash_pattern,
+                    )
+                    for seg in apply_dash_pattern(curve, dash_pattern):
+                        args.Display.DrawCurve(seg, color, width)
+                else:
+                    args.Display.DrawCurve(curve, color, width)
             except Exception:
                 pass
 

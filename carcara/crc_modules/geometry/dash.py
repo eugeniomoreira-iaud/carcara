@@ -15,9 +15,12 @@ from __future__ import annotations
 def parse_dash_pattern(text) -> list[float] | None:
     """Parse a space-separated dash pattern string into a list of floats.
 
-    Mirrors C# ``ParseDashPattern`` exactly:
+    Mirrors C# ``ParseDashPattern``, with one superset extension:
     - ``None``, empty string, or whitespace-only → return ``None``
-    - Split on spaces; skip empty fragments (consecutive spaces treated as one)
+    - Split on commas AND any whitespace, so both the CurveDisplay syntax
+      (``"5 5"``) and the SVG ``stroke-dasharray`` syntax (``"5,5"`` / ``"5, 5"``)
+      parse identically. Empty fragments are dropped (consecutive separators
+      treated as one). Commas were never valid before, so this is backward-compatible.
     - Non-numeric fragment → ``ValueError("<frag> is not a valid number.")``
     - Value <= 0 → ``ValueError("Dashes or gaps must have a strictly positive length.")``
     - Returns ``list[float]`` on success.
@@ -28,7 +31,8 @@ def parse_dash_pattern(text) -> list[float] | None:
     if not text.strip():
         return None
 
-    fragments = [f for f in text.split(" ") if f]  # drop empty from multi-spaces
+    # Split on commas or any run of whitespace; empties dropped by str.split().
+    fragments = text.replace(",", " ").split()
     if not fragments:
         return None
 

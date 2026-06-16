@@ -34,6 +34,7 @@ _AXIS_CLR = sd.Color.Black
 _GRID_CLR = sd.Color.FromArgb(255, 204, 204, 204)
 _TEXT_CLR = sd.Color.Black
 _DOT_EDGE = sd.Color.Black
+GRID_DASH = "2,2"
 
 
 class ScatterPlot(component):
@@ -237,7 +238,7 @@ class ScatterPlot(component):
                 _svg_elems.append(polyline_to_svg(
                     [(p0[0] - _ox, _ch - (p0[1] - _oy)),
                      (p1[0] - _ox, _ch - (p1[1] - _oy))],
-                    stroke="#cccccc", stroke_width=0.5,
+                    stroke="#cccccc", stroke_width=0.5, dash=GRID_DASH,
                 ))
 
             _dot_colors = res["colors"]
@@ -325,7 +326,7 @@ class ScatterPlot(component):
 
             # Grid wires
             for ln in grid_x + grid_y:
-                pv.add_curve(rg.LineCurve(ln), _GRID_CLR, _gw)
+                pv.add_curve(rg.LineCurve(ln), _GRID_CLR, _gw, dash=GRID_DASH)
 
             # Legend cell fills + outlines
             for i, rect in enumerate(leg_cells):

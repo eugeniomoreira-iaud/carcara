@@ -48,6 +48,7 @@ _SERIES_COLORS_HEX = [
 _AXIS_CLR = sd.Color.Black
 _GRID_CLR = sd.Color.FromArgb(255, 204, 204, 204)
 _TEXT_CLR = sd.Color.Black
+GRID_DASH = "2,2"
 
 
 class LinePlot(component):
@@ -185,14 +186,14 @@ class LinePlot(component):
                            (p1[0] - ox, to_svg_y(p1[1]))]
                 svg_elements.append(
                     polyline_to_svg(pts_svg, stroke="#CCCCCC",
-                                    stroke_width=0.5, fill="none"))
+                                    stroke_width=0.5, fill="none", dash=GRID_DASH))
 
             for (p0, p1) in result["grid_x"]:
                 pts_svg = [(p0[0] - ox, to_svg_y(p0[1])),
                            (p1[0] - ox, to_svg_y(p1[1]))]
                 svg_elements.append(
                     polyline_to_svg(pts_svg, stroke="#CCCCCC",
-                                    stroke_width=0.5, fill="none"))
+                                    stroke_width=0.5, fill="none", dash=GRID_DASH))
 
             for (p0, p1) in result["axes"]:
                 pts_svg = [(p0[0] - ox, to_svg_y(p0[1])),
@@ -248,7 +249,7 @@ class LinePlot(component):
 
             # Grid wires
             for ln in grid_x + grid_y:
-                pv.add_curve(rg.LineCurve(ln), _GRID_CLR, _gw)
+                pv.add_curve(rg.LineCurve(ln), _GRID_CLR, _gw, dash=GRID_DASH)
 
             # X/Y labels
             for pt, txt in zip(x_pts, x_txt):

@@ -125,8 +125,7 @@ def ask_user_confirmation(message, title="Confirm Installation"):
     """
     Show confirmation dialog to user using cross-platform Rhino UI.
     """
-    # CROSS-PLATFORM FIX: Replaced System.Windows.Forms with Rhino.UI.Dialogs
-    response = Rhino.UI.Dialogs.ShowMessageBox(
+    response = Rhino.UI.Dialogs.ShowMessage(
         message,
         title,
         Rhino.UI.ShowMessageButton.YesNo,

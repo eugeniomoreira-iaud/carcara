@@ -36,3 +36,16 @@ def test_negative_raises():
 def test_zero_raises():
     with pytest.raises(ValueError, match="strictly positive"):
         parse_dash_pattern("0 1")
+
+
+def test_comma_separator():
+    """SVG stroke-dasharray syntax parses the same as space syntax."""
+    assert parse_dash_pattern("5,5") == [5.0, 5.0]
+
+
+def test_comma_space_mixed():
+    assert parse_dash_pattern("5, 2") == [5.0, 2.0]
+
+
+def test_comma_and_space_equivalent():
+    assert parse_dash_pattern("5,2") == parse_dash_pattern("5 2")

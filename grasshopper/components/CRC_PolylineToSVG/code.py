@@ -138,7 +138,7 @@ class PolylineToSVG(component):
                         # Viewport preview — always draw; use stroke color or default black
                         _preview_clr = stroke_color if stroke_color is not None else Color.Black
                         _preview_w = max(1, int(sw_val)) if sw_val else 1
-                        pv.add_curve(crv, _preview_clr, _preview_w)
+                        pv.add_curve(crv, _preview_clr, _preview_w, dash=dash_val)
                         if fill_color is not None and crv.IsClosed:
                             pv.add_filled_curve(crv, fill_color)
 
