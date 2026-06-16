@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "CurveDisplay",
   "nickname": "CrvDpl",
   "category": "Carcara",
@@ -6,16 +6,17 @@
   "description": "Custom viewport preview (lineweight, color, dash) for curves — CPython SDK-mode port of CRC_CurveDisplay.",
   "exposure": 2,
   "componentVersion": "0.5-00",
+  "date": "2026-06-16",
   "instanceGuid": "a7f3c2e9-1b54-4d80-9c6a-2e8f0b3d7a16",
   "ghpython": {
     "isAdvancedMode": true,
     "marshalGuids": false,
     "iconDisplay": 0,
     "inputParameters": [
-      { "name": "Curve",  "description": "Curves to preview",                                                 "typeHintID": "curve", "scriptParamAccess": "list" },
-      { "name": "Colour", "description": "Color per curve (last value repeats for remaining curves)",         "typeHintID": "color", "scriptParamAccess": "list" },
-      { "name": "Width",  "description": "Lineweight per curve in pixels (last value repeats)",               "typeHintID": "float", "scriptParamAccess": "list" },
-      { "name": "Dash",   "description": "Dash pattern per curve: space-separated dash/gap values (e.g. '2 1'); last value repeats", "typeHintID": "str", "scriptParamAccess": "list", "optional": true }
+      { "name": "curves",  "nickname": "crv",  "description": "Curves to preview",                                                 "typeHintID": "curve", "scriptParamAccess": "list" },
+      { "name": "colours", "nickname": "col",  "description": "Color per curve (last value repeats for remaining curves)",         "typeHintID": "color", "scriptParamAccess": "list" },
+      { "name": "widths",  "nickname": "w",    "description": "Lineweight per curve in pixels (last value repeats)",               "typeHintID": "float", "scriptParamAccess": "list" },
+      { "name": "dashes",  "nickname": "dash", "description": "Dash pattern per curve: space-separated dash/gap values (e.g. '2 1'); last value repeats", "typeHintID": "str", "scriptParamAccess": "list", "optional": true }
     ],
     "outputParameters": []
   }

@@ -1,20 +1,16 @@
-﻿"""CRC_QueryValues: Query column(s) from a table with NULL replacement, output as tree."""
+"""CRC_QueryValues: Query column(s) from a table with NULL replacement, output as tree."""
 import sys
 import os
+import Grasshopper
 
-_bases = []
-_appdata = os.environ.get("APPDATA")
-if _appdata:
-    _bases.append(os.path.join(_appdata, "Grasshopper", "UserObjects", "carcara"))
-_bases.append(os.path.join(
-    os.path.expanduser("~"), "Library", "Application Support", "McNeel",
-    "Rhinoceros", "8.0", "Plug-ins", "Grasshopper", "UserObjects", "carcara"))
-for _b in _bases:
-    if os.path.isdir(_b) and _b not in sys.path:
-        sys.path.insert(0, _b)
+# Dynamically route to the user objects folder via the Grasshopper API
+_carcara_path = os.path.join(Grasshopper.Folders.DefaultUserObjectFolder, "carcara")
+
+if os.path.isdir(_carcara_path) and _carcara_path not in sys.path:
+    sys.path.insert(0, _carcara_path)
 
 try:
-    ghenv.Component.Message = "v{{component_version}}"
+    ghenv.Component.Message = "v{{component_version}}-{{date}}"
 except Exception:
     pass
 
@@ -29,7 +25,7 @@ if CToggle:
         
         # Handle single column or multiple columns (comma-separated)
         cols = [c.strip() for c in str(column).split(",")] if column else []
-        null_val = N if N else ""
+        null_val = nullReplacement if nullReplacement else ""
         
         # Build SQL for multiple columns
         from crc_modules.db.query import _quote_identifier, _quote_literal

@@ -175,10 +175,10 @@ def create_curvedisplay_cs_ghuser(source: str, target: str,
 
     icon_bytes = _bitmap_from_image_path(icon_path)
 
-    with open(code_path, "r", encoding="utf-8") as f:
+    with open(code_path, "r", encoding="utf-8-sig") as f:
         cs_source = f.read()
 
-    with open(meta_path, "r", encoding="utf-8") as f:
+    with open(meta_path, "r", encoding="utf-8-sig") as f:
         data = json.load(f)
 
     prefix = prefix or ""

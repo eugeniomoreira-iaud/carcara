@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "Histogram",
   "nickname": "Hist",
   "category": "Carcara",
@@ -6,24 +6,25 @@
   "description": "Renders a histogram chart in the Rhino viewport and exports raw SVG body content. Chain svgCode into CRC_SaveSVG to write the file.",
   "exposure": 8,
   "componentVersion": "0.5-00",
+  "date": "2026-06-16",
   "instanceGuid": "b3c4d5e6-f7a8-9012-bcde-fa2345678901",
   "ghpython": {
     "isAdvancedMode": true,
     "marshalGuids": true,
     "iconDisplay": 0,
     "inputParameters": [
-      { "name": "canvasRect",      "description": "Canvas boundary Rectangle3d (default 100x100 at origin)",        "typeHintID": "rectangle", "scriptParamAccess": "item", "optional": true },
-      { "name": "dataValues",      "description": "Data values to histogram (uses demo data if absent)",             "typeHintID": "float",     "scriptParamAccess": "list" },
-      { "name": "numBins",         "description": "Number of histogram bins (default 10)",                           "typeHintID": "int",       "scriptParamAccess": "item", "optional": true },
-      { "name": "numXLabels",      "description": "Number of X-axis labels (default: all bin edges)",               "typeHintID": "int",       "scriptParamAccess": "item", "optional": true },
-      { "name": "numYLabels",      "description": "Number of Y-axis labels (default 5)",                            "typeHintID": "int",       "scriptParamAccess": "item", "optional": true },
-      { "name": "decimals",        "description": "Decimal places for labels (default 1)",                          "typeHintID": "int",       "scriptParamAccess": "item", "optional": true },
-      { "name": "axisExtension",   "description": "Axis extension beyond canvas (default 0)",                       "typeHintID": "float",     "scriptParamAccess": "item", "optional": true },
-      { "name": "labelDist",       "description": "Label distance from axis (default 10)",                          "typeHintID": "float",     "scriptParamAccess": "item", "optional": true },
-      { "name": "drawGridY",       "description": "Draw horizontal grid lines at Y labels (default False)",         "typeHintID": "bool",      "scriptParamAccess": "item", "optional": true },
-      { "name": "barOutlineWidth", "description": "Bar outline width in pixels (default 1)",                        "typeHintID": "float",     "scriptParamAccess": "item", "optional": true },
-      { "name": "axisLineWidth",   "description": "Axis line width in pixels (default 2)",                          "typeHintID": "float",     "scriptParamAccess": "item", "optional": true },
-      { "name": "gridLineWidth",   "description": "Grid line width in pixels (default 1)",                          "typeHintID": "float",     "scriptParamAccess": "item", "optional": true }
+      { "name": "canvasRect",      "nickname": "cnv",  "description": "Canvas boundary Rectangle3d (default 100x100 at origin)",        "typeHintID": "rectangle", "scriptParamAccess": "item", "optional": true },
+      { "name": "dataValues",      "nickname": "val",  "description": "Data values to histogram (uses demo data if absent)",             "typeHintID": "float",     "scriptParamAccess": "list" },
+      { "name": "numBins",         "nickname": "bins", "description": "Number of histogram bins (default 10)",                           "typeHintID": "int",       "scriptParamAccess": "item", "optional": true },
+      { "name": "numXLabels",      "nickname": "nxL",  "description": "Number of X-axis labels (default: all bin edges)",               "typeHintID": "int",       "scriptParamAccess": "item", "optional": true },
+      { "name": "numYLabels",      "nickname": "nyL",  "description": "Number of Y-axis labels (default 5)",                            "typeHintID": "int",       "scriptParamAccess": "item", "optional": true },
+      { "name": "decimals",        "nickname": "dec",  "description": "Decimal places for labels (default 1)",                          "typeHintID": "int",       "scriptParamAccess": "item", "optional": true },
+      { "name": "axisExtension",   "nickname": "axE",  "description": "Axis extension beyond canvas (default 0)",                       "typeHintID": "float",     "scriptParamAccess": "item", "optional": true },
+      { "name": "labelDist",       "nickname": "lblD", "description": "Label distance from axis (default 10)",                          "typeHintID": "float",     "scriptParamAccess": "item", "optional": true },
+      { "name": "drawGridY",       "nickname": "gY",   "description": "Draw horizontal grid lines at Y labels (default False)",         "typeHintID": "bool",      "scriptParamAccess": "item", "optional": true },
+      { "name": "barOutlineWidth", "nickname": "barW", "description": "Bar outline width in pixels (default 1)",                        "typeHintID": "float",     "scriptParamAccess": "item", "optional": true },
+      { "name": "axisLineWidth",   "nickname": "axW",  "description": "Axis line width in pixels (default 2)",                          "typeHintID": "float",     "scriptParamAccess": "item", "optional": true },
+      { "name": "gridLineWidth",   "nickname": "grdW", "description": "Grid line width in pixels (default 1)",                          "typeHintID": "float",     "scriptParamAccess": "item", "optional": true }
     ],
     "outputParameters": [
       {

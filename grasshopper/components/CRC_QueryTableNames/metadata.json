@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "QueryTableNames",
   "nickname": "QT",
   "category": "Carcara",
@@ -6,20 +6,48 @@
   "description": "Lists all tables in a specified schema.",
   "exposure": 2,
   "componentVersion": "0.5-00",
+  "date": "2026-06-16",
   "instanceGuid": "e5f6a7b8-c9d0-1234-efab-567890123456",
   "ghpython": {
     "isAdvancedMode": false,
     "marshalGuids": true,
     "iconDisplay": 0,
     "inputParameters": [
-      { "name": "CString", "description": "Connection string with plain-text password (libpq format)", "typeHintID": "str", "scriptParamAccess": "item" },
-      { "name": "CToggle", "description": "Set True to execute", "typeHintID": "bool", "scriptParamAccess": "item" },
-      { "name": "schema", "description": "Schema name", "typeHintID": "str", "scriptParamAccess": "item" }
+      {
+        "name": "CString",
+        "nickname": "cs",
+        "description": "Connection string with plain-text password (libpq format)",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "CToggle",
+        "nickname": "tog",
+        "description": "Set True to execute",
+        "typeHintID": "bool",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "schema",
+        "nickname": "sch",
+        "description": "Schema name",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      }
     ],
     "outputParameters": [
-      { "name": "tables", "description": "List of table names" },
-      { "name": "report", "description": "Status message" },
-      { "name": "queries", "description": "All SQL statements executed against the database (structured)" }
+      {
+        "name": "tables",
+        "description": "List of table names"
+      },
+      {
+        "name": "report",
+        "description": "Status message"
+      },
+      {
+        "name": "queries",
+        "description": "All SQL statements executed against the database (structured)"
+      }
     ]
   }
 }

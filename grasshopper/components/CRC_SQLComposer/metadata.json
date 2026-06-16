@@ -1,24 +1,52 @@
-﻿{
+{
   "name": "SQLComposer",
-  "nickname": "SQLComp.py",
+  "nickname": "SQLComp",
   "category": "Carcara",
   "subcategory": "03.Utilities",
   "description": "Generates SQL statements by replacing variable placeholders with corresponding values.",
   "exposure": 4,
   "componentVersion": "0.5-00",
+  "date": "2026-06-16",
   "ghpython": {
     "isAdvancedMode": false,
     "marshalGuids": true,
     "iconDisplay": 0,
     "inputParameters": [
-      { "name": "sql", "description": "SQL template with placeholders (e.g., 'SELECT * FROM #table# WHERE col = #value#').", "typeHintID": "str", "scriptParamAccess": "item" },
-      { "name": "var", "description": "List of placeholder strings to be replaced.", "typeHintID": "str", "scriptParamAccess": "list" },
-      { "name": "val", "description": "List of replacement values corresponding to the placeholders.", "typeHintID": "str", "scriptParamAccess": "list" }
+      {
+        "name": "sql",
+        "nickname": "sql",
+        "description": "SQL template with placeholders (e.g., 'SELECT * FROM #table# WHERE col = #value#').",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "variables",
+        "nickname": "var",
+        "description": "List of placeholder strings to be replaced.",
+        "typeHintID": "str",
+        "scriptParamAccess": "list"
+      },
+      {
+        "name": "values",
+        "nickname": "val",
+        "description": "List of replacement values corresponding to the placeholders.",
+        "typeHintID": "str",
+        "scriptParamAccess": "list"
+      }
     ],
     "outputParameters": [
-      { "name": "out", "description": "Processing log" },
-      { "name": "stmt", "description": "Final SQL statement after all replacements." },
-      { "name": "report", "description": "Status message" }
+      {
+        "name": "out",
+        "description": "Processing log"
+      },
+      {
+        "name": "statement",
+        "description": "Final SQL statement after all replacements."
+      },
+      {
+        "name": "report",
+        "description": "Status message"
+      }
     ]
   }
 }

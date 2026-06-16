@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "CreateTable",
   "nickname": "CrtTbl",
   "category": "Carcara",
@@ -6,25 +6,86 @@
   "description": "CREATE TABLE in PostGIS and INSERT row data; always adds a primary key (from Id Values or auto-increment). Destructive when replace_table=True.",
   "exposure": 8,
   "componentVersion": "0.5-00",
+  "date": "2026-06-16",
   "instanceGuid": "e5f6a7b8-c9d0-1234-ef01-567890123456",
   "ghpython": {
     "isAdvancedMode": false,
     "marshalGuids": true,
     "iconDisplay": 0,
     "inputParameters": [
-      { "name": "CString",      "description": "Connection string with encoded password",                                          "typeHintID": "str",  "scriptParamAccess": "item" },
-      { "name": "CToggle",      "description": "Set True to CREATE the table and INSERT rows (destructive if replace_table=True)", "typeHintID": "bool", "scriptParamAccess": "item" },
-      { "name": "schema",       "description": "Target schema",                                                                    "typeHintID": "str",  "scriptParamAccess": "item" },
-      { "name": "table",        "description": "Table name to create",                                                             "typeHintID": "str",  "scriptParamAccess": "item" },
-      { "name": "column_names", "description": "Column names (parallel to column_types)",                                         "typeHintID": "str",  "scriptParamAccess": "list" },
-      { "name": "column_types", "description": "SQL types parallel to column_names (e.g. text, integer, double precision)",       "typeHintID": "str",  "scriptParamAccess": "list" },
-      { "name": "values",       "description": "DataTree of row data — branch per row; each branch holds values for all columns", "typeHintID": "str",  "scriptParamAccess": "tree" },
-      { "name": "id_values",    "description": "Optional DataTree of primary-key values — branch per row (one id per branch); omit for auto-increment id", "typeHintID": "str",  "scriptParamAccess": "tree" },
-      { "name": "replace_table","description": "DROP TABLE IF EXISTS before CREATE (destructive)",                                 "typeHintID": "bool", "scriptParamAccess": "item" }
+      {
+        "name": "CString",
+        "nickname": "cs",
+        "description": "Connection string with encoded password",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "CToggle",
+        "nickname": "tog",
+        "description": "Set True to CREATE the table and INSERT rows (destructive if replace_table=True)",
+        "typeHintID": "bool",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "schema",
+        "nickname": "sch",
+        "description": "Target schema",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "table",
+        "nickname": "tbl",
+        "description": "Table name to create",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "columnNames",
+        "nickname": "cols",
+        "description": "Column names (parallel to column_types)",
+        "typeHintID": "str",
+        "scriptParamAccess": "list"
+      },
+      {
+        "name": "columnTypes",
+        "nickname": "types",
+        "description": "SQL types parallel to column_names (e.g. text, integer, double precision)",
+        "typeHintID": "str",
+        "scriptParamAccess": "list"
+      },
+      {
+        "name": "values",
+        "nickname": "vals",
+        "description": "DataTree of row data — branch per row; each branch holds values for all columns",
+        "typeHintID": "str",
+        "scriptParamAccess": "tree"
+      },
+      {
+        "name": "idValues",
+        "nickname": "ids",
+        "description": "Optional DataTree of primary-key values — branch per row (one id per branch); omit for auto-increment id",
+        "typeHintID": "str",
+        "scriptParamAccess": "tree"
+      },
+      {
+        "name": "replaceTable",
+        "nickname": "rep",
+        "description": "DROP TABLE IF EXISTS before CREATE (destructive)",
+        "typeHintID": "bool",
+        "scriptParamAccess": "item"
+      }
     ],
     "outputParameters": [
-      { "name": "affected", "description": "Rows inserted" },
-      { "name": "report",   "description": "Status message" }
+      {
+        "name": "affected",
+        "description": "Rows inserted"
+      },
+      {
+        "name": "report",
+        "description": "Status message"
+      }
     ]
   }
 }

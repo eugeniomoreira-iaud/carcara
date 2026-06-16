@@ -123,10 +123,10 @@ def validate_source_bundle(source):
 
     icon = bitmap_from_image_path(icon)
 
-    with open(code, "r") as f:
+    with open(code, "r", encoding="utf-8-sig") as f:
         python_code = f.read()
 
-    with open(data, "r") as f:
+    with open(data, "r", encoding="utf-8-sig") as f:
         data = json.load(f)
 
     if "exposure" not in data:

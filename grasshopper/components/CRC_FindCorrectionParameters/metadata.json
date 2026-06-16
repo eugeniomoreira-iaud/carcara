@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "FindCorrectionParameters",
   "nickname": "FindCorr",
   "category": "Carcara",
@@ -6,23 +6,69 @@
   "description": "Finds the coordinate correction parameters (Cx, Cy) from a PostGIS table row. Returns the centroid of the selected row as text strings for use as false-origin correction in geometry query components.",
   "exposure": 2,
   "componentVersion": "0.5-00",
+  "date": "2026-06-16",
   "instanceGuid": "c4d5e6f7-a8b9-0123-cdef-012345678902",
   "ghpython": {
     "isAdvancedMode": false,
     "marshalGuids": true,
     "iconDisplay": 0,
     "inputParameters": [
-      { "name": "CString", "description": "A database connection string.",                                                          "typeHintID": "str",  "scriptParamAccess": "item" },
-      { "name": "CToggle", "description": "Set True to connect.",                                                                  "typeHintID": "bool", "scriptParamAccess": "item" },
-      { "name": "Schema",  "description": "Schema where the table is located.",                                                    "typeHintID": "str",  "scriptParamAccess": "item" },
-      { "name": "Table",   "description": "Table to be queried.",                                                                  "typeHintID": "str",  "scriptParamAccess": "item" },
-      { "name": "Column",  "description": "Column where a specific value can be searched (optional — omit for first row).",       "typeHintID": "str",  "scriptParamAccess": "item" },
-      { "name": "Value",   "description": "Value to be searched (optional — omit for first row).",                                "typeHintID": "str",  "scriptParamAccess": "item" }
+      {
+        "name": "CString",
+        "nickname": "cs",
+        "description": "A database connection string.",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "CToggle",
+        "nickname": "tog",
+        "description": "Set True to connect.",
+        "typeHintID": "bool",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "schema",
+        "nickname": "sch",
+        "description": "Schema where the table is located.",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "table",
+        "nickname": "tbl",
+        "description": "Table to be queried.",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "column",
+        "nickname": "col",
+        "description": "Column where a specific value can be searched (optional — omit for first row).",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "value",
+        "nickname": "val",
+        "description": "Value to be searched (optional — omit for first row).",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      }
     ],
     "outputParameters": [
-      { "name": "Cx",     "description": "Correction X — positioning correction parameter on the X axis to bring geometries closer to the origin." },
-      { "name": "Cy",     "description": "Correction Y — positioning correction parameter on the Y axis to bring geometries closer to the origin." },
-      { "name": "report", "description": "Exceptions — displays errors on the query." }
+      {
+        "name": "Cx",
+        "description": "Correction X — positioning correction parameter on the X axis to bring geometries closer to the origin."
+      },
+      {
+        "name": "Cy",
+        "description": "Correction Y — positioning correction parameter on the Y axis to bring geometries closer to the origin."
+      },
+      {
+        "name": "report",
+        "description": "Exceptions — displays errors on the query."
+      }
     ]
   }
 }

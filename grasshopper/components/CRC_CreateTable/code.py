@@ -1,20 +1,16 @@
-﻿"""CRC_CreateTable: CREATE TABLE in PostGIS and INSERT row data with mandatory primary key."""
+"""CRC_CreateTable: CREATE TABLE in PostGIS and INSERT row data with mandatory primary key."""
 import sys
 import os
+import Grasshopper
 
-_bases = []
-_appdata = os.environ.get("APPDATA")
-if _appdata:
-    _bases.append(os.path.join(_appdata, "Grasshopper", "UserObjects", "carcara"))
-_bases.append(os.path.join(
-    os.path.expanduser("~"), "Library", "Application Support", "McNeel",
-    "Rhinoceros", "8.0", "Plug-ins", "Grasshopper", "UserObjects", "carcara"))
-for _b in _bases:
-    if os.path.isdir(_b) and _b not in sys.path:
-        sys.path.insert(0, _b)
+# Dynamically route to the user objects folder via the Grasshopper API
+_carcara_path = os.path.join(Grasshopper.Folders.DefaultUserObjectFolder, "carcara")
+
+if os.path.isdir(_carcara_path) and _carcara_path not in sys.path:
+    sys.path.insert(0, _carcara_path)
 
 try:
-    ghenv.Component.Message = "v{{component_version}}"
+    ghenv.Component.Message = "v{{component_version}}-{{date}}"
 except Exception:
     pass
 
@@ -30,11 +26,11 @@ if CToggle:
             raise ValueError("schema and table are required")
 
         # --- validate parallel column lists ---
-        names = [str(c) for c in (column_names or [])]
-        types = [str(t) for t in (column_types or [])]
+        names = [str(c) for c in (columnNames or [])]
+        types = [str(t) for t in (columnTypes or [])]
         if len(names) != len(types):
             raise ValueError(
-                "column_names and column_types must be parallel (same length); "
+                "columnNames and columnTypes must be parallel (same length); "
                 "got {} names and {} types".format(len(names), len(types))
             )
         columns = list(zip(names, types))
@@ -52,16 +48,16 @@ if CToggle:
                     )
                 rows.append(branch)
 
-        # --- optional id_values (DataTree: branch per row, one id per branch) ---
+        # --- optional idValues (DataTree: branch per row, one id per branch) ---
         ids = None
-        if id_values is not None and hasattr(id_values, "BranchCount") and id_values.BranchCount > 0:
+        if idValues is not None and hasattr(idValues, "BranchCount") and idValues.BranchCount > 0:
             ids = []
-            for i in range(id_values.BranchCount):
-                branch = id_values.Branch(i)
+            for i in range(idValues.BranchCount):
+                branch = idValues.Branch(i)
                 ids.append(str(branch[0]) if branch and branch[0] is not None else "")
             if rows and len(ids) != len(rows):
                 raise ValueError(
-                    "id_values has {} branches but values tree has {} rows".format(
+                    "idValues has {} branches but values tree has {} rows".format(
                         len(ids), len(rows)
                     )
                 )
@@ -70,7 +66,7 @@ if CToggle:
         n = create_table_with_data(
             CString, schema, table, columns, rows,
             id_values=ids,
-            replace_table=bool(replace_table)
+            replace_table=bool(replaceTable)
         )
         affected = n if n is not None else 0
         report = "success: true\nRows Inserted: {}".format(affected)

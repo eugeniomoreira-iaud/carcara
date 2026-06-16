@@ -1,38 +1,34 @@
-﻿import sys
+import sys
 import os
+import Grasshopper
 
-_bases = []
-_appdata = os.environ.get("APPDATA")
-if _appdata:
-    _bases.append(os.path.join(_appdata, "Grasshopper", "UserObjects", "carcara"))
-_bases.append(os.path.join(
-    os.path.expanduser("~"), "Library", "Application Support", "McNeel",
-    "Rhinoceros", "8.0", "Plug-ins", "Grasshopper", "UserObjects", "carcara"))
-for _b in _bases:
-    if os.path.isdir(_b) and _b not in sys.path:
-        sys.path.insert(0, _b)
+# Dynamically route to the user objects folder via the Grasshopper API
+_carcara_path = os.path.join(Grasshopper.Folders.DefaultUserObjectFolder, "carcara")
+
+if os.path.isdir(_carcara_path) and _carcara_path not in sys.path:
+    sys.path.insert(0, _carcara_path)
 
 try:
-    ghenv.Component.Message = "v{{component_version}}"
+    ghenv.Component.Message = "v{{component_version}}-{{date}}"
 except Exception:
     pass
 
 from crc_modules.utils.sql_composer import compose
 
-stmt, report, out = "", "", ""
+statement, report, out = "", "", ""
 
 try:
     if not sql:
         raise ValueError("No SQL template provided.")
-    _var = var if isinstance(var, (list, tuple)) else ([var] if var else [])
-    _val = val if isinstance(val, (list, tuple)) else ([val] if val else [])
-    if len(_var) != len(_val):
+    _variables = variables if isinstance(variables, (list, tuple)) else ([variables] if variables else [])
+    _values = values if isinstance(values, (list, tuple)) else ([values] if values else [])
+    if len(_variables) != len(_values):
         raise ValueError(
-            f"var and val must have the same length "
-            f"(got {len(_var)} and {len(_val)})."
+            f"variables and values must have the same length "
+            f"(got {len(_variables)} and {len(_values)})."
         )
-    replacements = dict(zip([str(v) for v in _var], [str(v) for v in _val]))
-    stmt = compose(sql, replacements)
+    replacements = dict(zip([str(v) for v in _variables], [str(v) for v in _values]))
+    statement = compose(sql, replacements)
     n = len(replacements)
     report = f"OK – {n} replacement{'s' if n != 1 else ''} applied"
     out = f"Replaced {n} placeholder{'s' if n != 1 else ''}: {list(replacements.keys())}"

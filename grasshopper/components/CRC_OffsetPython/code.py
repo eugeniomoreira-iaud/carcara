@@ -1,4 +1,4 @@
-﻿"""CRC_OffsetPython: Offset planar curves using Rhino's Curve.Offset.
+"""CRC_OffsetPython: Offset planar curves using Rhino's Curve.Offset.
 
 No CToggle — executes on data arrival (matches legacy).
 DataTree fan-out, distance cyclic mapping, and None-fill for failures
@@ -7,20 +7,16 @@ are handled here (GH plumbing). Offset algorithm lives in crc_modules/rhino/offs
 import sys
 import os
 
-# Make crc_modules importable inside Grasshopper (no __file__ available here).
-_bases = []
-_appdata = os.environ.get("APPDATA")
-if _appdata:
-    _bases.append(os.path.join(_appdata, "Grasshopper", "UserObjects", "carcara"))
-_bases.append(os.path.join(
-    os.path.expanduser("~"), "Library", "Application Support", "McNeel",
-    "Rhinoceros", "8.0", "Plug-ins", "Grasshopper", "UserObjects", "carcara"))
-for _b in _bases:
-    if os.path.isdir(_b) and _b not in sys.path:
-        sys.path.insert(0, _b)
+import Grasshopper
+
+# Dynamically route to the user objects folder via the Grasshopper API
+_carcara_path = os.path.join(Grasshopper.Folders.DefaultUserObjectFolder, "carcara")
+
+if os.path.isdir(_carcara_path) and _carcara_path not in sys.path:
+    sys.path.insert(0, _carcara_path)
 
 try:
-    ghenv.Component.Message = "v{{component_version}}"
+    ghenv.Component.Message = "v{{component_version}}-{{date}}"
 except Exception:
     pass
 
@@ -31,16 +27,16 @@ from Grasshopper.Kernel.Data import GH_Path
 from crc_modules.rhino.offset import get_corner_style, offset_curve, DEFAULT_TOLERANCE
 
 # ── Resolve inputs ────────────────────────────────────────────────────────────
-# Crv and Dist arrive as DataTrees via GHPython tree access.
-# CStyle is a single item (may be None → default to 1 = Sharp).
+# curves and distances arrive as DataTrees via GHPython tree access.
+# cornerStyle is a single item (may be None → default to 1 = Sharp).
 
-_style_int = int(CStyle) if CStyle is not None else 1
+_style_int = int(cornerStyle) if cornerStyle is not None else 1
 _corner_style = get_corner_style(_style_int)
 
 _curves_tree  = ghenv.Component.Params.Input[0].VolatileData
 _dist_tree    = ghenv.Component.Params.Input[1].VolatileData
 
-OffCrv = DataTree[object]()
+offsetCurves = DataTree[object]()
 
 _log_lines = ["Corner style: {}".format(_style_int)]
 _total = _ok = _fail = 0
@@ -88,10 +84,10 @@ try:
                 _result, _err = offset_curve(_crv, _d, _corner_style, DEFAULT_TOLERANCE)
 
                 if _result is not None:
-                    OffCrv.Add(_result, _path)
+                    offsetCurves.Add(_result, _path)
                     _ok += 1
                 else:
-                    OffCrv.Add(None, _path)
+                    offsetCurves.Add(None, _path)
                     _fail += 1
                     if _err:
                         _log_lines.append("  [{} #{}]: {}".format(_path, _i, _err))

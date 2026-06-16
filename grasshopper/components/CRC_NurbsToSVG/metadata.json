@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "NurbsToSVG",
   "nickname": "NurbsSVG",
   "category": "Carcara",
@@ -6,18 +6,19 @@
   "description": "Converts Grasshopper NURBS curves to SVG <path> elements via linear-segment approximation at a configurable sample count (default 50). Coordinates are transformed from Rhino Y-up to SVG Y-down using the canvas anchor.",
   "exposure": 4,
   "componentVersion": "0.5-00",
+  "date": "2026-06-16",
   "instanceGuid": "d3e4f5a6-b7c8-9012-defa-123456789003",
   "ghpython": {
     "isAdvancedMode": true,
     "marshalGuids": false,
     "iconDisplay": 0,
     "inputParameters": [
-      { "name": "n",      "description": "NURBS curve or list of curves",                                         "typeHintID": "curve",  "scriptParamAccess": "list" },
-      { "name": "s",      "description": "Sample count per curve (default 50). Higher = smoother",                "typeHintID": "int",    "scriptParamAccess": "list" },
-      { "name": "sc",     "description": "Stroke color or list of stroke colors. Default: none",                  "typeHintID": "color",  "scriptParamAccess": "list", "optional": true },
-      { "name": "sw",     "description": "Stroke width or list of stroke widths. Default: 0",                    "typeHintID": "float",  "scriptParamAccess": "list" },
-      { "name": "f",      "description": "Fill color or list of fill colors. Default: none",                     "typeHintID": "color",  "scriptParamAccess": "list", "optional": true },
-      { "name": "canvas", "description": "Rectangle defining the SVG canvas (optional; uses bounding box if not provided)", "typeHintID": "rectangle", "scriptParamAccess": "item", "optional": true }
+      { "name": "nurbsCurves", "nickname": "n",      "description": "NURBS curve or list of curves",                                         "typeHintID": "curve",  "scriptParamAccess": "list" },
+      { "name": "sampleCount", "nickname": "s",      "description": "Sample count per curve (default 50). Higher = smoother",                "typeHintID": "int",    "scriptParamAccess": "list" },
+      { "name": "strokeColor", "nickname": "sc",     "description": "Stroke color or list of stroke colors. Default: none",                  "typeHintID": "color",  "scriptParamAccess": "list", "optional": true },
+      { "name": "strokeWidth", "nickname": "sw",     "description": "Stroke width or list of stroke widths. Default: 0",                    "typeHintID": "float",  "scriptParamAccess": "list" },
+      { "name": "fillColor",   "nickname": "f",      "description": "Fill color or list of fill colors. Default: none",                     "typeHintID": "color",  "scriptParamAccess": "list", "optional": true },
+      { "name": "canvas",      "nickname": "canvas", "description": "Rectangle defining the SVG canvas (optional; uses bounding box if not provided)", "typeHintID": "rectangle", "scriptParamAccess": "item", "optional": true }
     ],
     "outputParameters": [
       { "name": "svgCode", "description": "SVG element string(s); chain into CRC_SaveSVG for file export." },

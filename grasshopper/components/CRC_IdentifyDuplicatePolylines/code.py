@@ -1,21 +1,16 @@
-﻿"""CRC_IdentifyDuplicatePolylines: Detect duplicate polylines by normalised geometric signature."""
+"""CRC_IdentifyDuplicatePolylines: Detect duplicate polylines by normalised geometric signature."""
 import sys
 import os
+import Grasshopper
 
-# Make crc_modules importable from Grasshopper UserObjects path.
-_bases = []
-_appdata = os.environ.get("APPDATA")
-if _appdata:
-    _bases.append(os.path.join(_appdata, "Grasshopper", "UserObjects", "carcara"))
-_bases.append(os.path.join(
-    os.path.expanduser("~"), "Library", "Application Support", "McNeel",
-    "Rhinoceros", "8.0", "Plug-ins", "Grasshopper", "UserObjects", "carcara"))
-for _b in _bases:
-    if os.path.isdir(_b) and _b not in sys.path:
-        sys.path.insert(0, _b)
+# Dynamically route to the user objects folder via the Grasshopper API
+_carcara_path = os.path.join(Grasshopper.Folders.DefaultUserObjectFolder, "carcara")
+
+if os.path.isdir(_carcara_path) and _carcara_path not in sys.path:
+    sys.path.insert(0, _carcara_path)
 
 try:
-    ghenv.Component.Message = "v{{component_version}}"
+    ghenv.Component.Message = "v{{component_version}}-{{date}}"
 except Exception:
     pass
 
@@ -27,17 +22,17 @@ from crc_modules.rhino.wkt_conversion import rh_geometry_to_wkt
 from crc_modules.geometry.wkt import wkt_to_shapely
 from crc_modules.geometry.duplicates import identify_duplicates
 
-i = DataTree[object]()
-report = "Provide a list of polyline curves to p."
+duplicateIndices = DataTree[object]()
+report = "Provide a list of polyline curves to polylines."
 
 try:
-    if not p:
+    if not polylines:
         report = "ERROR: No polylines provided."
     else:
         # Convert Rhino geometry → coordinate rings (list of (x, y) tuples)
         rings = []
         invalid_count = 0
-        for poly in p:
+        for poly in polylines:
             if poly is None:
                 rings.append(None)
                 invalid_count += 1
@@ -65,13 +60,13 @@ try:
         groups = identify_duplicates(rings, tolerance=DEFAULT_TOLERANCE)
 
         # Build DataTree output — one branch per duplicate group
-        i = DataTree[object]()
+        duplicateIndices = DataTree[object]()
         total_duplicates = 0
         for branch_idx, dup_list in enumerate(groups):
             path = GH_Path(branch_idx)
-            i.EnsurePath(path)
+            duplicateIndices.EnsurePath(path)
             for dup_idx in dup_list:
-                i.Add(dup_idx, path)
+                duplicateIndices.Add(dup_idx, path)
                 total_duplicates += 1
 
         valid_count = sum(1 for r in rings if r is not None)
@@ -82,7 +77,7 @@ try:
                 unique=unique_count,
                 dups=total_duplicates,
                 groups=len(groups),
-                total=len(p),
+                total=len(polylines),
             )
         )
         if invalid_count:

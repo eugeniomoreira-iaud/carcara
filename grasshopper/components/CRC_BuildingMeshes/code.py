@@ -1,4 +1,4 @@
-﻿"""CRC_BuildingMeshes: Extrude building footprints to Ground / Lateral / Roof meshes.
+"""CRC_BuildingMeshes: Extrude building footprints to Ground / Lateral / Roof meshes.
 
 No CToggle — executes on data arrival (matches legacy).
 DataTree iteration, height fan-out, empty-branch preservation, and the
@@ -8,21 +8,16 @@ Mesh algorithms live in crc_modules/rhino/building_mesh.py.
 import sys
 import os
 import time
+import Grasshopper
 
-# Make crc_modules importable inside Grasshopper (no __file__ available here).
-_bases = []
-_appdata = os.environ.get("APPDATA")
-if _appdata:
-    _bases.append(os.path.join(_appdata, "Grasshopper", "UserObjects", "carcara"))
-_bases.append(os.path.join(
-    os.path.expanduser("~"), "Library", "Application Support", "McNeel",
-    "Rhinoceros", "8.0", "Plug-ins", "Grasshopper", "UserObjects", "carcara"))
-for _b in _bases:
-    if os.path.isdir(_b) and _b not in sys.path:
-        sys.path.insert(0, _b)
+# Dynamically route to the user objects folder via the Grasshopper API
+_carcara_path = os.path.join(Grasshopper.Folders.DefaultUserObjectFolder, "carcara")
+
+if os.path.isdir(_carcara_path) and _carcara_path not in sys.path:
+    sys.path.insert(0, _carcara_path)
 
 try:
-    ghenv.Component.Message = "v{{component_version}}"
+    ghenv.Component.Message = "v{{component_version}}-{{date}}"
 except Exception:
     pass
 
@@ -36,13 +31,13 @@ from crc_modules.rhino.building_mesh import (
 )
 
 # ── Resolve inputs ────────────────────────────────────────────────────────────
-# BdgFp / BdgH are already DataTrees (scriptParamAccess: "tree"); use them directly.
-_fp_tree = BdgFp
-_h_tree  = BdgH
+# buildingFootprints / buildingHeights are already DataTrees (scriptParamAccess: "tree"); use them directly.
+_fp_tree = buildingFootprints
+_h_tree  = buildingHeights
 
-GrdF = DataTree[object]()
-LatF = DataTree[object]()
-RftF = DataTree[object]()
+groundFaces = DataTree[object]()
+lateralFaces = DataTree[object]()
+rooftopFaces = DataTree[object]()
 
 _t0 = time.time()
 _total_branches = _empty_branches = _total_bldg = _ok_bldg = _fail_bldg = 0
@@ -94,9 +89,9 @@ try:
             _path = _fp_tree.Path(_i)
 
             # Ensure branch exists in all output trees (preserves empty branches)
-            GrdF.EnsurePath(_path)
-            LatF.EnsurePath(_path)
-            RftF.EnsurePath(_path)
+            groundFaces.EnsurePath(_path)
+            lateralFaces.EnsurePath(_path)
+            rooftopFaces.EnsurePath(_path)
 
             _fps = [_unwrap(x) for x in _fp_tree.Branch(_path)]
 
@@ -120,9 +115,9 @@ try:
                 try:
                     _grd, _lat, _rft = create_building_mesh_with_holes(_ext, _holes, _h)
                     if _grd and _lat and _rft:
-                        GrdF.Add(_grd, _path)
-                        LatF.Add(_lat, _path)
-                        RftF.Add(_rft, _path)
+                        groundFaces.Add(_grd, _path)
+                        lateralFaces.Add(_lat, _path)
+                        rooftopFaces.Add(_rft, _path)
                         _ok_bldg += 1
                     else:
                         _fail_bldg += 1

@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "QueryValues",
   "nickname": "QV",
   "category": "Carcara",
@@ -6,24 +6,73 @@
   "description": "Queries a single column from a PostGIS table, replacing NULL values with a given replacement.",
   "exposure": 2,
   "componentVersion": "0.5-00",
+  "date": "2026-06-16",
   "instanceGuid": "c3d4e5f6-a7b8-9012-cdef-345678901234",
   "ghpython": {
     "isAdvancedMode": false,
     "marshalGuids": true,
     "iconDisplay": 0,
     "inputParameters": [
-      { "name": "CString", "description": "Connection string with encoded password (libpq format)", "typeHintID": "str", "scriptParamAccess": "item" },
-      { "name": "CToggle", "description": "Set True to execute", "typeHintID": "bool", "scriptParamAccess": "item" },
-      { "name": "schema", "description": "Schema name", "typeHintID": "str", "scriptParamAccess": "item" },
-      { "name": "table", "description": "Table name", "typeHintID": "str", "scriptParamAccess": "item" },
-      { "name": "column", "description": "Column name(s) to query (comma-separated for multiple)", "typeHintID": "str", "scriptParamAccess": "item" },
-      { "name": "N", "description": "Value to replace NULL with (optional)", "typeHintID": "str", "scriptParamAccess": "item" }
+      {
+        "name": "CString",
+        "nickname": "cs",
+        "description": "Connection string with encoded password (libpq format)",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "CToggle",
+        "nickname": "tog",
+        "description": "Set True to execute",
+        "typeHintID": "bool",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "schema",
+        "nickname": "sch",
+        "description": "Schema name",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "table",
+        "nickname": "tbl",
+        "description": "Table name",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "column",
+        "nickname": "col",
+        "description": "Column name(s) to query (comma-separated for multiple)",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "nullReplacement",
+        "nickname": "N",
+        "description": "Value to replace NULL with (optional)",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      }
     ],
     "outputParameters": [
-      { "name": "rows", "description": "Returned rows as strings" },
-      { "name": "columns", "description": "Column names" },
-      { "name": "report", "description": "Status message" },
-      { "name": "queries", "description": "All SQL statements executed against the database (structured)" }
+      {
+        "name": "rows",
+        "description": "Returned rows as strings"
+      },
+      {
+        "name": "columns",
+        "description": "Column names"
+      },
+      {
+        "name": "report",
+        "description": "Status message"
+      },
+      {
+        "name": "queries",
+        "description": "All SQL statements executed against the database (structured)"
+      }
     ]
   }
 }

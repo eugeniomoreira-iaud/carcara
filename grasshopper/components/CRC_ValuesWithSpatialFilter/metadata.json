@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "ValuesWithSpatialFilter",
   "nickname": "ValSptFlt",
   "category": "Carcara",
@@ -6,29 +6,108 @@
   "description": "Returns a single column's values for rows intersecting a spatial filter boundary, with coordinate correction. Output is a DataTree (branch per row) parallel to CRC_GeometriesWithSpatialFilter.",
   "exposure": 4,
   "componentVersion": "0.5-00",
+  "date": "2026-06-16",
   "instanceGuid": "c3d4e5f6-a7b8-9012-cdef-345678901234",
   "ghpython": {
     "isAdvancedMode": false,
     "marshalGuids": true,
     "iconDisplay": 0,
     "inputParameters": [
-      { "name": "CString", "description": "Connection string with encoded password", "typeHintID": "str", "scriptParamAccess": "item" },
-      { "name": "CToggle", "description": "Set True to execute", "typeHintID": "bool", "scriptParamAccess": "item" },
-      { "name": "schema", "description": "Schema where the table is located", "typeHintID": "str", "scriptParamAccess": "item" },
-      { "name": "table", "description": "Table to be queried", "typeHintID": "str", "scriptParamAccess": "item" },
-      { "name": "column", "description": "Single column name to query", "typeHintID": "str", "scriptParamAccess": "item" },
-      { "name": "N", "description": "Value to replace NULL items with", "typeHintID": "str", "scriptParamAccess": "item" },
-      { "name": "spatial_filter", "description": "Grasshopper geometries to act as spatial filter (list — all polygons dissolved into a single mask)", "typeHintID": "ghdoc", "scriptParamAccess": "list" },
-      { "name": "SRID", "description": "Spatial reference identifier for the spatial filter (default 4326)", "typeHintID": "int", "scriptParamAccess": "item" },
-      { "name": "function", "description": "Filter function: 0 = ST_Intersects, else = ST_Contains", "typeHintID": "int", "scriptParamAccess": "item" },
-      { "name": "Cx", "description": "Correction X (false origin) - default 0", "typeHintID": "str", "scriptParamAccess": "item" },
-      { "name": "Cy", "description": "Correction Y (false origin) - default 0", "typeHintID": "str", "scriptParamAccess": "item" }
+      {
+        "name": "CString",
+        "nickname": "cs",
+        "description": "Connection string with encoded password",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "CToggle",
+        "nickname": "tog",
+        "description": "Set True to execute",
+        "typeHintID": "bool",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "schema",
+        "nickname": "sch",
+        "description": "Schema where the table is located",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "table",
+        "nickname": "tbl",
+        "description": "Table to be queried",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "column",
+        "nickname": "col",
+        "description": "Single column name to query",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "nullReplacement",
+        "nickname": "N",
+        "description": "Value to replace NULL items with",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "spatialFilter",
+        "nickname": "flt",
+        "description": "Grasshopper geometries to act as spatial filter (list — all polygons dissolved into a single mask)",
+        "typeHintID": "ghdoc",
+        "scriptParamAccess": "list"
+      },
+      {
+        "name": "srid",
+        "nickname": "srid",
+        "description": "Spatial reference identifier for the spatial filter (default 4326)",
+        "typeHintID": "int",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "sqlFilter",
+        "nickname": "fn",
+        "description": "Filter function: 0 = ST_Intersects, else = ST_Contains",
+        "typeHintID": "int",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "Cx",
+        "nickname": "cx",
+        "description": "Correction X (false origin) - default 0",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "Cy",
+        "nickname": "cy",
+        "description": "Correction Y (false origin) - default 0",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      }
     ],
     "outputParameters": [
-      { "name": "values", "description": "Values as DataTree (one branch per row, ORDER BY pk)" },
-      { "name": "pk", "description": "Primary keys as DataTree (parallel to values, one branch per row)" },
-      { "name": "report", "description": "Status message" },
-      { "name": "queries", "description": "All SQL statements executed against the database (structured)" }
+      {
+        "name": "values",
+        "description": "Values as DataTree (one branch per row, ORDER BY pk)"
+      },
+      {
+        "name": "primaryKeys",
+        "description": "Primary keys as DataTree (parallel to values, one branch per row)"
+      },
+      {
+        "name": "report",
+        "description": "Status message"
+      },
+      {
+        "name": "queries",
+        "description": "All SQL statements executed against the database (structured)"
+      }
     ]
   }
 }

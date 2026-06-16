@@ -1,4 +1,4 @@
-﻿"""CRC_FindCorrectionParameters: Find coordinate correction parameters (false origin) from a PostGIS table.
+"""CRC_FindCorrectionParameters: Find coordinate correction parameters (false origin) from a PostGIS table.
 
 Queries one row from the table, auto-detects the geometry column, computes
 the centroid, and returns (Cx, Cy) as verbatim text strings for use as
@@ -14,21 +14,16 @@ directly into the Cx/Cy inputs of CRC_GeometryEntities and related components.
 # r: psycopg2
 import sys
 import os
+import Grasshopper
 
-# Make the crc_modules package importable from a Grasshopper Python 3 component.
-_bases = []
-_appdata = os.environ.get("APPDATA")
-if _appdata:
-    _bases.append(os.path.join(_appdata, "Grasshopper", "UserObjects", "carcara"))
-_bases.append(os.path.join(
-    os.path.expanduser("~"), "Library", "Application Support", "McNeel",
-    "Rhinoceros", "8.0", "Plug-ins", "Grasshopper", "UserObjects", "carcara"))
-for _b in _bases:
-    if os.path.isdir(_b) and _b not in sys.path:
-        sys.path.insert(0, _b)
+# Dynamically route to the user objects folder via the Grasshopper API
+_carcara_path = os.path.join(Grasshopper.Folders.DefaultUserObjectFolder, "carcara")
+
+if os.path.isdir(_carcara_path) and _carcara_path not in sys.path:
+    sys.path.insert(0, _carcara_path)
 
 try:
-    ghenv.Component.Message = "v{{component_version}}"
+    ghenv.Component.Message = "v{{component_version}}-{{date}}"
 except Exception:
     pass
 
@@ -40,14 +35,14 @@ if CToggle:
     try:
         if not CString:
             raise ValueError("CString is required")
-        if not Schema or not Table:
-            raise ValueError("Schema and Table are required")
+        if not schema or not table:
+            raise ValueError("schema and table are required")
 
-        # Unwired Column/Value arrive as None → first-row fallback in find_correction_parameters
-        col_arg = str(Column) if Column else None
-        val_arg = str(Value) if Value else None
+        # Unwired column/value arrive as None → first-row fallback in find_correction_parameters
+        col_arg = str(column) if column else None
+        val_arg = str(value) if value else None
 
-        Cx, Cy = find_correction_parameters(CString, Schema, Table, col_arg, val_arg)
+        Cx, Cy = find_correction_parameters(CString, schema, table, col_arg, val_arg)
         report = "OK — Cx={}, Cy={}".format(Cx, Cy)
 
     except Exception as e:

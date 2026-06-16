@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "GrasshopperGeometryToWKT",
   "nickname": "ghToWkt",
   "category": "Carcara",
@@ -6,17 +6,30 @@
   "description": "Converts Grasshopper geometry (points, lines/polylines, polygons) to Well-Known Text. A branch with one geometry yields a single WKT; multiple uniform geometries yield a MULTI* WKT. No coordinate correction (geometry stays local).",
   "exposure": 8,
   "componentVersion": "0.5-00",
+  "date": "2026-06-16",
   "instanceGuid": "c9f30d4b-2e55-4d29-9a3b-2b7f1d6e8f21",
   "ghpython": {
     "isAdvancedMode": false,
     "marshalGuids": true,
     "iconDisplay": 0,
     "inputParameters": [
-      { "name": "geom", "description": "Geometry or DataTree of geometries to convert (points, lines/polylines, polygons)", "typeHintID": "ghdoc", "scriptParamAccess": "tree" }
+      {
+        "name": "geometry",
+        "nickname": "geo",
+        "description": "Geometry or DataTree of geometries to convert (points, lines/polylines, polygons)",
+        "typeHintID": "ghdoc",
+        "scriptParamAccess": "tree"
+      }
     ],
     "outputParameters": [
-      { "name": "WKT", "description": "Well-Known Text per branch as DataTree" },
-      { "name": "report", "description": "Status message" }
+      {
+        "name": "WKT",
+        "description": "Well-Known Text per branch as DataTree"
+      },
+      {
+        "name": "report",
+        "description": "Status message"
+      }
     ]
   }
 }

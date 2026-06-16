@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "BuildingMeshes",
   "nickname": "BdgMsh",
   "category": "Carcara",
@@ -6,20 +6,21 @@
   "description": "Extrudes a list of building footprints by their heights.",
   "exposure": 2,
   "componentVersion": "0.5-00",
+  "date": "2026-06-16",
   "instanceGuid": "c3d4e5f6-a7b8-9012-cdef-012345678902",
   "ghpython": {
     "isAdvancedMode": false,
     "marshalGuids": true,
     "iconDisplay": 0,
     "inputParameters": [
-      { "name": "BdgFp", "description": "Tree of building footprint polygons. Holes are auto-detected by containment.", "typeHintID": "polyline", "scriptParamAccess": "tree" },
-      { "name": "BdgH",  "description": "Tree of building heights matching BdgFp tree structure.",                    "typeHintID": "float", "scriptParamAccess": "tree" }
+      { "name": "buildingFootprints", "nickname":"fp", "description": "Tree of building footprint polygons. Holes are auto-detected by containment.", "typeHintID": "polyline", "scriptParamAccess": "tree" },
+      { "name": "buildingHeights",  "nickname": "h", "description": "Tree of building heights matching buildingFootprints tree structure.",                    "typeHintID": "float", "scriptParamAccess": "tree" }
     ],
     "outputParameters": [
       { "name": "out",  "description": "Performance summary report" },
-      { "name": "GrdF", "description": "Ground faces with holes (ngon). One mesh per building." },
-      { "name": "LatF", "description": "Lateral wall faces. One mesh per building." },
-      { "name": "RftF", "description": "Rooftop faces with holes (ngon). One mesh per building." }
+      { "name": "groundFaces", "description": "Ground faces with holes (ngon). One mesh per building." },
+      { "name": "lateralFaces", "description": "Lateral wall faces. One mesh per building." },
+      { "name": "rooftopFaces", "description": "Rooftop faces with holes (ngon). One mesh per building." }
     ]
   }
 }

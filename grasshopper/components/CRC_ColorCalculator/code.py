@@ -29,16 +29,18 @@ except Exception as e:
     Rhino.RhinoApp.WriteLine("FATAL ERROR: Grasshopper/Rhino import failed: {}".format(e))
 
 Rhino.RhinoApp.WriteLine("ACTION: Appending to sys.path...")
-_bases = []
-_appdata = os.environ.get("APPDATA")
-if _appdata:
-    _bases.append(os.path.join(_appdata, "Grasshopper", "UserObjects", "carcara"))
-_bases.append(os.path.join(
-    os.path.expanduser("~"), "Library", "Application Support", "McNeel",
-    "Rhinoceros", "8.0", "Plug-ins", "Grasshopper", "UserObjects", "carcara"))
-for _b in _bases:
-    if os.path.isdir(_b) and _b not in sys.path:
-        sys.path.insert(0, _b)
+
+# Dynamically route to the user objects folder via the Grasshopper API
+_carcara_path = os.path.join(Grasshopper.Folders.DefaultUserObjectFolder, "carcara")
+
+if os.path.isdir(_carcara_path) and _carcara_path not in sys.path:
+    sys.path.insert(0, _carcara_path)
+
+try:
+    ghenv.Component.Message = "v{{component_version}}-{{date}}"
+    ghenv.Component.Params.Output[3].Hidden = True
+except Exception:
+    pass
 
 try:
     from crc_modules.utils.color import (
@@ -70,22 +72,23 @@ Rhino.RhinoApp.WriteLine("ACTION: Defining ColorCalculator class...")
 
 class ColorCalculator(component):
 
-    # 2. STRIPPED STRICT TYPE HINTS TO FORCE COMPILATION
     def RunScript(self,
-      val: Grasshopper.DataTree[object],
-      col: object,
-      cls: object,
-      lin: bool,
-      leg_cfg: str,
-      leg_pln: Rhino.Geometry.Plane):
+      valueTree: Grasshopper.DataTree[object],
+      colorGrad,
+      classCount,
+      linear,
+      legendCfg,
+      legendPlane):
+        self.Message = "v{{component_version}}-{{date}}"
 
-        # 3. INTERNAL COMPONENT TRACING
+        # INTERNAL COMPONENT TRACING
         out = ["--- INTERNAL RUNSCRIPT TRACE ---"]
-        col_out = DataTree[object]()
-        leg_geo = None
-        txt_loc = []
-        txt_con = []
-        txt_siz = []
+        out = ["--- INTERNAL RUNSCRIPT TRACE ---"]
+        colors = DataTree[object]()
+        legendGeo = None
+        textLocations = []
+        textContents = []
+        textSizes = []
         stats = ""
         report = "Executing..."
 
@@ -95,7 +98,7 @@ class ColorCalculator(component):
         out.append("STEP 1: Checking inputs...")
 
         try:
-            input_colors = list(col) if col else []
+            input_colors = list(colorGrad) if colorGrad else []
             if not input_colors:
                 out.append("INFO: Using default gradient.")
                 gradient_argb = default_gradient_argb()
@@ -103,12 +106,12 @@ class ColorCalculator(component):
                 out.append("INFO: Parsing {} input colors.".format(len(input_colors)))
                 gradient_argb = [_color_to_argb_tuple(c) for c in input_colors]
 
-            input_lin = bool(lin) if lin is not None else True
-            input_leg_cfg = str(leg_cfg) if leg_cfg else None
-            input_leg_pln = leg_pln if leg_pln else rg.Plane.WorldXY
-            cls_raw = list(cls) if cls else [0]
+            input_lin = bool(linear) if linear is not None else True
+            input_leg_cfg = str(legendCfg) if legendCfg else None
+            input_leg_pln = legendPlane if legendPlane else rg.Plane.WorldXY
+            cls_raw = list(classCount) if classCount else [0]
 
-            if val is None or val.BranchCount == 0:
+            if valueTree is None or valueTree.BranchCount == 0:
                 out.append("STOP: No values provided.")
                 report = "No values provided"
             elif len(gradient_argb) < 2:
@@ -120,9 +123,9 @@ class ColorCalculator(component):
 
                 branches = []
                 values_flat = []
-                for i in range(val.BranchCount):
-                    path = val.Path(i)
-                    branch = list(val.Branch(i))
+                for i in range(valueTree.BranchCount):
+                    path = valueTree.Path(i)
+                    branch = list(valueTree.Branch(i))
                     branches.append((path, branch))
                     values_flat.extend(branch)
 
@@ -139,12 +142,12 @@ class ColorCalculator(component):
                     )
 
                     out.append("STEP 4: Rebuilding color DataTree...")
-                    col_out = DataTree[object]()
+                    colors = DataTree[object]()
                     idx = 0
                     for path, branch in branches:
                         for _ in branch:
                             argb = argb_per_value[idx]
-                            col_out.Add(_argb_to_color(argb) if argb is not None else Color.Gray, path)
+                            colors.Add(_argb_to_color(argb) if argb is not None else Color.Gray, path)
                             idx += 1
 
                     out.append("STEP 5: Generating legend mesh layout...")
@@ -164,20 +167,20 @@ class ColorCalculator(component):
                     mesh.Normals.ComputeNormals()
                     mesh.UnifyNormals()
                     mesh.Compact()
-                    leg_geo = mesh
+                    legendGeo = mesh
 
-                    out.append("STEP 6: Mapping text and stats...")
-                    txt_loc = [input_leg_pln.PointAt(x, y, 0) for (x, y, _t, _s) in layout['labels']]
-                    txt_con = [lbl[2] for lbl in layout['labels']]
-                    txt_siz = [lbl[3] for lbl in layout['labels']]
+                    out.append("STEP 7: Mapping text and stats...")
+                    textLocations = [input_leg_pln.PointAt(x, y, 0) for (x, y, _t, _s) in layout['labels']]
+                    textContents = [lbl[2] for lbl in layout['labels']]
+                    textSizes = [lbl[3] for lbl in layout['labels']]
 
                     stats = compute_statistics(valid_vals)
 
-                    out.append("STEP 7: Binding PreviewPayload...")
+                    out.append("STEP 8: Binding PreviewPayload...")
                     pv = PreviewPayload()
-                    pv.add_mesh(leg_geo)
+                    pv.add_mesh(legendGeo)
                     _text_color = System.Drawing.Color.Black
-                    for loc, txt, siz in zip(txt_loc, txt_con, txt_siz):
+                    for loc, txt, siz in zip(textLocations, textContents, textSizes):
                         pv.add_text(str(txt), loc, float(siz), _text_color)
                     self._pv = pv
 
@@ -190,7 +193,7 @@ class ColorCalculator(component):
             out.append("CRITICAL ERROR IN RUNSCRIPT:\n{}".format(_tb))
             report = "ERROR: See 'out' panel."
 
-        return (out, col_out, leg_geo, txt_loc, txt_con, txt_siz, stats, report)
+        return (out, colors, legendGeo, textLocations, textContents, textSizes, stats, report)
 
     def DrawViewportWires(self, args):
         if getattr(self, "_pv", None):

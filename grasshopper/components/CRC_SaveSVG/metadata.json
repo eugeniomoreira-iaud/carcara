@@ -1,26 +1,60 @@
-﻿{
+{
   "name": "SaveSVG",
-  "nickname": "SaveSVG",
+  "nickname": "Save",
   "category": "Carcara",
   "subcategory": "04.Dataviz",
   "description": "Assembles SVG element strings into a complete SVG document (viewBox from canvas dimensions) and writes it to disk. File is only written when save_flag is True.",
   "exposure": 16,
   "componentVersion": "0.5-00",
+  "date": "2026-06-16",
   "instanceGuid": "f5a6b7c8-d9e0-1234-fabc-345678901205",
   "ghpython": {
     "isAdvancedMode": false,
     "marshalGuids": true,
     "iconDisplay": 0,
     "inputParameters": [
-      { "name": "svg_code",  "description": "SVG element string(s) to assemble (list or single string)", "typeHintID": "str",   "scriptParamAccess": "list" },
-      { "name": "canvas",    "description": "Rectangle geometry defining canvas width/height (optional; uses 800x600 default if absent)", "typeHintID": "ghdoc", "scriptParamAccess": "item" },
-      { "name": "file_path", "description": "Output file path including filename (e.g. C:\\output.svg)", "typeHintID": "str",   "scriptParamAccess": "item" },
-      { "name": "save_flag", "description": "Set True to write the file to disk",                        "typeHintID": "bool",  "scriptParamAccess": "item" }
+      {
+        "name": "svgCode",
+        "nickname": "svg",
+        "description": "SVG element string(s) to assemble (list or single string)",
+        "typeHintID": "str",
+        "scriptParamAccess": "list"
+      },
+      {
+        "name": "canvas",
+        "nickname": "canvas",
+        "description": "Rectangle geometry defining canvas width/height (optional; uses 800x600 default if absent)",
+        "typeHintID": "ghdoc",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "filePath",
+        "nickname": "path",
+        "description": "Output file path including filename (e.g. C:\\output.svg)",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "saveFlag",
+        "nickname": "save",
+        "description": "Set True to write the file to disk",
+        "typeHintID": "bool",
+        "scriptParamAccess": "item"
+      }
     ],
     "outputParameters": [
-      { "name": "path",     "description": "Absolute path of the written SVG file" },
-      { "name": "svg_doc",  "description": "Complete SVG document string (for inspection without saving)" },
-      { "name": "report",   "description": "Status message" }
+      {
+        "name": "path",
+        "description": "Absolute path of the written SVG file"
+      },
+      {
+        "name": "svgDoc",
+        "description": "Complete SVG document string (for inspection without saving)"
+      },
+      {
+        "name": "report",
+        "description": "Status message"
+      }
     ]
   }
 }

@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "IdentifyDuplicatePolylines",
   "nickname": "IdDupPol",
   "category": "Carcara",
@@ -6,6 +6,7 @@
   "description": "Computes a normalized signature for each polyline to handle differences in start point and direction. Groups those with identical signatures and outputs the duplicate indexes.",
   "exposure": 2,
   "componentVersion": "0.5-00",
+  "date": "2026-06-16",
   "instanceGuid": "d4e5f6a7-b8c9-0123-defa-234567890123",
   "ghpython": {
     "isAdvancedMode": false,
@@ -13,7 +14,8 @@
     "iconDisplay": 0,
     "inputParameters": [
       {
-        "name": "p",
+        "name": "polylines",
+        "nickname": "pl",
         "description": "List of polyline objects to check for duplicates.",
         "typeHintID": "ghdoc",
         "scriptParamAccess": "list"
@@ -21,10 +23,13 @@
     ],
     "outputParameters": [
       {
-        "name": "i",
+        "name": "duplicateIndices",
         "description": "DataTree of duplicate indexes. Each branch is one duplicate group. First occurrence is excluded from each group."
       },
-      { "name": "report", "description": "Status message." }
+      {
+        "name": "report",
+        "description": "Status message."
+      }
     ]
   }
 }

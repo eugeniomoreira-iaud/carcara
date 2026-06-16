@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "GeometryEntities",
   "nickname": "GeoEnt",
   "category": "Carcara",
@@ -6,24 +6,73 @@
   "description": "Draws the geometric entities from a given table with coordinate correction (false origin).",
   "exposure": 4,
   "componentVersion": "0.5-00",
+  "date": "2026-06-16",
   "instanceGuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "ghpython": {
     "isAdvancedMode": false,
     "marshalGuids": true,
     "iconDisplay": 0,
     "inputParameters": [
-      { "name": "CString", "description": "Connection string with encoded password", "typeHintID": "str", "scriptParamAccess": "item" },
-      { "name": "CToggle", "description": "Set True to execute", "typeHintID": "bool", "scriptParamAccess": "item" },
-      { "name": "schema", "description": "Schema where the table is located", "typeHintID": "str", "scriptParamAccess": "item" },
-      { "name": "table", "description": "Table to query", "typeHintID": "str", "scriptParamAccess": "item" },
-      { "name": "Cx", "description": "Correction X (false origin) - default 0", "typeHintID": "str", "scriptParamAccess": "item" },
-      { "name": "Cy", "description": "Correction Y (false origin) - default 0", "typeHintID": "str", "scriptParamAccess": "item" }
+      {
+        "name": "CString",
+        "nickname": "cs",
+        "description": "Connection string with encoded password",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "CToggle",
+        "nickname": "tog",
+        "description": "Set True to execute",
+        "typeHintID": "bool",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "schema",
+        "nickname": "sch",
+        "description": "Schema where the table is located",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "table",
+        "nickname": "tbl",
+        "description": "Table to query",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "Cx",
+        "nickname": "cx",
+        "description": "Correction X (false origin) - default 0",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      },
+      {
+        "name": "Cy",
+        "nickname": "cy",
+        "description": "Correction Y (false origin) - default 0",
+        "typeHintID": "str",
+        "scriptParamAccess": "item"
+      }
     ],
     "outputParameters": [
-      { "name": "geometry", "description": "Geometry list as DataTree" },
-      { "name": "pk", "description": "Primary keys as DataTree" },
-      { "name": "report", "description": "Status message" },
-      { "name": "queries", "description": "All SQL statements executed against the database (structured)" }
+      {
+        "name": "geometry",
+        "description": "Geometry list as DataTree"
+      },
+      {
+        "name": "primaryKeys",
+        "description": "Primary keys as DataTree"
+      },
+      {
+        "name": "report",
+        "description": "Status message"
+      },
+      {
+        "name": "queries",
+        "description": "All SQL statements executed against the database (structured)"
+      }
     ]
   }
 }

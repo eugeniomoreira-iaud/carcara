@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "SortByContainer",
   "nickname": "Srt_Ctn",
   "category": "Carcara",
@@ -6,6 +6,7 @@
   "description": "Sorts a list of points by a list of containers. Output tree always matches curve count with empty branches for curves containing no points.",
   "exposure": 2,
   "componentVersion": "0.5-00",
+  "date": "2026-06-16",
   "instanceGuid": "c3d4e5f6-a7b8-9012-cdef-123456789012",
   "ghpython": {
     "isAdvancedMode": false,
@@ -30,10 +31,12 @@
     "outputParameters": [
       {
         "name": "indices",
-        "nickname": "i",
         "description": "Global point indices sorted by container. Branch k corresponds to containers[k] (empty branch = no points in that container). Use with 'List Item' component to sort original lists."
       },
-      { "name": "report", "description": "Status message." }
+      {
+        "name": "report",
+        "description": "Status message."
+      }
     ]
   }
 }

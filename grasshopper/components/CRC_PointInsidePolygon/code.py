@@ -1,21 +1,16 @@
-﻿"""CRC_PointInsidePolygon: Find a guaranteed-inside point for a polygon curve."""
+"""CRC_PointInsidePolygon: Find a guaranteed-inside point for a polygon curve."""
 import sys
 import os
+import Grasshopper
 
-# Make crc_modules importable from Grasshopper UserObjects path.
-_bases = []
-_appdata = os.environ.get("APPDATA")
-if _appdata:
-    _bases.append(os.path.join(_appdata, "Grasshopper", "UserObjects", "carcara"))
-_bases.append(os.path.join(
-    os.path.expanduser("~"), "Library", "Application Support", "McNeel",
-    "Rhinoceros", "8.0", "Plug-ins", "Grasshopper", "UserObjects", "carcara"))
-for _b in _bases:
-    if os.path.isdir(_b) and _b not in sys.path:
-        sys.path.insert(0, _b)
+# Dynamically route to the user objects folder via the Grasshopper API
+_carcara_path = os.path.join(Grasshopper.Folders.DefaultUserObjectFolder, "carcara")
+
+if os.path.isdir(_carcara_path) and _carcara_path not in sys.path:
+    sys.path.insert(0, _carcara_path)
 
 try:
-    ghenv.Component.Message = "v{{component_version}}"
+    ghenv.Component.Message = "v{{component_version}}-{{date}}"
 except Exception:
     pass
 
@@ -23,17 +18,17 @@ from crc_modules.rhino.wkt_conversion import rh_geometry_to_wkt
 from crc_modules.geometry.polylabel import interior_point
 from crc_modules.geometry.wkt import wkt_to_shapely
 
-pt = None
-report = "Provide a closed polygon curve to pol to compute its pole of inaccessibility (polylabel)."
+interiorPoint = None
+report = "Provide a closed polygon curve to polygon to compute its pole of inaccessibility (polylabel)."
 
 try:
-    if pol is None:
+    if polygon is None:
         report = "No polygon provided."
     else:
         # Convert Rhino curve → WKT (via rhino module, no direct Rhino import here)
-        wkt_str = rh_geometry_to_wkt(pol)
+        wkt_str = rh_geometry_to_wkt(polygon)
         if wkt_str is None:
-            report = "ERROR: Could not convert input to WKT. Ensure pol is a closed planar curve."
+            report = "ERROR: Could not convert input to WKT. Ensure polygon is a closed planar curve."
         else:
             # Extract ring coordinates from WKT via shapely
             shp_geom = wkt_to_shapely(wkt_str)
@@ -52,7 +47,7 @@ try:
                 # Build Rhino Point3d via RhinoCommon (imported inside rhino module scope,
                 # but we need it here for the output — import is GH-side only)
                 import Rhino.Geometry as rg
-                pt = rg.Point3d(ix, iy, 0.0)
+                interiorPoint = rg.Point3d(ix, iy, 0.0)
                 report = "OK — pole of inaccessibility (polylabel) at ({:.4f}, {:.4f}), dist to nearest edge: {:.4f}".format(
                     ix, iy, dist
                 )
