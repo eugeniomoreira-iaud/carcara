@@ -1,20 +1,20 @@
 {
   "name": "CurveDisplay",
-  "nickname": "CrvDpl.cs",
+  "nickname": "CrvDpl",
   "category": "Carcara",
   "subcategory": "04.Dataviz",
-  "description": "Custom preview: control lineweight, color, and dash pattern on Rhino viewport curves.",
+  "description": "Custom viewport preview (lineweight, color, dash) for curves — CPython SDK-mode port of CRC_CurveDisplay.",
   "exposure": 2,
-  "instanceGuid": "d4e1f6a2-7b83-4c50-9e1d-3a8c2f0b6d44",
+  "instanceGuid": "a7f3c2e9-1b54-4d80-9c6a-2e8f0b3d7a16",
   "ghpython": {
     "isAdvancedMode": true,
-    "marshalGuids": true,
+    "marshalGuids": false,
     "iconDisplay": 0,
     "inputParameters": [
-      { "name": "Curve",  "description": "Curves to preview",                                                   "typeHintID": "curve", "scriptParamAccess": "item" },
-      { "name": "Width",  "description": "Width of the curves",                                                  "typeHintID": "int",   "scriptParamAccess": "item" },
-      { "name": "Colour", "description": "Color of the curves",                                                  "typeHintID": "colour","scriptParamAccess": "item" },
-      { "name": "Dash",   "description": "Dash pattern: space-separated values for dash and gap (e.g. '2 1')",   "typeHintID": "ghdoc", "scriptParamAccess": "item", "optional": true }
+      { "name": "Curve",  "description": "Curves to preview",                                                 "typeHintID": "curve",  "scriptParamAccess": "item" },
+      { "name": "Width",  "description": "Width of the curves",                                                "typeHintID": "int",    "scriptParamAccess": "item" },
+      { "name": "Colour", "description": "Color of the curves",                                               "typeHintID": "colour", "scriptParamAccess": "item" },
+      { "name": "Dash",   "description": "Dash pattern: space-separated values for dash and gap (e.g. '2 1')", "typeHintID": "str",    "scriptParamAccess": "item", "optional": true }
     ],
     "outputParameters": []
   }
