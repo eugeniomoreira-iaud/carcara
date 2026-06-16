@@ -9,7 +9,7 @@ Asserts:
 import re
 from pathlib import Path
 
-COMPONENTS_DIR = Path(__file__).parent.parent / "grasshopper" / "components"
+COMPONENTS_DIR = Path(__file__).parent.parent / "build" / "components"
 
 RQ_CODE = (COMPONENTS_DIR / "CRC_RunQuery" / "code.py").read_text(encoding="utf-8")
 RC_CODE = (COMPONENTS_DIR / "CRC_RunCommand" / "code.py").read_text(encoding="utf-8")

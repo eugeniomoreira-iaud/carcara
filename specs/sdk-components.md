@@ -48,7 +48,7 @@ taxon. The reference that proved it: `carcara-old/carcara/test-displaycurve.ghus
 
 ## 3. Build routing
 
-`build_userobjects.py` chooses a builder per bundle, no hard-coded names:
+`tools/build_userobjects.py` chooses a builder per bundle, no hard-coded names:
 
 1. bundle has **`code.cs`** → C# builder (`componentize_cs.create_curvedisplay_cs_ghuser`).
 2. bundle has **`code.py`** AND `metadata.json` `ghpython.isAdvancedMode == true` →
@@ -57,13 +57,13 @@ taxon. The reference that proved it: `carcara-old/carcara/test-displaycurve.ghus
 
 So **the only switch you flip to make a component SDK is `isAdvancedMode: true` in its
 `metadata.json`** (with a `code.py`, no `code.cs`). The helper `is_advanced_mode(source)` in
-`build_userobjects.py` reads the flag.
+`tools/build_userobjects.py` reads the flag.
 
 Build / deploy is unchanged:
 
 ```powershell
-conda run -n carcara python build_userobjects.py
-powershell -ExecutionPolicy Bypass -File .\deploy.ps1
+conda run -n carcara python tools/build_userobjects.py
+powershell -ExecutionPolicy Bypass -File tools\deploy.ps1
 ```
 
 ---
@@ -212,7 +212,7 @@ Rhino viewport. The nine components currently are:
 > matplotlib — `PreviewPayload` shows the geometry in Rhino's viewport while `svgwrite` emits
 > the file. The display-only component (#1) is the original CurveDisplay ported from C#.
 
-All SDK component source bundles live at `grasshopper/components/CRC_<Name>/`. Each has
+All SDK component source bundles live at `build/components/CRC_<Name>/`. Each has
 `isAdvancedMode: true` in `metadata.json`, a `code.py` using the executingcomponent pattern,
 and an `icon.png`.
 
@@ -222,12 +222,12 @@ and an `icon.png`.
 
 1. Put pure algorithm logic in `crc_modules/` (pytest-tested). Rhino-only helpers go in
    `crc_modules/rhino/` with deferred imports.
-2. Create `grasshopper/components/CRC_<Name>/` with `metadata.json` (`isAdvancedMode: true`,
+2. Create `build/components/CRC_<Name>/` with `metadata.json` (`isAdvancedMode: true`,
    stable `instanceGuid`), `code.py` (the §4 pattern, using `PreviewPayload`), `icon.png`.
-3. `conda run -n carcara python build_userobjects.py` — confirm the bundle reports `[OK]` and
+3. `conda run -n carcara python tools/build_userobjects.py` — confirm the bundle reports `[OK]` and
    routed through the SDK builder.
 4. `conda run -n carcara python -m pytest tests/ -q` — pure modules stay green; no Rhino leak.
-5. `deploy.ps1`, restart Grasshopper, confirm the viewport preview renders and the clip box
+5. `tools/deploy.ps1`, restart Grasshopper, confirm the viewport preview renders and the clip box
    frames the camera.
 
 ## 8. Verifying the built schema
@@ -243,8 +243,8 @@ Version `3.9.10`, `ScriptComponentVersion=3`, `Marsh*` keys present. If you inst
 ## 9. References
 
 - Builder: `vendor/componentizer/componentize_py_sdk.py`
-- Routing: `build_userobjects.py` (`is_advanced_mode`)
-- Draw helper: `carcara/crc_modules/rhino/preview.py`
+- Routing: `tools/build_userobjects.py` (`is_advanced_mode`)
+- Draw helper: `release/crc_modules/rhino/preview.py`
 - Reference components: the SVG / chart / `CRC_ColorCalculator` bundles (full: outputs + preview), `CRC_CurveDisplay` (display-only)
 - Working hand-made reference archive: `carcara-old/carcara/test-displaycurve.ghuser`
 - Build pipeline: [`componentizer.md`](componentizer.md) · decoding: [`ghuser-decoding.md`](ghuser-decoding.md)

@@ -10,7 +10,7 @@ This document is the authoritative specification for agentic and collaborative d
 
 ## Design Principles
 
-1. **Separation of concerns**: All domain logic lives in the pure Python library (`carcara/crc_modules/`, import name `crc_modules`). Grasshopper component files contain only GH plumbing — input coercion, output assignment, and error display.
+1. **Separation of concerns**: All domain logic lives in the pure Python library (`release/crc_modules/`, import name `crc_modules`). Grasshopper component files contain only GH plumbing — input coercion, output assignment, and error display.
 2. **No Rhino imports in the core library**: `crc_modules` must be importable and testable outside of Rhino using a standard CPython 3.11+ environment.
 3. **Fail visibly, not silently**: Every component wraps its logic in a try/except and surfaces errors through a `report` output string. No component should crash Grasshopper.
 4. **One responsibility per module**: Each file in `crc_modules/` handles one domain concern. Do not mix database logic with geometry conversion.
@@ -39,7 +39,7 @@ Repository root is the project root. There is no `carcara-rebuild/` wrapper fold
 ```
 carcara/                              ← Repository root
 │
-├── carcara/                        ← THE deployable folder. Copied as-is to UserObjects.
+├── release/                        ← THE deployable folder. Copied as-is to UserObjects.
 │   ├── crc_modules/                ← Pure Python library (import name). No Rhino imports allowed.
 │   │   ├── __init__.py
 │   │   ├── db/                     ← DB layer (mostly 02.Queries; also ConnectionString + RunQuery/RunCommand which sit in 03.Utilities)
@@ -58,7 +58,7 @@ carcara/                              ← Repository root
 │   │   └── …
 │   └── version.txt                 ← Written by make_release.py; installer reads this
 │
-├── grasshopper/
+├── build/
 │   ├── components/                 ← One FOLDER per GH component (componentizer bundle layout).
 │   │   │                             Flat: no subcategory folders — subcategory lives in metadata.json.
 │   │   ├── CRC_ConnectionString/
@@ -68,7 +68,7 @@ carcara/                              ← Repository root
 │   │   └── …(one folder per component)
 │   └── installer/                  ← Self-contained bootstrap installers (delivered in a .gh)
 │       ├── install_python_libs.py  ← pip-installs deps into Rhino 8 CPython
-│       └── install_carcara.py      ← downloads repo zip, copies carcara/ → UserObjects
+│       └── install_carcara.py      ← downloads repo zip, copies release/ → UserObjects
 │
 ├── specs/                          ← Internal specs and how-tos.
 │   ├── componentizer.md            ← Componentizer build pipeline reference
@@ -79,10 +79,13 @@ carcara/                              ← Repository root
 │   ├── current-vs-legacy-component-report.md
 │   └── assets/logo_carcara.png
 │
-├── tools/                          ← Dev utilities (not shipped).
-│   └── decode_ghuser.py            ← Canonical legacy .ghuser decoder (stdlib only)
+├── tools/                          ← Dev utilities (not shipped) + build scripts.
+│   ├── decode_ghuser.py            ← Canonical legacy .ghuser decoder (stdlib only)
+│   ├── build_userobjects.py        ← Build script: bundles → release/userobjects/*.ghuser
+│   ├── make_release.py             ← Build + stamp version.txt (run before a release)
+│   └── deploy.ps1                  ← Dev: copy release/ → UserObjects/carcara/
 │
-├── implementation/                 ← Phase-by-phase rebuild plans (00–12) + _archive/
+├── implementation-plans/           ← Phase-by-phase rebuild plans (00–12) + _archive/
 │
 ├── tests/                          ← pytest (imports crc_modules.*); never touches the rhino submodule
 │   ├── test_connection.py
@@ -100,9 +103,6 @@ carcara/                              ← Repository root
 │   ├── LICENSE
 │   └── README.md
 │
-├── build_userobjects.py            ← Build script: bundles → carcara/userobjects/*.ghuser
-├── make_release.py                 ← Build + stamp version.txt (run before a release)
-├── deploy.ps1                      ← Dev: copy carcara/ → UserObjects/carcara/
 ├── pyproject.toml
 ├── requirements.txt
 └── README.md
@@ -116,7 +116,7 @@ carcara/                              ← Repository root
 
 - **Purpose**: source of truth for behavior, inputs, outputs, and nicknames of every original component. When rebuilding a component, open the matching `.ghuser` in `carcara-old/carcara/` to confirm parameter names and semantics.
 - **Do not**: edit, delete, move, or import from `carcara-old/`. Do not run its modules. Do not rebuild against its code.
-- **Do**: extract metadata, inspect inputs/outputs, and port logic into the new layered architecture under `carcara/crc_modules/` + `grasshopper/components/`.
+- **Do**: extract metadata, inspect inputs/outputs, and port logic into the new layered architecture under `release/crc_modules/` + `build/components/`.
 - **Decoded reference layer — `carcara-old/ghuser-metadata/`**: all 33 legacy `.ghuser` files have been decoded. The artifacts live here and are the preferred starting point for any component rebuild:
   - `01.Modeling.md`, `02.Queries.md`, `03.Utilities.md`, `04.Dataviz.md` — per-subcategory capture docs: component tables, input/output hook params, general logic descriptions, and links to decoded scripts.
   - `scripts/` — 51 canonical decoded source files. Naming conventions: `<Name>.py` (per-component script), `<Name>_interface.txt` (cluster hook params + internal component list for the 19 cluster-based components), `CRC_<Name>.py` (hand-captured wiring reconstruction for the 9 query components), and shared engine scripts (`RunODBCQuery.py`, `SQLComposer.py`, `GrasshopperGeometryToWKT.py`, etc.) deduped to one canonical copy each. `CurveDisplay` is C#.
@@ -133,16 +133,16 @@ Every `.ghuser` file present in `carcara-old/carcara/` must be rebuilt under the
 
 1. Identify the legacy file in `carcara-old/carcara/carcara_<Name>_*.ghuser`.
 2. Locate the matching row in the [Component Inventory](#component-inventory) below.
-3. Implement the domain logic in the correct `carcara/crc_modules/` submodule.
+3. Implement the domain logic in the correct `release/crc_modules/` submodule.
 4. Write tests in `tests/` (mock all DB calls).
-5. Create the component bundle at `grasshopper/components/CRC_<Name>/` with `metadata.json`, `code.py`, and `icon.png` following the [Grasshopper Component Pattern](#grasshopper-component-pattern).
-6. Run `python build_userobjects.py` to regenerate the `.ghuser` into `carcara/userobjects/`.
+5. Create the component bundle at `build/components/CRC_<Name>/` with `metadata.json`, `code.py`, and `icon.png` following the [Grasshopper Component Pattern](#grasshopper-component-pattern).
+6. Run `python tools/build_userobjects.py` to regenerate the `.ghuser` into `release/userobjects/`.
 7. Flip the inventory status from ⬜ Todo to ✅ Done in the commit.
 
 ### Completion criteria
 
 - Every legacy `.ghuser` listed in the inventory has a ✅ Done row.
-- `carcara/userobjects/` contains the freshly built equivalent for every entry.
+- `release/userobjects/` contains the freshly built equivalent for every entry.
 - No file under `carcara-old/` is referenced from runtime code.
 
 ***
@@ -353,7 +353,7 @@ operate on whatever (already-local) geometry they are handed.
 
 ## Grasshopper Component Pattern
 
-Every component is a **folder** under `grasshopper/components/<CRC_Name>/` containing exactly three files:
+Every component is a **folder** under `build/components/<CRC_Name>/` containing exactly three files:
 
 ```
 CRC_RunQuery/
@@ -450,7 +450,7 @@ The componentizer supports three template tokens substituted at build time: `{{v
 
 ### Rules for component bundles
 
-- **Never** import `Rhino`, `rhinoscriptsyntax`, or `Grasshopper` in `code.py`. If RhinoCommon geometry conversion is needed, isolate it in a dedicated `carcara/crc_modules/rhino/` submodule that is clearly marked as Rhino-dependent.
+- **Never** import `Rhino`, `rhinoscriptsyntax`, or `Grasshopper` in `code.py`. If RhinoCommon geometry conversion is needed, isolate it in a dedicated `release/crc_modules/rhino/` submodule that is clearly marked as Rhino-dependent.
 - **Never** put business logic in `code.py`. If more than ~5 lines of non-plumbing code, it belongs in `crc_modules/`.
 - **Always** include a `report` output that surfaces both success and error states.
 - **Always** guard execution behind the `CToggle` boolean input to prevent accidental execution on canvas load.
@@ -491,14 +491,14 @@ did.
 | `pythonnet` (`clr`) | Bridges CPython 3.11+ to `GH_IO.dll` |
 | `build_userobjects.py` | Thin local wrapper that invokes the componentizer with our paths |
 
-### Build script: `build_userobjects.py`
+### Build script: `tools/build_userobjects.py`
 
 The wrapper must:
 
 1. Ensure `pythonnet` is importable (else error with install instructions).
 2. Locate `GH_IO.dll` — search Rhino 8 install paths first, then fall back to NuGet fetch.
 3. Locate `componentize_cpy.py` (vendored in `vendor/componentizer/` or fetched at build time).
-4. Invoke it with `source=grasshopper/components`, `target=carcara/userobjects`, `--ghio <path>`, `--version <from pyproject.toml>`.
+4. Invoke it with `source=build/components`, `target=release/userobjects`, `--ghio <path>`, `--version <from pyproject.toml>`.
 5. Surface any per-component failures without aborting the whole build.
 
 Full details, install matrix, troubleshooting, and CI snippets are in [`specs/componentizer.md`](specs/componentizer.md).
@@ -506,17 +506,17 @@ Full details, install matrix, troubleshooting, and CI snippets are in [`specs/co
 ### Running the build
 
 ```powershell
-conda run -n carcara python build_userobjects.py
+conda run -n carcara python tools/build_userobjects.py
 ```
 
-Run from the repository root. Output: `carcara/userobjects/*.ghuser` (committed).
+Run from the repository root. Output: `release/userobjects/*.ghuser` (committed).
 
 > **Environment note:** On Windows PowerShell, the `python` command resolves to the Windows Store stub unless the conda `carcara` environment is activated. Always prefix with `conda run -n carcara` (or use the full interpreter path). See [`specs/python-execution.md`](specs/python-execution.md) for details.
 
-Installing is **one** copy: the whole deployable `carcara/` folder → the
+Installing is **one** copy: the whole deployable `release/` folder → the
 UserObjects folder. It carries the `crc_modules` package, the built
 `userobjects/*.ghuser`, and `version.txt` together. `deploy.ps1` does this for
-dev; end users get it via the GitHub installer (`grasshopper/installer/`).
+dev; end users get it via the GitHub installer (`build/installer/`).
 
 - **Windows**: `%APPDATA%\Grasshopper\UserObjects\carcara\`
 - **macOS**: `~/Library/Application Support/McNeel/Rhinoceros/8.0/Plug-ins/Grasshopper/UserObjects/carcara/`
@@ -526,8 +526,8 @@ Copying only the `.ghuser` gives `No module named 'crc_modules'` — ship the
 whole folder.
 
 ```powershell
-conda run -n carcara python make_release.py    # build + stamp version.txt
-powershell -ExecutionPolicy Bypass -File .\deploy.ps1
+conda run -n carcara python tools/make_release.py    # build + stamp version.txt
+powershell -ExecutionPolicy Bypass -File tools\deploy.ps1
 ```
 
 DB components also need `psycopg2` available to Rhino's Python; their `code.py` carries a `# r: psycopg2` directive so Rhino installs it on first run.
@@ -589,10 +589,10 @@ Run from the repository root.
 
 ### Test file naming
 
-- `test_connection.py` — tests `carcara/crc_modules/db/connection.py`
-- `test_query.py` — tests `carcara/crc_modules/db/query.py`
-- `test_wkt.py` — tests `carcara/crc_modules/geometry/wkt.py`
-- `test_svg.py` — tests `carcara/crc_modules/svg/export.py`
+- `test_connection.py` — tests `release/crc_modules/db/connection.py`
+- `test_query.py` — tests `release/crc_modules/db/query.py`
+- `test_wkt.py` — tests `release/crc_modules/geometry/wkt.py`
+- `test_svg.py` — tests `release/crc_modules/svg/export.py`
 
 ### Test pattern
 
@@ -652,7 +652,7 @@ build: update build_userobjects.py XML escaping
 
 ## Component Inventory
 
-All 33 components in one master map. Each maps to one bundle in `grasshopper/components/CRC_<Name>/`
+All 33 components in one master map. Each maps to one bundle in `build/components/CRC_<Name>/`
 and one or more functions in `crc_modules/`. The `Legacy file` column points to the original
 `.ghuser` in `carcara-old/carcara/` that must be reimplemented.
 
@@ -785,7 +785,7 @@ When generating code for this repository, an AI agent must:
 1. **Read this spec before writing any code.** Do not infer structure from the existing files alone.
 2. **Write core logic in `crc_modules/` first**, then write the GH component wrapper. Never the reverse.
 3. **Check the component inventory table** before creating a new file. Update the status column when a component is completed.
-4. **Never add Rhino or Grasshopper imports** to any file under `crc_modules/`. If geometry conversion requires RhinoCommon, create `carcara/crc_modules/rhino/` and document it as a Rhino-dependent submodule.
+4. **Never add Rhino or Grasshopper imports** to any file under `crc_modules/`. If geometry conversion requires RhinoCommon, create `release/crc_modules/rhino/` and document it as a Rhino-dependent submodule.
 5. **Always include `report` output** in every GH component. The `report` string must distinguish between "not yet run", "success", and "error" states.
 6. **Always guard execution with `if CToggle:`** in every GH component.
 7. **Write a corresponding test** in `tests/` for every new function added to `crc_modules/`. Mock all database calls.
@@ -793,7 +793,7 @@ When generating code for this repository, an AI agent must:
 9. **Do not create `.ghuser` files manually.** They are always generated by `build_userobjects.py` (which wraps the `compas-actions.ghpython_components` componentizer and `GH_IO.dll`). A `.ghuser` is a **binary `GH_Archive`**, not a zip — never hand-craft one.
 10. **Match the commit message convention** defined in the Git section above.
 11. **Treat `carcara-old/` as read-only legacy.** Never import from it, never edit it, never delete it. Use it only to recover original behavior, inputs, outputs, and nicknames when rebuilding a component.
-12. **Rebuild every legacy `.ghuser`.** The end state of this project is that every file currently in `carcara-old/carcara/*.ghuser` has been reimplemented under `grasshopper/components/` and regenerated into `carcara/userobjects/` via `build_userobjects.py`. No legacy `.ghuser` ships as-is.
-13. **Paths are repo-root relative.** There is no `carcara-rebuild/` directory anymore. All commands (`pytest`, `python build_userobjects.py`, `pip install -e .`) run from the repository root.
-14. **Component layout is the componentizer bundle layout.** Each component is `grasshopper/components/CRC_<Name>/{metadata.json, code.py, icon.png}`. Flat, no subcategory subdirs. Subcategory is a metadata field. See [`specs/componentizer.md`](specs/componentizer.md) for the full schema and rationale.
+12. **Rebuild every legacy `.ghuser`.** The end state of this project is that every file currently in `carcara-old/carcara/*.ghuser` has been reimplemented under `build/components/` and regenerated into `release/userobjects/` via `tools/build_userobjects.py`. No legacy `.ghuser` ships as-is.
+13. **Paths are repo-root relative.** There is no `carcara-rebuild/` directory anymore. All commands (`pytest`, `python tools/build_userobjects.py`, `pip install -e .`) run from the repository root.
+14. **Component layout is the componentizer bundle layout.** Each component is `build/components/CRC_<Name>/{metadata.json, code.py, icon.png}`. Flat, no subcategory subdirs. Subcategory is a metadata field. See [`specs/componentizer.md`](specs/componentizer.md) for the full schema and rationale.
 15. **Never `float()` the `Cx`/`Cy` correction values.** They are numeric **text**, applied as a false-origin shift **inside SQL** (`ST_Translate`), to avoid the precision loss that motivates the whole correction system. Validate them as numeric literals via `utils/correction.py`, then embed verbatim. See [Coordinate Correction](#coordinate-correction-projected-coordinates--false-origin).

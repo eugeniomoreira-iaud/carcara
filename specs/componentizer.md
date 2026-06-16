@@ -1,6 +1,6 @@
 # Componentizer Build Pipeline
 
-Authoritative reference for how Carcara turns Python source into binary `.ghuser` files. Read this before editing `build_userobjects.py`, before adding a component bundle, and before changing CI for releases.
+Authoritative reference for how Carcara turns Python source into binary `.ghuser` files. Read this before editing `tools/build_userobjects.py`, before adding a component bundle, and before changing CI for releases.
 
 ---
 
@@ -22,7 +22,7 @@ The Ladybug Tools / COMPAS ecosystem solved this years ago with a small Python t
 | `componentize_cpy.py` | The CPython-3 variant we use (Rhino 8) | `vendor/componentizer/componentize_cpy.py` |
 | `GH_IO.dll` | Grasshopper's serialization assembly | Bundled with Rhino 8, or auto-fetched from NuGet |
 | `pythonnet` (`clr`) | CPython ↔ .NET bridge so we can call `GH_IO.dll` from Python 3.11+ | `pip install pythonnet>=3.0` |
-| `build_userobjects.py` | Carcara-specific thin wrapper | repo root |
+| `build_userobjects.py` | Carcara-specific thin wrapper | `tools/` |
 
 Important: there is also an IronPython variant (`componentize_ipy.py`) for Rhino 7. **We do not use it.** Carcara targets Rhino 8 / CPython only.
 
@@ -33,7 +33,7 @@ Important: there is also an IronPython variant (`componentize_ipy.py`) for Rhino
 The componentizer expects this directory structure:
 
 ```
-grasshopper/components/
+build/components/
 ├── CRC_ConnectionString/
 │   ├── metadata.json
 │   ├── code.py
@@ -205,7 +205,7 @@ Per the upstream README:
 
 ### `GH_IO.dll` search order
 
-`build_userobjects.py` looks in this order:
+`tools/build_userobjects.py` looks in this order:
 
 1. `--ghio <path>` CLI flag, if supplied.
 2. `C:\Program Files\Rhino 8\Plug-ins\Grasshopper\`
@@ -224,27 +224,27 @@ Per the upstream README:
 pip install pythonnet>=3.0 requests
 
 # every build
-python build_userobjects.py
+python tools/build_userobjects.py
 ```
 
-Outputs go to `carcara/userobjects/` (committed; shipped to users).
+Outputs go to `release/userobjects/` (committed; shipped to users).
 
 ### With a version tag
 
 ```powershell
-python build_userobjects.py --version 1.0.0
+python tools/build_userobjects.py --version 1.0.0
 ```
 
 ### Clean rebuild
 
 ```powershell
-python build_userobjects.py --clean
+python tools/build_userobjects.py --clean
 ```
 
 ### Explicit DLL path
 
 ```powershell
-python build_userobjects.py --ghio "C:\Program Files\Rhino 8\Plug-ins\Grasshopper"
+python tools/build_userobjects.py --ghio "C:\Program Files\Rhino 8\Plug-ins\Grasshopper"
 ```
 
 ### CI (GitHub Actions sketch)
@@ -254,11 +254,11 @@ python build_userobjects.py --ghio "C:\Program Files\Rhino 8\Plug-ins\Grasshoppe
   with:
     python-version: "3.11"
 - run: pip install pythonnet>=3.0 requests
-- run: python build_userobjects.py --version ${{ github.ref_name }}
+- run: python tools/build_userobjects.py --version ${{ github.ref_name }}
 - uses: actions/upload-artifact@v4
   with:
     name: carcara-ghuser
-    path: carcara/userobjects/*.ghuser
+    path: release/userobjects/*.ghuser
 ```
 
 No Rhino install is required in CI — `GH_IO.dll` is pulled from NuGet by the componentizer the first time. Cache `vendor/componentizer/` and (optionally) the downloaded `GH_IO.dll` between runs.
@@ -267,10 +267,10 @@ No Rhino install is required in CI — `GH_IO.dll` is pulled from NuGet by the c
 
 ## 10. Installing the built `.ghuser` files
 
-Installing is **one** copy: the whole deployable `carcara/` folder → the
+Installing is **one** copy: the whole deployable `release/` folder → the
 UserObjects folder. It carries the `crc_modules` package, the built
-`userobjects/*.ghuser`, and `version.txt` together. `deploy.ps1` does it for dev;
-end users get it via the GitHub installer (`grasshopper/installer/`). GHPython has
+`userobjects/*.ghuser`, and `version.txt` together. `tools/deploy.ps1` does it for dev;
+end users get it via the GitHub installer (`build/installer/`). GHPython has
 no `__file__`, so each `code.py` puts `…/UserObjects/carcara` on `sys.path` and
 imports `crc_modules`.
 
@@ -289,10 +289,10 @@ UserObjects folders:
 - **macOS**: `~/Library/Application Support/McNeel/Rhinoceros/8.0/Plug-ins/Grasshopper/UserObjects/carcara/`
 
 > Copying only the `.ghuser` yields `No module named 'crc_modules'`. Ship the
-> whole `carcara/` folder so the package is on Rhino's Python path.
+> whole `release/` folder so the package is on Rhino's Python path.
 
 Third-party deps (e.g. `psycopg2` for DB components) must also be importable by
-Rhino's Python. They are installed once by `grasshopper/installer/install_python_libs.py`
+Rhino's Python. They are installed once by `build/installer/install_python_libs.py`
 (run before the components are used).
 
 Restart Grasshopper (or reload the user objects via the GH menu) and the components appear in the **Carcara** tab.

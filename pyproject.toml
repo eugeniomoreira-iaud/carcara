@@ -21,16 +21,16 @@ dev = [
     "requests",
 ]
 
-# The package lives inside the deployable folder: carcara/crc_modules/.
+# The package lives inside the deployable folder: release/crc_modules/.
 # Import name is crc_modules (folder name on sys.path), not carcara.
 [tool.setuptools.packages.find]
-where = ["carcara"]
+where = ["release"]
 include = ["crc_modules*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-# carcara/ is on sys.path so tests can `import crc_modules.*` without install.
-pythonpath = ["carcara"]
-norecursedirs = ["carcara*", "carcara-old*", "vendor*", "grasshopper*", "dist*", "__pycache__*"]
+# release/ is on sys.path so tests can `import crc_modules.*` without install.
+pythonpath = ["release"]
+norecursedirs = ["release*", "carcara-old*", "vendor*", "build*", "dist*", "__pycache__*"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
