@@ -1,20 +1,21 @@
-{
+﻿{
   "name": "CurveDisplay",
   "nickname": "CrvDpl",
   "category": "Carcara",
   "subcategory": "04.Dataviz",
   "description": "Custom viewport preview (lineweight, color, dash) for curves — CPython SDK-mode port of CRC_CurveDisplay.",
   "exposure": 2,
+  "componentVersion": "0.5-00",
   "instanceGuid": "a7f3c2e9-1b54-4d80-9c6a-2e8f0b3d7a16",
   "ghpython": {
     "isAdvancedMode": true,
     "marshalGuids": false,
     "iconDisplay": 0,
     "inputParameters": [
-      { "name": "Curve",  "description": "Curves to preview",                                                 "typeHintID": "curve",  "scriptParamAccess": "item" },
-      { "name": "Width",  "description": "Width of the curves",                                                "typeHintID": "int",    "scriptParamAccess": "item" },
-      { "name": "Colour", "description": "Color of the curves",                                               "typeHintID": "colour", "scriptParamAccess": "item" },
-      { "name": "Dash",   "description": "Dash pattern: space-separated values for dash and gap (e.g. '2 1')", "typeHintID": "str",    "scriptParamAccess": "item", "optional": true }
+      { "name": "Curve",  "description": "Curves to preview",                                                 "typeHintID": "curve", "scriptParamAccess": "list" },
+      { "name": "Colour", "description": "Color per curve (last value repeats for remaining curves)",         "typeHintID": "color", "scriptParamAccess": "list" },
+      { "name": "Width",  "description": "Lineweight per curve in pixels (last value repeats)",               "typeHintID": "float", "scriptParamAccess": "list" },
+      { "name": "Dash",   "description": "Dash pattern per curve: space-separated dash/gap values (e.g. '2 1'); last value repeats", "typeHintID": "str", "scriptParamAccess": "list", "optional": true }
     ],
     "outputParameters": []
   }

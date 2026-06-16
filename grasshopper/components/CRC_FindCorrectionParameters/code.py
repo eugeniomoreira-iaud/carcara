@@ -1,4 +1,4 @@
-"""CRC_FindCorrectionParameters: Find coordinate correction parameters (false origin) from a PostGIS table.
+﻿"""CRC_FindCorrectionParameters: Find coordinate correction parameters (false origin) from a PostGIS table.
 
 Queries one row from the table, auto-detects the geometry column, computes
 the centroid, and returns (Cx, Cy) as verbatim text strings for use as
@@ -28,7 +28,7 @@ for _b in _bases:
         sys.path.insert(0, _b)
 
 try:
-    ghenv.Component.Message = "v{{version}} - {{date}}"
+    ghenv.Component.Message = "v{{component_version}}"
 except Exception:
     pass
 

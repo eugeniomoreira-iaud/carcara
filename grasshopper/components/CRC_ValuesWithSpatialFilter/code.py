@@ -1,4 +1,4 @@
-"""CRC_ValuesWithSpatialFilter: Query attribute values with spatial filter and coordinate correction."""
+﻿"""CRC_ValuesWithSpatialFilter: Query a single attribute column with spatial filter and coordinate correction."""
 import sys
 import os
 
@@ -15,7 +15,7 @@ for _b in _bases:
         sys.path.insert(0, _b)
 
 try:
-    ghenv.Component.Message = "v{{version}} - {{date}}"
+    ghenv.Component.Message = "v{{component_version}}"
 except Exception:
     pass
 
@@ -26,7 +26,7 @@ from Grasshopper import DataTree
 from crc_modules.db.spatial_query import get_values_with_spatial_filter
 from crc_modules.rhino.wkt_conversion import rh_geometry_to_wkt
 
-values, report, queries = DataTree[object](), "Set 'CToggle' to True to execute", ""
+values, pk, report, queries = DataTree[object](), DataTree[object](), "Set 'CToggle' to True to execute", ""
 
 if CToggle:
     try:
@@ -34,16 +34,10 @@ if CToggle:
             raise ValueError("CString is required")
         if not schema or not table:
             raise ValueError("schema and table are required")
-        if columns is None:
-            raise ValueError("columns list is required")
-        if spatial_filter is None:
-            raise ValueError("spatial_filter geometry is required")
-
-        # Handle columns input (can be list or comma-separated string)
-        if isinstance(columns, (list, tuple)):
-            col_list = [str(c).strip() for c in columns]
-        else:
-            col_list = [c.strip() for c in str(columns).split(",")]
+        if not column:
+            raise ValueError("column is required")
+        if not spatial_filter:
+            raise ValueError("spatial_filter geometry list is required")
 
         null_val = str(N) if N else ""
 
@@ -51,32 +45,28 @@ if CToggle:
         func = int(function) if function else 0
         cx = str(Cx) if Cx else "0"
         cy = str(Cy) if Cy else "0"
-        sql_filter = sql_filter if sql_filter else None
 
-        # Convert GH geometry to WKT for spatial filter
-        filter_wkt = rh_geometry_to_wkt(spatial_filter)
-        if not filter_wkt:
-            raise ValueError("Failed to convert spatial filter geometry to WKT")
+        # Convert list of GH geometries to WKT strings for spatial filter
+        filter_wkts = [rh_geometry_to_wkt(g) for g in spatial_filter if g is not None]
+        filter_wkts = [w for w in filter_wkts if w]
+        if not filter_wkts:
+            raise ValueError("Failed to convert any spatial filter geometry to WKT")
 
         executed_sql = []
-        rows, col_names = get_values_with_spatial_filter(
-            CString, schema, table, col_list, filter_wkt,
-            cx=cx, cy=cy, srid=srid, sql_filter=sql_filter, func=func, sql_log=executed_sql
+        values_list, pk_list = get_values_with_spatial_filter(
+            CString, schema, table, str(column), filter_wkts,
+            cx=cx, cy=cy, srid=srid, func=func, sql_log=executed_sql
         )
 
-        # Apply NULL replacement if specified
-        if null_val != "":
-            rows = [[null_val if v is None else v for v in row] for row in rows]
+        # Output as DataTree: one branch per row (parallel to GeometriesWithSpatialFilter)
+        for i, (val, pk_val) in enumerate(zip(values_list, pk_list)):
+            p = GH_Path(i)
+            if null_val != "" and val is None:
+                val = null_val
+            values.Add(str(val) if val is not None else "", p)
+            pk.Add(pk_val, p)
 
-        # Output as Grasshopper DataTree: each column is a branch
-        for col_idx, col_name in enumerate(col_names):
-            path = GH_Path(col_idx)
-            for row_idx, row in enumerate(rows):
-                if col_idx < len(row):
-                    val = row[col_idx]
-                    values.Add(str(val) if val is not None else "", path)
-
-        report = f"OK – {len(rows)} rows, {len(col_names)} columns returned"
+        report = f"OK – {len(values_list)} rows returned"
         queries = "\n\n".join("-- query {}\n{}".format(i + 1, s) for i, s in enumerate(executed_sql))
     except Exception as e:
         report = f"ERROR: {e}"

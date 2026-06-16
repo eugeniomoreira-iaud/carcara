@@ -1,4 +1,4 @@
-"""CRC_BuildingMeshes: Extrude building footprints to Ground / Lateral / Roof meshes.
+﻿"""CRC_BuildingMeshes: Extrude building footprints to Ground / Lateral / Roof meshes.
 
 No CToggle — executes on data arrival (matches legacy).
 DataTree iteration, height fan-out, empty-branch preservation, and the
@@ -22,7 +22,7 @@ for _b in _bases:
         sys.path.insert(0, _b)
 
 try:
-    ghenv.Component.Message = "v{{version}} - {{date}}"
+    ghenv.Component.Message = "v{{component_version}}"
 except Exception:
     pass
 
@@ -36,8 +36,9 @@ from crc_modules.rhino.building_mesh import (
 )
 
 # ── Resolve inputs ────────────────────────────────────────────────────────────
-_fp_tree = ghenv.Component.Params.Input[0].VolatileData
-_h_tree  = ghenv.Component.Params.Input[1].VolatileData
+# BdgFp / BdgH are already DataTrees (scriptParamAccess: "tree"); use them directly.
+_fp_tree = BdgFp
+_h_tree  = BdgH
 
 GrdF = DataTree[object]()
 LatF = DataTree[object]()
@@ -55,9 +56,9 @@ def _unwrap(v):
 def _get_h_branch(tree, path):
     """Return height branch for path; fall back to the sole branch."""
     if tree.PathExists(path):
-        return [_unwrap(x) for x in tree[path]]
-    if tree.PathCount == 1:
-        return [_unwrap(x) for x in tree[tree.Path(0)]]
+        return [_unwrap(x) for x in tree.Branch(path)]
+    if tree.BranchCount == 1:
+        return [_unwrap(x) for x in tree.Branch(tree.Path(0))]
     return []
 
 
@@ -82,14 +83,14 @@ def _resolve_heights(raw_heights, fp_count):
 
 
 try:
-    if _fp_tree.PathCount == 0:
+    if _fp_tree.BranchCount == 0:
         _log.append("WARNING: No footprints provided.")
-    elif _h_tree.PathCount == 0:
+    elif _h_tree.BranchCount == 0:
         _log.append("WARNING: No heights provided.")
     else:
-        _total_branches = _fp_tree.PathCount
+        _total_branches = _fp_tree.BranchCount
 
-        for _i in range(_fp_tree.PathCount):
+        for _i in range(_fp_tree.BranchCount):
             _path = _fp_tree.Path(_i)
 
             # Ensure branch exists in all output trees (preserves empty branches)

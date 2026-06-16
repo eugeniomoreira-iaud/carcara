@@ -1,4 +1,4 @@
-"""CRC_QueryValues: Query column(s) from a table with NULL replacement, output as tree."""
+﻿"""CRC_QueryValues: Query column(s) from a table with NULL replacement, output as tree."""
 import sys
 import os
 
@@ -14,7 +14,7 @@ for _b in _bases:
         sys.path.insert(0, _b)
 
 try:
-    ghenv.Component.Message = "v{{version}} - {{date}}"
+    ghenv.Component.Message = "v{{component_version}}"
 except Exception:
     pass
 

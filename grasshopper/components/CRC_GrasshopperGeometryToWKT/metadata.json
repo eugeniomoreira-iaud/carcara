@@ -1,10 +1,11 @@
-{
+﻿{
   "name": "GrasshopperGeometryToWKT",
   "nickname": "ghToWkt",
   "category": "Carcara",
   "subcategory": "03.Utilities",
   "description": "Converts Grasshopper geometry (points, lines/polylines, polygons) to Well-Known Text. A branch with one geometry yields a single WKT; multiple uniform geometries yield a MULTI* WKT. No coordinate correction (geometry stays local).",
   "exposure": 8,
+  "componentVersion": "0.5-00",
   "instanceGuid": "c9f30d4b-2e55-4d29-9a3b-2b7f1d6e8f21",
   "ghpython": {
     "isAdvancedMode": false,

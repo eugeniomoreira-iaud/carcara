@@ -18,6 +18,7 @@ import System.IO
 SCRIPT_COMPONENT_GUID = System.Guid("c9b2d725-6f87-4b07-af90-bd9aefef68eb")
 CPY_VER = "3.-1"
 TEMPLATE_VER = re.compile("{{version}}")
+TEMPLATE_COMPONENT_VER = re.compile("{{component_version}}")
 TEMPLATE_NAME = re.compile("{{name}}")
 TEMPLATE_GHUSER_NAME = re.compile("{{ghuser_name}}")
 TEMPLATE_DATE = re.compile("{{date}}")
@@ -203,9 +204,12 @@ def parse_param_type_hint(type_hint_id):
     return type_hint_id
 
 
-def replace_templates(code, version, name, ghuser_name):
+def replace_templates(code, version, name, ghuser_name, component_version=None):
     if version:
         code = TEMPLATE_VER.sub(version, code)
+
+    if component_version:
+        code = TEMPLATE_COMPONENT_VER.sub(component_version, code)
 
     code = TEMPLATE_NAME.sub(name, code)
     code = TEMPLATE_GHUSER_NAME.sub(ghuser_name, code)
@@ -219,7 +223,9 @@ def create_ghuser_component(source, target, version=None, prefix=None):
 
     icon, code, data = validate_source_bundle(source)
 
-    code = replace_templates(code, version, data["name"], os.path.basename(target))
+    component_version = data.get("componentVersion") or version
+    code = replace_templates(code, version, data["name"], os.path.basename(target),
+                             component_version)
 
     instance_guid = data.get("instanceGuid")
     if not instance_guid:

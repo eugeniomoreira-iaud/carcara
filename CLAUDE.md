@@ -72,6 +72,7 @@ carcara/                              ← Repository root
 │
 ├── specs/                          ← Internal specs and how-tos.
 │   ├── componentizer.md            ← Componentizer build pipeline reference
+│   ├── sdk-components.md           ← SDK/advanced-mode viewport-preview components how-to
 │   └── ghuser-decoding.md          ← How to decode legacy .ghuser binaries (CPython only)
 │
 ├── docs/                           ← Reports, design notes, branding assets.
@@ -362,6 +363,14 @@ CRC_RunQuery/
 ```
 
 This layout is dictated by the upstream componentizer (`compas-actions.ghpython_components`) used by Ladybug Tools, COMPAS, and now Carcara. The full schema, CLI, and rationale live in [`specs/componentizer.md`](specs/componentizer.md).
+
+> **SDK / advanced-mode components.** Components that draw a custom Rhino-viewport preview
+> (`DrawViewportWires` / `DrawViewportMeshes` / `get_ClippingBox`) are built differently: set
+> `ghpython.isAdvancedMode: true`, write `code.py` as an `executingcomponent` subclass, and use
+> the shared `crc_modules/rhino/preview.py` (`PreviewPayload`) helper. `build_userobjects.py`
+> routes these through `componentize_py_sdk.py` (new Script-component schema), not the procedural
+> builder. Full pattern, gotchas (e.g. `import System`, non-empty clipping box), and checklist:
+> [`specs/sdk-components.md`](specs/sdk-components.md).
 
 ### `metadata.json` (required)
 
@@ -666,7 +675,7 @@ Within each subcategory, ordered by exposure (`1` first). Global `#` runs across
 | 3 | CRC_OffsetPython | 2 | `rhino/offset.py` | `carcara_OffsetPython_r03.ghuser` | ✅ Done |
 | 4 | CRC_PointInsidePolygon | 2 | `geometry/polylabel.py` | `carcara_PointInsidePolygon_rev03.ghuser` | ✅ Done |
 | 5 | CRC_SortByContainer | 2 | `geometry/containment.py` | `carcara_SortByContainer_rev03.ghuser` | ✅ Done |
-| 6 | CRC_ColorCalculator | 4 | `utils/color.py` | `carcara_ColorCalculator_r00.ghuser` | ✅ Done |
+| 6 | CRC_ColorCalculator* | 4 | `utils/color.py` (SDK) | `carcara_ColorCalculator_r00.ghuser` | ✅ Done |
 
 #### 02.Queries (9)
 
@@ -698,15 +707,15 @@ Within each subcategory, ordered by exposure (`1` first). Global `#` runs across
 
 | # | Component | Exp | Core module | Legacy file | Status |
 |---|---|---|---|---|---|
-| 24 | CRC_CurveDisplay | 2 | `rhino/curve_display.py` (Python SDK-mode) | `carcara_CurveDisplay_r02.ghuser` | ✅ Done |
-| 25 | CRC_PolylineToSVG | 4 | `svg/export.py` | `carcara_PolylineToSVG_r03.ghuser` | ✅ Done |
-| 26 | CRC_CircleToSVG | 4 | `svg/export.py` | `carcara_CircletoSVG_r03.ghuser` | ✅ Done |
-| 27 | CRC_NurbsToSVG | 4 | `svg/export.py` | `carcara_NurbsToSVG_rev03.ghuser` | ✅ Done |
-| 28 | CRC_TextToSVG | 4 | `svg/export.py` | `carcara_TextToSVG_rev03.ghuser` | ✅ Done |
-| 29 | CRC_Histogram | 8 | `viz/histogram.py` | `carcara_Histogram_r01.ghuser` | ✅ Done |
-| 30 | CRC_ScatterPlot | 8 | `viz/scatter.py` | `carcara_ScatterPlot_r03.ghuser` | ✅ Done |
-| 31 | CRC_LinePlot | 8 | `viz/lineplot.py` | `carcara_LinePlot_r00.ghuser` | ✅ Done |
-| 32 | CRC_Heatmap | 8 | `viz/heatmap.py` | `carcara_Heatmap_rev00.ghuser` | ✅ Done |
+| 24 | CRC_CurveDisplay | 2 | `rhino/curve_display.py` (SDK) | `carcara_CurveDisplay_r02.ghuser` | ✅ Done |
+| 25 | CRC_PolylineToSVG* | 4 | `svg/export.py` (`rhino/preview.py`) | `carcara_PolylineToSVG_r03.ghuser` | ✅ Done |
+| 26 | CRC_CircleToSVG* | 4 | `svg/export.py` (`rhino/preview.py`) | `carcara_CircletoSVG_r03.ghuser` | ✅ Done |
+| 27 | CRC_NurbsToSVG* | 4 | `svg/export.py` (`rhino/preview.py`) | `carcara_NurbsToSVG_rev03.ghuser` | ✅ Done |
+| 28 | CRC_TextToSVG* | 4 | `svg/export.py` (`rhino/preview.py`) | `carcara_TextToSVG_rev03.ghuser` | ✅ Done |
+| 29 | CRC_Histogram* | 8 | `viz/histogram.py` (`rhino/preview.py`) | `carcara_Histogram_r01.ghuser` | ✅ Done |
+| 30 | CRC_ScatterPlot* | 8 | `viz/scatter.py` (`rhino/preview.py`) | `carcara_ScatterPlot_r03.ghuser` | ✅ Done |
+| 31 | CRC_LinePlot* | 8 | `viz/lineplot.py` (`rhino/preview.py`) | `carcara_LinePlot_r00.ghuser` | ✅ Done |
+| 32 | CRC_Heatmap* | 8 | `viz/heatmap.py` (`rhino/preview.py`) | `carcara_Heatmap_rev00.ghuser` | ✅ Done |
 | 33 | CRC_SaveSVG | 16 | `svg/save.py` | `carcara_SaveSVG_r03.ghuser` | ✅ Done |
 
 Counts: **01.Modeling 6 · 02.Queries 9 · 03.Utilities 7 · 04.Dataviz 10 = 32.**
@@ -730,9 +739,7 @@ Counts: **01.Modeling 6 · 02.Queries 9 · 03.Utilities 7 · 04.Dataviz 10 = 32.
   (`CRC_ConnectionString`, which *produces* the `CString`), the generic query/command
   runners (`CRC_RunQuery`, `CRC_RunCommand`), the SQL composer (free-form substring replace),
   geometry⇄WKT conversion, and the coordinate-correction false origin tools.
-- **04.Dataviz** — data visualizations rendered on screen and exportable as SVG (SVG export is
-  folded into Dataviz, as in the legacy plugin). `CRC_CurveDisplay` is a C# Rhino-viewport preview.
-  Chart components output SVG files via matplotlib.
+-   **04.Dataviz** — data visualizations rendered on screen (SDK-mode viewport preview) and exportable as SVG. All ten components use SDK mode (`CRC_CurveDisplay` for display-only curves; `CRC_ColorCalculator`; five SVG exporters: `CRC_PolylineToSVG`, `CRC_CircleToSVG`, `CRC_NurbsToSVG`, `CRC_TextToSVG`; and four chart renderers: `CRC_Histogram`, `CRC_ScatterPlot`, `CRC_LinePlot`, `CRC_Heatmap`). Charts combine Rhino geometry in the viewport via `PreviewPayload` with SVG file export via matplotlib. Only `CRC_SaveSVG` is procedural. Full SDK component inventory and gotchas: [`specs/sdk-components.md`](specs/sdk-components.md).
 
 > **Engine / reuse pattern (from legacy).** `CRC_RunQuery` / `CRC_RunCommand` (03.Utilities)
 > are the generic primitives — reimplement as thin GH wrappers over `run_query` / `run_command`.
@@ -759,9 +766,11 @@ Counts: **01.Modeling 6 · 02.Queries 9 · 03.Utilities 7 · 04.Dataviz 10 = 32.
 
 > **Module vs subcategory are independent.** `CRC_ConnectionString` and the `CRC_Run*` pair
 > live in `db/` but sit in 03.Utilities; `CRC_SQLComposer` lives in `utils/` and sits in
-> 03.Utilities; `CRC_ColorCalculator` lives in `utils/color.py` but sits in 01.Modeling;
-> `CRC_CurveDisplay` is C# in `rhino/` but sits in 04.Dataviz. Set `subcategory` from this
-> table, not from the module path.
+> 03.Utilities; `CRC_ColorCalculator` lives in `utils/color.py` but sits in 01.Modeling and
+> uses SDK mode. `CRC_CurveDisplay` is Python SDK-mode (was C# in the legacy) and sits in
+> 04.Dataviz. Set `subcategory` from this table, not from the module path.
+
+> **SDK-mode components.** Nine of the ten data-viz components (all except `CRC_SaveSVG`) plus CRC_ColorCalculator (10 total) use SDK mode: they draw a custom Rhino viewport preview via `PreviewPayload`. The five SVG exporters also emit files via matplotlib; the remaining four chart renderers and ColorCalculator are preview-only. Full inventory and gotchas: [`specs/sdk-components.md`](specs/sdk-components.md).
 
 ### Inventory cross-check
 

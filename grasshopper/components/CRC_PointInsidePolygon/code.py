@@ -1,4 +1,4 @@
-"""CRC_PointInsidePolygon: Find a guaranteed-inside point for a polygon curve."""
+﻿"""CRC_PointInsidePolygon: Find a guaranteed-inside point for a polygon curve."""
 import sys
 import os
 
@@ -15,7 +15,7 @@ for _b in _bases:
         sys.path.insert(0, _b)
 
 try:
-    ghenv.Component.Message = "v{{version}} - {{date}}"
+    ghenv.Component.Message = "v{{component_version}}"
 except Exception:
     pass
 
@@ -24,7 +24,7 @@ from crc_modules.geometry.polylabel import interior_point
 from crc_modules.geometry.wkt import wkt_to_shapely
 
 pt = None
-report = "Provide a closed polygon curve to pol."
+report = "Provide a closed polygon curve to pol to compute its pole of inaccessibility (polylabel)."
 
 try:
     if pol is None:
@@ -53,7 +53,7 @@ try:
                 # but we need it here for the output — import is GH-side only)
                 import Rhino.Geometry as rg
                 pt = rg.Point3d(ix, iy, 0.0)
-                report = "OK — interior point found at ({:.4f}, {:.4f}), dist to edge: {:.4f}".format(
+                report = "OK — pole of inaccessibility (polylabel) at ({:.4f}, {:.4f}), dist to nearest edge: {:.4f}".format(
                     ix, iy, dist
                 )
 

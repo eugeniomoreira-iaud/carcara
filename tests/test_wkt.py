@@ -9,6 +9,9 @@ from crc_modules.geometry.wkt import (
     is_multipart_wkt,
     classify_wkt,
     combine_to_multipart,
+    combine_wkts,
+    detect_wkt_type,
+    promote_to_multi,
 )
 
 
@@ -90,3 +93,90 @@ def test_combine_to_multipart_mixed_raises():
 def test_combine_to_multipart_empty_raises():
     with pytest.raises(ValueError):
         combine_to_multipart([])
+
+
+# ── combine_wkts ───────────────────────────────────────────────────────────
+
+def test_combine_wkts_single_passthrough():
+    wkt = "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))"
+    assert combine_wkts([wkt]) == wkt
+
+
+def test_combine_wkts_two_polygons_yields_multipolygon():
+    p1 = "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))"
+    p2 = "POLYGON ((2 2, 3 2, 3 3, 2 3, 2 2))"
+    result = combine_wkts([p1, p2])
+    assert classify_wkt(result) == "MULTIPOLYGON"
+    geom = wkt_to_shapely(result)
+    assert len(list(geom.geoms)) == 2
+
+
+def test_combine_wkts_mixed_base_raises():
+    p = "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))"
+    l = "LINESTRING (0 0, 1 1)"
+    with pytest.raises(ValueError):
+        combine_wkts([p, l])
+
+
+def test_combine_wkts_empty_raises():
+    with pytest.raises(ValueError):
+        combine_wkts([])
+
+
+def test_combine_wkts_two_points_yields_multipoint():
+    result = combine_wkts(["POINT (0 0)", "POINT (1 1)"])
+    assert classify_wkt(result) == "MULTIPOINT"
+
+
+# ── detect_wkt_type ────────────────────────────────────────────────────────
+
+def test_detect_wkt_type_singular_polygon():
+    assert detect_wkt_type(["POLYGON ((0 0, 1 0, 1 1, 0 0))"]) == "POLYGON"
+
+
+def test_detect_wkt_type_singular_point():
+    assert detect_wkt_type(["POINT (0 0)"]) == "POINT"
+
+
+def test_detect_wkt_type_returns_multi_when_any_multipart():
+    p1 = "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))"
+    mp = "MULTIPOLYGON (((2 2, 3 2, 3 3, 2 3, 2 2)))"
+    assert detect_wkt_type([p1, mp]) == "MULTIPOLYGON"
+
+
+def test_detect_wkt_type_all_single_returns_singular():
+    p1 = "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))"
+    p2 = "POLYGON ((2 2, 3 2, 3 3, 2 3, 2 2))"
+    assert detect_wkt_type([p1, p2]) == "POLYGON"
+
+
+def test_detect_wkt_type_mixed_base_raises():
+    with pytest.raises(ValueError):
+        detect_wkt_type(["POINT (0 0)", "LINESTRING (0 0, 1 1)"])
+
+
+def test_detect_wkt_type_empty_raises():
+    with pytest.raises(ValueError):
+        detect_wkt_type([])
+
+
+# ── promote_to_multi ───────────────────────────────────────────────────────
+
+def test_promote_to_multi_single_polygon_to_multipolygon():
+    wkt = "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))"
+    result = promote_to_multi(wkt, "MULTIPOLYGON")
+    assert classify_wkt(result) == "MULTIPOLYGON"
+    geom = wkt_to_shapely(result)
+    assert len(list(geom.geoms)) == 1
+
+
+def test_promote_to_multi_already_multi_passthrough():
+    wkt = "MULTIPOLYGON (((0 0, 1 0, 1 1, 0 1, 0 0)))"
+    result = promote_to_multi(wkt, "MULTIPOLYGON")
+    assert classify_wkt(result) == "MULTIPOLYGON"
+
+
+def test_promote_to_multi_non_multi_target_passthrough():
+    wkt = "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))"
+    result = promote_to_multi(wkt, "POLYGON")
+    assert result == wkt

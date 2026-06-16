@@ -1,10 +1,11 @@
-{
+﻿{
   "name": "SaveSVG",
   "nickname": "SaveSVG",
   "category": "Carcara",
   "subcategory": "04.Dataviz",
   "description": "Assembles SVG element strings into a complete SVG document (viewBox from canvas dimensions) and writes it to disk. File is only written when save_flag is True.",
   "exposure": 16,
+  "componentVersion": "0.5-00",
   "instanceGuid": "f5a6b7c8-d9e0-1234-fabc-345678901205",
   "ghpython": {
     "isAdvancedMode": false,

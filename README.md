@@ -26,7 +26,7 @@ importable and testable outside Rhino; the Grasshopper components are thin wrapp
 | **01.Modeling** | 6 | BuildingMeshes, OffsetPython, PointInsidePolygon, SortByContainer, IdentifyDuplicatePolylines, ColorCalculator |
 | **02.Queries** | 9 | QuerySchemaNames, QueryTableNames, QueryColumnNames, QueryValues, GeometryEntities, GeometriesWithSpatialFilter, ValuesWithSpatialFilter, CreateTable, CreateShapefile |
 | **03.Utilities** | 7 | ConnectionString, FindCorrectionParameters, SQLComposer, RunQuery, RunCommand, GrasshopperGeometryToWKT, WKTtoGrasshopperGeometry |
-| **04.Dataviz** | 10 | CurveDisplay, PolylineToSVG, CircleToSVG, NurbsToSVG, TextToSVG, Histogram, ScatterPlot, LinePlot, Heatmap, SaveSVG |
+| **04.Dataviz** | 10 | CurveDisplay, PolylineToSVG, CircleToSVG, NurbsToSVG, TextToSVG, Histogram, ScatterPlot, LinePlot, Heatmap, SaveSVG (all use SDK-mode viewport preview except SaveSVG) |
 
 `CRC_SRID` is a native Grasshopper ValueList added manually (not part of the build).
 

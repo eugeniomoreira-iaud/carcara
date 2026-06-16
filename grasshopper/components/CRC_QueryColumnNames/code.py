@@ -1,4 +1,4 @@
-"""CRC_QueryColumnNames: List all columns and their types in a specified table."""
+﻿"""CRC_QueryColumnNames: List all columns and their types in a specified table."""
 import sys
 import os
 
@@ -18,7 +18,7 @@ for _b in _bases:
         sys.path.insert(0, _b)
 
 try:
-    ghenv.Component.Message = "v{{version}} - {{date}}"
+    ghenv.Component.Message = "v{{component_version}}"
 except Exception:
     pass
 

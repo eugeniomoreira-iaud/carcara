@@ -1,17 +1,18 @@
-{
+﻿{
   "name": "BuildingMeshes",
   "nickname": "BdgMsh",
   "category": "Carcara",
   "subcategory": "01.Modeling",
   "description": "Extrudes a list of building footprints by their heights.",
   "exposure": 2,
+  "componentVersion": "0.5-00",
   "instanceGuid": "c3d4e5f6-a7b8-9012-cdef-012345678902",
   "ghpython": {
     "isAdvancedMode": false,
     "marshalGuids": true,
     "iconDisplay": 0,
     "inputParameters": [
-      { "name": "BdgFp", "description": "Tree of building footprint polygons. Holes are auto-detected by containment.", "typeHintID": "ghdoc", "scriptParamAccess": "tree" },
+      { "name": "BdgFp", "description": "Tree of building footprint polygons. Holes are auto-detected by containment.", "typeHintID": "polyline", "scriptParamAccess": "tree" },
       { "name": "BdgH",  "description": "Tree of building heights matching BdgFp tree structure.",                    "typeHintID": "float", "scriptParamAccess": "tree" }
     ],
     "outputParameters": [

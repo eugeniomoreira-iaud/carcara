@@ -1,22 +1,23 @@
-{
+﻿{
   "name": "ColorCalculator",
   "nickname": "ColorCalc",
   "category": "Carcara",
   "subcategory": "01.Modeling",
-  "description": "Calculates colors for mesh volumes based on numerical values. Supports continuous gradients, fixed class count, or custom class boundaries. Generates legend geometry.",
+  "description": "Calculates colors for mesh volumes based on numerical values. Supports continuous gradients, fixed class count, or custom class boundaries. Generates legend geometry and renders it directly in the Rhino viewport.",
   "exposure": 4,
+  "componentVersion": "0.5-00",
   "instanceGuid": "b3c4d5e6-f7a8-9012-bcde-f12345678901",
   "ghpython": {
-    "isAdvancedMode": false,
+    "isAdvancedMode": true,
     "marshalGuids": true,
     "iconDisplay": 0,
     "inputParameters": [
-      { "name": "val",     "description": "Tree of values for color mapping. One value per mesh.",                                                                                     "typeHintID": "ghdoc", "scriptParamAccess": "tree" },
-      { "name": "col",     "description": "Color gradient or list of colors (min 2, default: Ladybug gradient).",                                                                     "typeHintID": "ghdoc", "scriptParamAccess": "list" },
-      { "name": "cls",     "description": "Number of classes (int, 0=continuous) OR list of class boundary floats e.g. [0,5,10].",                                                   "typeHintID": "ghdoc", "scriptParamAccess": "list" },
-      { "name": "lin",     "description": "True=linear intervals, False=percentile-based (default: True).",                                                                           "typeHintID": "bool",  "scriptParamAccess": "item" },
-      { "name": "leg_cfg", "description": "Legend config as 'key: value' pairs (title, min, max, segments, decimals, vertical, seg_height, seg_width, text_height, scale, etc.).", "typeHintID": "str",   "scriptParamAccess": "item" },
-      { "name": "leg_pln", "description": "Base plane for legend positioning (default: World XY).",                                                                                   "typeHintID": "ghdoc", "scriptParamAccess": "item" }
+      { "name": "val",     "description": "Tree of values for color mapping. One value per mesh.",                                                                                     "typeHintID": "ghdoc",   "scriptParamAccess": "tree" },
+      { "name": "col",     "description": "Color gradient or list of colors (min 2, default: Ladybug gradient).",                                                                     "typeHintID": "color",   "scriptParamAccess": "list" },
+      { "name": "cls",     "description": "Number of classes (int, 0=continuous) OR list of class boundary floats e.g. [0,5,10].",                                                   "typeHintID": "ghdoc",   "scriptParamAccess": "list" },
+      { "name": "lin",     "description": "True=linear intervals, False=percentile-based (default: True).",                                                                           "typeHintID": "bool",    "scriptParamAccess": "item" },
+      { "name": "leg_cfg", "description": "Legend config as 'key: value' pairs (title, min, max, segments, decimals, vertical, seg_height, seg_width, text_height, scale, etc.).", "typeHintID": "str",     "scriptParamAccess": "item" },
+      { "name": "leg_pln", "description": "Base plane for legend positioning (default: World XY).",                                                                                   "typeHintID": "plane",   "scriptParamAccess": "item" }
     ],
     "outputParameters": [
       { "name": "out",     "description": "Processing log" },

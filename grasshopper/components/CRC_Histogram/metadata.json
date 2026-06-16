@@ -1,39 +1,39 @@
-{
+﻿{
   "name": "Histogram",
   "nickname": "Hist",
   "category": "Carcara",
   "subcategory": "04.Dataviz",
-  "description": "Builds a histogram as pure Rhino geometry (bars, axes, label anchors, grid) mapped into a canvas rectangle, and optionally exports the chart as SVG.",
+  "description": "Renders a histogram chart in the Rhino viewport and exports raw SVG body content. Chain svgCode into CRC_SaveSVG to write the file.",
   "exposure": 8,
+  "componentVersion": "0.5-00",
   "instanceGuid": "b3c4d5e6-f7a8-9012-bcde-fa2345678901",
   "ghpython": {
-    "isAdvancedMode": false,
+    "isAdvancedMode": true,
     "marshalGuids": true,
     "iconDisplay": 0,
     "inputParameters": [
-      { "name": "cv",      "description": "Canvas rectangle (default 100x100 at origin)",         "typeHintID": "ghdoc", "scriptParamAccess": "item" },
-      { "name": "v",       "description": "Data values to histogram",                              "typeHintID": "float", "scriptParamAccess": "list" },
-      { "name": "b",       "description": "Number of histogram bins (default 10)",                 "typeHintID": "int",   "scriptParamAccess": "item" },
-      { "name": "nx",      "description": "Number of X-axis labels (default: all bin edges)",      "typeHintID": "int",   "scriptParamAccess": "item" },
-      { "name": "ny",      "description": "Number of Y-axis labels (default 5)",                   "typeHintID": "int",   "scriptParamAccess": "item" },
-      { "name": "d",       "description": "Decimal places for labels (default 1)",                 "typeHintID": "int",   "scriptParamAccess": "item" },
-      { "name": "ext",     "description": "Axis extension beyond canvas (default 0)",              "typeHintID": "float", "scriptParamAccess": "item" },
-      { "name": "dist",    "description": "Label distance from axis (default 10)",                 "typeHintID": "float", "scriptParamAccess": "item" },
-      { "name": "gy",      "description": "Draw horizontal grid lines at Y labels (default False)","typeHintID": "bool",  "scriptParamAccess": "item" },
-      { "name": "OutPath", "description": "File path for SVG export (include .svg extension)",     "typeHintID": "str",   "scriptParamAccess": "item" },
-      { "name": "CToggle", "description": "Set True to save SVG file",                            "typeHintID": "bool",  "scriptParamAccess": "item" }
+      { "name": "canvasRect",      "description": "Canvas boundary Rectangle3d (default 100x100 at origin)",        "typeHintID": "rectangle", "scriptParamAccess": "item", "optional": true },
+      { "name": "dataValues",      "description": "Data values to histogram (uses demo data if absent)",             "typeHintID": "float",     "scriptParamAccess": "list" },
+      { "name": "numBins",         "description": "Number of histogram bins (default 10)",                           "typeHintID": "int",       "scriptParamAccess": "item", "optional": true },
+      { "name": "numXLabels",      "description": "Number of X-axis labels (default: all bin edges)",               "typeHintID": "int",       "scriptParamAccess": "item", "optional": true },
+      { "name": "numYLabels",      "description": "Number of Y-axis labels (default 5)",                            "typeHintID": "int",       "scriptParamAccess": "item", "optional": true },
+      { "name": "decimals",        "description": "Decimal places for labels (default 1)",                          "typeHintID": "int",       "scriptParamAccess": "item", "optional": true },
+      { "name": "axisExtension",   "description": "Axis extension beyond canvas (default 0)",                       "typeHintID": "float",     "scriptParamAccess": "item", "optional": true },
+      { "name": "labelDist",       "description": "Label distance from axis (default 10)",                          "typeHintID": "float",     "scriptParamAccess": "item", "optional": true },
+      { "name": "drawGridY",       "description": "Draw horizontal grid lines at Y labels (default False)",         "typeHintID": "bool",      "scriptParamAccess": "item", "optional": true },
+      { "name": "barOutlineWidth", "description": "Bar outline width in pixels (default 1)",                        "typeHintID": "float",     "scriptParamAccess": "item", "optional": true },
+      { "name": "axisLineWidth",   "description": "Axis line width in pixels (default 2)",                          "typeHintID": "float",     "scriptParamAccess": "item", "optional": true },
+      { "name": "gridLineWidth",   "description": "Grid line width in pixels (default 1)",                          "typeHintID": "float",     "scriptParamAccess": "item", "optional": true }
     ],
     "outputParameters": [
-      { "name": "out",      "description": "Processing log / status message" },
-      { "name": "bars",     "description": "Histogram bar rectangles (Rectangle3d)" },
-      { "name": "axes",     "description": "X and Y axis lines (Line)" },
-      { "name": "x_pts",   "description": "X-axis label anchor points (Point3d)" },
-      { "name": "x_txt",   "description": "X-axis label text strings" },
-      { "name": "y_pts",   "description": "Y-axis label anchor points (Point3d)" },
-      { "name": "y_txt",   "description": "Y-axis label text strings" },
-      { "name": "grid",    "description": "Horizontal grid lines (Line)" },
-      { "name": "svg_code","description": "Complete SVG document string" },
-      { "name": "svg_path","description": "Path to saved SVG file" }
+      {
+        "name": "svgCode",
+        "description": "Raw SVG body content (no <svg> wrapper). Chain into CRC_SaveSVG for file export."
+      },
+      {
+        "name": "report",
+        "description": "Verbose status — success details or error trace."
+      }
     ]
   }
 }

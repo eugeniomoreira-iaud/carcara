@@ -337,7 +337,7 @@ class TestGetGeometriesWithSpatialFilter:
                                   "dbname": "db", "user": "u", "password": "pw"}):
             get_geometries_with_spatial_filter(
                 cstring, "public", "buildings",
-                filter_wkt="POLYGON ((100 100, 200 100, 200 200, 100 200))")
+                filter_wkts=["POLYGON ((100 100, 200 100, 200 200, 100 200))"])
 
         all_sql = " ".join(captured)
         assert "POINT (0 0)" not in all_sql or len(captured) > 0  # just confirms SQL was built
@@ -351,7 +351,7 @@ class TestGetGeometriesWithSpatialFilter:
                                   "dbname": "db", "user": "u", "password": "pw"}):
             get_geometries_with_spatial_filter(
                 cstring, "public", "buildings",
-                filter_wkt="POLYGON ((100 100, 200 100, 200 200, 100 200))",
+                filter_wkts=["POLYGON ((100 100, 200 100, 200 200, 100 200))"],
                 cx="500000", cy="9500000")
 
         all_sql = " ".join(captured)
@@ -369,17 +369,17 @@ class TestGetGeometriesWithSpatialFilter:
                                   "dbname": "db", "user": "u", "password": "pw"}):
             get_geometries_with_spatial_filter(
                 cstring, "public", "buildings",
-                filter_wkt="POLYGON ((0 0, 1 0, 1 1, 0 1))",
+                filter_wkts=["POLYGON ((0 0, 1 0, 1 1, 0 1))"],
                 func=1)
 
         all_sql = " ".join(captured)
         upper = all_sql.upper()
         assert "ST_CONTAINS" in upper
-        # ST_Contains(filter_expr, geom_col): filter (ST_Translate(ST_GeomFromText(...))) must come before geom col
+        # ST_Contains(filter_expr, geom_col): filter (ST_Translate(ST_Union(...))) must come before geom col
         contains_pos = upper.find("ST_CONTAINS(")
-        translate_pos = upper.find("ST_TRANSLATE(ST_GEOMFROMTEXT(")
-        assert translate_pos > contains_pos, (
-            f"ST_Translate(ST_GeomFromText(...)) must be FIRST arg of ST_Contains. SQL: {all_sql}"
+        union_pos = upper.find("ST_UNION(")
+        assert union_pos > contains_pos, (
+            f"ST_Union(...) must be inside ST_Contains as first arg. SQL: {all_sql}"
         )
 
     def test_func_default_is_intersects(self):
@@ -392,69 +392,75 @@ class TestGetGeometriesWithSpatialFilter:
                                   "dbname": "db", "user": "u", "password": "pw"}):
             get_geometries_with_spatial_filter(
                 cstring, "public", "buildings",
-                filter_wkt="POLYGON ((0 0, 1 0, 1 1, 0 1))",
+                filter_wkts=["POLYGON ((0 0, 1 0, 1 1, 0 1))"],
                 func=0)
 
         all_sql = " ".join(captured)
         upper = all_sql.upper()
         assert "ST_INTERSECTS" in upper
-        # ST_Intersects(geom_col, filter_expr): geom col ("geom") must come before ST_Translate(ST_GeomFromText(
+        # ST_Intersects(geom_col, filter_expr): geom col ("geom") must come before ST_Union(
         intersects_pos = upper.find("ST_INTERSECTS(")
-        translate_pos = upper.find("ST_TRANSLATE(ST_GEOMFROMTEXT(")
-        # geom col sits right after ST_INTERSECTS( open paren — translate comes after the comma
-        assert intersects_pos < translate_pos, (
+        union_pos = upper.find("ST_UNION(")
+        assert intersects_pos < union_pos, (
             f"geom_col must be FIRST arg of ST_Intersects. SQL: {all_sql}"
         )
 
-    def test_extra_sql_filter_anded(self):
-        """Extra sql_filter is ANDed into WHERE."""
+    def test_multi_polygon_filter_uses_st_union(self):
+        """Two filter WKTs -> one WHERE predicate with ST_Union(ARRAY[...]) containing both."""
         cstring = "host=localhost port=5432 dbname=db user=u password=pw"
         mock_gc, captured = make_spatial_query_mocks()
+        wkt1 = "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))"
+        wkt2 = "POLYGON ((10 10, 11 10, 11 11, 10 11, 10 10))"
         with patch("crc_modules.db.spatial_query.psycopg2.connect", mock_gc), \
              patch("crc_modules.db.spatial_query.parse_connection_string"
                    , return_value={"host": "localhost", "port": 5432,
                                   "dbname": "db", "user": "u", "password": "pw"}):
             get_geometries_with_spatial_filter(
                 cstring, "public", "buildings",
-                filter_wkt="POLYGON ((0 0, 1 0, 1 1, 0 1))",
-                sql_filter="status = 'active'")
+                filter_wkts=[wkt1, wkt2])
 
         all_sql = " ".join(captured)
-        assert "'active'" in all_sql or "STATUS" in all_sql
+        upper = all_sql.upper()
+        # Single spatial predicate with ST_Union combining both polygons
+        assert "ST_UNION(ARRAY[" in upper, f"ST_Union(ARRAY[ not found: {all_sql}"
+        assert wkt1 in all_sql, f"First WKT not in SQL: {all_sql}"
+        assert wkt2 in all_sql, f"Second WKT not in SQL: {all_sql}"
+        # Only ONE occurrence of ST_INTERSECTS (no OR duplication)
+        assert upper.count("ST_INTERSECTS") == 1, \
+            f"Expected exactly 1 ST_INTERSECTS. SQL: {all_sql}"
 
 
 # ── get_values_with_spatial_filter ─────────────────────────────────────────
 
 class TestGetValuesWithSpatialFilter:
-    def test_returns_rows_and_columns_shape(self):
+    def test_returns_values_and_pk(self):
+        """New API: returns (values_list, pk_list), not (rows, col_names)."""
         cstring = "host=localhost port=5432 dbname=db user=u password=pw"
         mock_gc, captured = make_spatial_query_mocks(
             query_rows=[
-                ("Alice", Decimal("100.5")),
-                ("Bob", Decimal("200.3")),
+                ("Alice", 1),
+                ("Bob", 2),
             ],
-            query_cols=["name", "area"]
+            query_cols=["name", "pk"]
         )
         with patch("crc_modules.db.spatial_query.psycopg2.connect", mock_gc), \
              patch("crc_modules.db.spatial_query.parse_connection_string"
                    , return_value={"host": "localhost", "port": 5432,
                                   "dbname": "db", "user": "u", "password": "pw"}):
-            rows, cols = get_values_with_spatial_filter(
+            values, pks = get_values_with_spatial_filter(
                 cstring, "public", "buildings",
-                columns=["name", "area"],
-                filter_wkt="POLYGON ((0 0, 1 0, 1 1, 0 1))")
+                column="name",
+                filter_wkts=["POLYGON ((0 0, 1 0, 1 1, 0 1))"])
 
-        assert cols == ["name", "area"]
-        assert len(rows) == 2
-        assert rows[0] == ("Alice", Decimal("100.5"))
-        assert rows[1] == ("Bob", Decimal("200.3"))
+        assert values == ["Alice", "Bob"]
+        assert pks == [1, 2]
 
-    def test_column_list_in_select(self):
-        """Verify column list appears in SQL SELECT clause."""
+    def test_column_in_select(self):
+        """Verify single column name appears in SQL SELECT clause."""
         cstring = "host=localhost port=5432 dbname=db user=u password=pw"
         mock_gc, captured = make_spatial_query_mocks(
-            query_rows=[("Alice",)],
-            query_cols=["name"]
+            query_rows=[("Alice", 1)],
+            query_cols=["name", "gid"]
         )
         with patch("crc_modules.db.spatial_query.psycopg2.connect", mock_gc), \
              patch("crc_modules.db.spatial_query.parse_connection_string"
@@ -462,11 +468,57 @@ class TestGetValuesWithSpatialFilter:
                                   "dbname": "db", "user": "u", "password": "pw"}):
             get_values_with_spatial_filter(
                 cstring, "public", "buildings",
-                columns=["name"],
-                filter_wkt="POLYGON ((0 0, 1 0, 1 1, 0 1))")
+                column="name",
+                filter_wkts=["POLYGON ((0 0, 1 0, 1 1, 0 1))"])
 
         all_sql = " ".join(captured).upper()
         assert "NAME" in all_sql
+
+    def test_values_parallel_to_pk_ordered_by_pk(self):
+        """Values and pk lists are parallel and returned in pk ORDER BY order."""
+        cstring = "host=localhost port=5432 dbname=db user=u password=pw"
+        # Simulate DB returning rows in pk order: pk 1=Alice, pk 2=Bob
+        mock_gc, captured = make_spatial_query_mocks(
+            geo_col="geom", pk_col="gid",
+            query_rows=[("Alice", 1), ("Bob", 2)],
+            query_cols=["name", "gid"]
+        )
+        with patch("crc_modules.db.spatial_query.psycopg2.connect", mock_gc), \
+             patch("crc_modules.db.spatial_query.parse_connection_string"
+                   , return_value={"host": "localhost", "port": 5432,
+                                  "dbname": "db", "user": "u", "password": "pw"}):
+            values, pks = get_values_with_spatial_filter(
+                cstring, "public", "buildings",
+                column="name",
+                filter_wkts=["POLYGON ((0 0, 1 0, 1 1, 0 1))"])
+
+        assert len(values) == len(pks)
+        assert values[0] == "Alice" and pks[0] == 1
+        assert values[1] == "Bob" and pks[1] == 2
+
+    def test_multi_polygon_filter_single_predicate(self):
+        """Two WKTs -> ONE WHERE predicate containing ST_Union(ARRAY[ and both polygons."""
+        cstring = "host=localhost port=5432 dbname=db user=u password=pw"
+        wkt1 = "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))"
+        wkt2 = "POLYGON ((10 10, 11 10, 11 11, 10 11, 10 10))"
+        mock_gc, captured = make_spatial_query_mocks(
+            query_rows=[("Alice", 1)],
+            query_cols=["name", "gid"]
+        )
+        with patch("crc_modules.db.spatial_query.psycopg2.connect", mock_gc), \
+             patch("crc_modules.db.spatial_query.parse_connection_string"
+                   , return_value={"host": "localhost", "port": 5432,
+                                  "dbname": "db", "user": "u", "password": "pw"}):
+            get_values_with_spatial_filter(
+                cstring, "public", "buildings",
+                column="name",
+                filter_wkts=[wkt1, wkt2])
+
+        all_sql = " ".join(captured)
+        upper = all_sql.upper()
+        assert "ST_UNION(ARRAY[" in upper, f"ST_Union(ARRAY[ not in SQL: {all_sql}"
+        assert wkt1 in all_sql and wkt2 in all_sql
+        assert upper.count("ST_INTERSECTS") == 1
 
 
 # ── Multipart splitting (unit, no DB) ──────────────────────────────────────

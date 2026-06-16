@@ -1,4 +1,4 @@
-"""CRC_RunCommand: Run a SQL DDL/DML command (non-SELECT) and return execution feedback."""
+﻿"""CRC_RunCommand: Run a SQL DDL/DML command (non-SELECT) and return execution feedback."""
 # r: psycopg2
 import sys
 import os
@@ -21,7 +21,7 @@ for _b in _bases:
         sys.path.insert(0, _b)
 
 try:
-    ghenv.Component.Message = "v{{version}} - {{date}}"
+    ghenv.Component.Message = "v{{component_version}}"
 except Exception:
     pass
 

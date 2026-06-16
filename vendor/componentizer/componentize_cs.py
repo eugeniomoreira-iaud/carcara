@@ -66,16 +66,18 @@ import os
 from datetime import datetime
 
 
-def _replace_templates(code, version, name, ghuser_name):
+def _replace_templates(code, version, name, ghuser_name, component_version=None):
     """Substitute the componentizer template tokens in the C# source.
 
     Mirrors componentize_cpy.replace_templates so the C# code can use
-    ``{{version}}`` / ``{{date}}`` / ``{{name}}`` / ``{{ghuser_name}}`` in e.g.
-    ``Component.Message``. Tokens are replaced at build time, before the source
-    is base64-embedded into the archive.
+    ``{{version}}`` / ``{{component_version}}`` / ``{{date}}`` / ``{{name}}`` /
+    ``{{ghuser_name}}`` in e.g. ``Component.Message``. Tokens are replaced at
+    build time, before the source is base64-embedded into the archive.
     """
     if version:
         code = code.replace("{{version}}", version)
+    if component_version:
+        code = code.replace("{{component_version}}", component_version)
     code = code.replace("{{name}}", name)
     code = code.replace("{{ghuser_name}}", ghuser_name)
     code = code.replace("{{date}}", datetime.now().strftime("%Y/%m/%d"))
@@ -199,8 +201,10 @@ def create_curvedisplay_cs_ghuser(source: str, target: str,
     input_params = ghpython_data.get("inputParameters", [])
     output_params = ghpython_data.get("outputParameters", [])
 
-    # --- substitute template tokens ({{version}}, {{date}}, …) then BASE64-encode ---
-    cs_source = _replace_templates(cs_source, version, name, os.path.basename(target))
+    # --- substitute template tokens ({{version}}, {{component_version}}, …) then BASE64-encode ---
+    component_version = data.get("componentVersion") or version
+    cs_source = _replace_templates(cs_source, version, name, os.path.basename(target),
+                                   component_version)
     cs_source_b64 = base64.b64encode(cs_source.encode("utf-8")).decode("ascii")
 
     # --- build inner chunk (mirrors the decoded legacy structure) ---

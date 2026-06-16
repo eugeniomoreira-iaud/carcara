@@ -1,4 +1,4 @@
-"""CRC_GeometriesWithSpatialFilter: Query geometries with spatial filter and coordinate correction."""
+﻿"""CRC_GeometriesWithSpatialFilter: Query geometries with spatial filter and coordinate correction."""
 import sys
 import os
 
@@ -15,7 +15,7 @@ for _b in _bases:
         sys.path.insert(0, _b)
 
 try:
-    ghenv.Component.Message = "v{{version}} - {{date}}"
+    ghenv.Component.Message = "v{{component_version}}"
 except Exception:
     pass
 
@@ -34,26 +34,26 @@ if CToggle:
             raise ValueError("CString is required")
         if not schema or not table:
             raise ValueError("schema and table are required")
-        if spatial_filter is None:
-            raise ValueError("spatial_filter geometry is required")
+        if not spatial_filter:
+            raise ValueError("spatial_filter geometry list is required")
 
         srid = int(SRID) if SRID else 4326
         func = int(function) if function else 0
         cx = str(Cx) if Cx else "0"
         cy = str(Cy) if Cy else "0"
-        sql_filter = sql_filter if sql_filter else None
 
-        # Convert GH geometry to WKT for spatial filter
-        filter_wkt = rh_geometry_to_wkt(spatial_filter)
-        if not filter_wkt:
-            raise ValueError("Failed to convert spatial filter geometry to WKT")
+        # Convert list of GH geometries to WKT strings for spatial filter
+        filter_wkts = [rh_geometry_to_wkt(g) for g in spatial_filter if g is not None]
+        filter_wkts = [w for w in filter_wkts if w]
+        if not filter_wkts:
+            raise ValueError("Failed to convert any spatial filter geometry to WKT")
 
         executed_sql = []
         geom_cols = detect_geometry_columns(CString, schema, table, sql_log=executed_sql)
 
         wkt_list, pk_list = get_geometries_with_spatial_filter(
-            CString, schema, table, filter_wkt,
-            cx=cx, cy=cy, srid=srid, sql_filter=sql_filter, func=func, sql_log=executed_sql
+            CString, schema, table, filter_wkts,
+            cx=cx, cy=cy, srid=srid, func=func, sql_log=executed_sql
         )
 
         built = null_wkt = failed = 0

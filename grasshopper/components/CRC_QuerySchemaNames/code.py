@@ -1,4 +1,4 @@
-"""CRC_QuerySchemaNames: List all non-system schemas in a PostGIS database."""
+﻿"""CRC_QuerySchemaNames: List all non-system schemas in a PostGIS database."""
 import sys
 import os
 
@@ -18,7 +18,7 @@ for _b in _bases:
         sys.path.insert(0, _b)
 
 try:
-    ghenv.Component.Message = "v{{version}} - {{date}}"
+    ghenv.Component.Message = "v{{component_version}}"
 except Exception:
     pass
 

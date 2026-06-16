@@ -1,49 +1,43 @@
-{
+﻿{
   "name": "Heatmap",
-  "nickname": "Heatmap",
+  "nickname": "HeatMap",
   "category": "Carcara",
   "subcategory": "04.Dataviz",
-  "description": "Creates a heatmap from a 2D data matrix as Rhino geometry (colored rectangles, row/col labels, legend) and exports an SVG file. Full parametric control over color gradient and legend.",
+  "description": "Renders a heatmap chart in the Rhino viewport and exports raw SVG body content. Chain svgCode into CRC_SaveSVG to write the file.",
   "exposure": 8,
+  "componentVersion": "0.5-00",
   "instanceGuid": "c3d4e5f6-a7b8-9012-cdef-34567890abcd",
   "ghpython": {
-    "isAdvancedMode": false,
+    "isAdvancedMode": true,
     "marshalGuids": true,
     "iconDisplay": 0,
     "inputParameters": [
-      { "name": "cv",         "description": "Canvas boundary rectangle (Rectangle3d)",                                "typeHintID": "ghdoc",  "scriptParamAccess": "item" },
-      { "name": "data",       "description": "2D matrix — DataTree (one branch per row) or nested list",               "typeHintID": "ghdoc",  "scriptParamAccess": "tree" },
-      { "name": "colors",     "description": "Color gradient list (System.Drawing.Color, min 2, REQUIRED)",            "typeHintID": "ghdoc",  "scriptParamAccess": "list" },
-      { "name": "rows",       "description": "Row labels (optional list of strings)",                                   "typeHintID": "str",    "scriptParamAccess": "list" },
-      { "name": "cols",       "description": "Column labels (optional list of strings)",                               "typeHintID": "str",    "scriptParamAccess": "list" },
-      { "name": "vals",       "description": "Show numeric values inside cells (default False)",                        "typeHintID": "bool",   "scriptParamAccess": "item" },
-      { "name": "d",          "description": "Decimal places for cell values (default 1)",                             "typeHintID": "int",    "scriptParamAccess": "item" },
-      { "name": "n_leg",      "description": "Number of legend steps (default 5)",                                     "typeHintID": "int",    "scriptParamAccess": "item" },
-      { "name": "dist",       "description": "Label distance from canvas edge (default 10.0)",                         "typeHintID": "float",  "scriptParamAccess": "item" },
-      { "name": "leg_w",      "description": "Legend bar width (default 5% of canvas dimension)",                      "typeHintID": "float",  "scriptParamAccess": "item" },
-      { "name": "leg_dist",   "description": "Distance from chart area to legend (default 20.0)",                      "typeHintID": "float",  "scriptParamAccess": "item" },
-      { "name": "leg_l_dist", "description": "Distance from legend bar to legend labels (default 5.0)",               "typeHintID": "float",  "scriptParamAccess": "item" },
-      { "name": "leg_orient", "description": "Legend orientation: 'vertical' or 'horizontal' (default 'vertical')",   "typeHintID": "str",    "scriptParamAccess": "item" },
-      { "name": "show_leg",   "description": "Show legend (default True)",                                             "typeHintID": "bool",   "scriptParamAccess": "item" },
-      { "name": "OutPath",    "description": "Output SVG file path",                                                   "typeHintID": "str",    "scriptParamAccess": "item" },
-      { "name": "CToggle",    "description": "Set True to execute and save SVG",                                       "typeHintID": "bool",   "scriptParamAccess": "item" }
+      { "name": "canvasRect",      "description": "Canvas boundary rectangle (Rectangle3d)",                            "typeHintID": "rectangle", "scriptParamAccess": "item", "optional": true },
+      { "name": "dataMatrix",      "description": "2D data matrix (DataTree one branch-per-row or nested list). Defaults to demo data if empty.",    "typeHintID": "ghdoc",     "scriptParamAccess": "tree" },
+      { "name": "gradientColors",  "description": "Color gradient (min 2 System.Drawing.Color). Defaults cool-to-warm if absent.",                 "typeHintID": "color",     "scriptParamAccess": "list" },
+      { "name": "rowLabels",       "description": "Row labels as strings (e.g. R1, R2)",                                                               "typeHintID": "str",       "scriptParamAccess": "list", "optional": true },
+      { "name": "colLabels",       "description": "Column labels as strings (e.g. C1, C2)",                                                              "typeHintID": "str",       "scriptParamAccess": "list", "optional": true },
+      { "name": "showCellValues",  "description": "Show numeric values inside cells (default False)",                                                  "typeHintID": "bool",      "scriptParamAccess": "item", "optional": true },
+      { "name": "decimals",        "description": "Decimal places for displayed numbers (default 1)",                                                  "typeHintID": "int",       "scriptParamAccess": "item", "optional": true },
+      { "name": "legendSteps",     "description": "Number of legend gradient steps (default 5)",                                                       "typeHintID": "int",       "scriptParamAccess": "item", "optional": true },
+      { "name": "labelDist",       "description": "Distance from axis labels to chart edge (default 10.0)",                                            "typeHintID": "float",     "scriptParamAccess": "item", "optional": true },
+      { "name": "legendBarW",      "description": "Legend bar width (default auto, ~5% canvas dim)",                                                   "typeHintID": "float",     "scriptParamAccess": "item", "optional": true },
+      { "name": "legendDist",      "description": "Distance from chart area to legend (default 20.0)",                                                 "typeHintID": "float",     "scriptParamAccess": "item", "optional": true },
+      { "name": "legendLabelDist", "description": "Distance from legend bar to its labels (default 5.0)",                                              "typeHintID": "float",     "scriptParamAccess": "item", "optional": true },
+      { "name": "legendOrientation","description": "Legend orientation: vertical or horizontal (default vertical)",                                    "typeHintID": "str",       "scriptParamAccess": "item", "optional": true },
+      { "name": "showLegend",      "description": "Display legend panel (default True)",                                                               "typeHintID": "bool",      "scriptParamAccess": "item", "optional": true },
+      { "name": "cellOutlineWidth","description": "Heatmap cell-border width in pixels (default 0.5)",                                                "typeHintID": "float",     "scriptParamAccess": "item", "optional": true },
+      { "name": "legendCellOutlineWidth", "description": "Legend cell border width in pixels (default 0.5)",                                              "typeHintID": "float",     "scriptParamAccess": "item", "optional": true }
     ],
     "outputParameters": [
-      { "name": "cells",     "description": "Heatmap grid rectangles (Rectangle3d)" },
-      { "name": "clrs",      "description": "Cell colors (System.Drawing.Color, one per cell)" },
-      { "name": "row_pts",   "description": "Row label anchor points" },
-      { "name": "row_txt",   "description": "Row label text" },
-      { "name": "col_pts",   "description": "Column label anchor points" },
-      { "name": "col_txt",   "description": "Column label text" },
-      { "name": "val_pts",   "description": "Cell value label anchor points (if vals=True)" },
-      { "name": "val_txt",   "description": "Cell value label text (if vals=True)" },
-      { "name": "leg_cells", "description": "Legend rectangles" },
-      { "name": "leg_clrs",  "description": "Legend colors" },
-      { "name": "leg_pts",   "description": "Legend label anchor points" },
-      { "name": "leg_txt",   "description": "Legend label text" },
-      { "name": "svg_code",  "description": "Complete SVG document string" },
-      { "name": "svg_path",  "description": "Absolute path of saved SVG file (empty if not saved)" },
-      { "name": "report",    "description": "Status message" }
+      {
+        "name": "svgCode",
+        "description": "Raw SVG body content (no <svg> wrapper). Chain into CRC_SaveSVG for file export."
+      },
+      {
+        "name": "report",
+        "description": "Verbose status — success details or error trace."
+      }
     ]
   }
 }

@@ -1,24 +1,25 @@
-{
+﻿{
   "name": "CircleToSVG",
   "nickname": "CircSVG",
   "category": "Carcara",
   "subcategory": "04.Dataviz",
   "description": "Converts Grasshopper Circle geometries to SVG <circle> element strings. Transforms center from Rhino Y-up to SVG Y-down using the canvas anchor.",
   "exposure": 4,
+  "componentVersion": "0.5-00",
   "instanceGuid": "c2d3e4f5-a6b7-8901-cdef-012345678902",
   "ghpython": {
-    "isAdvancedMode": false,
-    "marshalGuids": true,
+    "isAdvancedMode": true,
+    "marshalGuids": false,
     "iconDisplay": 0,
     "inputParameters": [
-      { "name": "c",      "description": "Circle geometry or list of circles",                                   "typeHintID": "ghdoc", "scriptParamAccess": "list" },
-      { "name": "sc",     "description": "Stroke color (CSS string or list). Default: 'none'",                   "typeHintID": "str",   "scriptParamAccess": "list" },
-      { "name": "sw",     "description": "Stroke width or list of stroke widths. Default: 0",                    "typeHintID": "float", "scriptParamAccess": "list" },
-      { "name": "f",      "description": "Fill color (CSS string or list). Default: 'none'",                     "typeHintID": "str",   "scriptParamAccess": "list" },
-      { "name": "canvas", "description": "Rectangle defining the SVG canvas (optional; uses bounding box if not provided)", "typeHintID": "ghdoc", "scriptParamAccess": "item" }
+      { "name": "c",      "description": "Circle geometry or list of circles",                                    "typeHintID": "circle",  "scriptParamAccess": "list" },
+      { "name": "sc",     "description": "Stroke color or list of stroke colors. Default: none",                  "typeHintID": "color",   "scriptParamAccess": "list", "optional": true },
+      { "name": "sw",     "description": "Stroke width or list of stroke widths. Default: 0",                    "typeHintID": "float",   "scriptParamAccess": "list" },
+      { "name": "f",      "description": "Fill color or list of fill colors. Default: none",                     "typeHintID": "color",   "scriptParamAccess": "list", "optional": true },
+      { "name": "canvas", "description": "Rectangle defining the SVG canvas (optional; uses bounding box if not provided)", "typeHintID": "rectangle", "scriptParamAccess": "item", "optional": true }
     ],
     "outputParameters": [
-      { "name": "svg_code", "description": "SVG element string(s) for each circle" },
+      { "name": "svgCode", "description": "SVG element string(s); chain into CRC_SaveSVG for file export." },
       { "name": "report",   "description": "Status message" }
     ]
   }

@@ -1,10 +1,11 @@
-{
+﻿{
   "name": "QueryTableNames",
   "nickname": "QT",
   "category": "Carcara",
   "subcategory": "02.Queries",
   "description": "Lists all tables in a specified schema.",
   "exposure": 2,
+  "componentVersion": "0.5-00",
   "instanceGuid": "e5f6a7b8-c9d0-1234-efab-567890123456",
   "ghpython": {
     "isAdvancedMode": false,

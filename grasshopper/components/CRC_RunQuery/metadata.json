@@ -1,10 +1,11 @@
-{
+﻿{
   "name": "RunQuery",
   "nickname": "RQ",
   "category": "Carcara",
   "subcategory": "03.Utilities",
   "description": "Runs a raw SQL SELECT against a PostGIS database and returns results as a DataTree organised by column.",
   "exposure": 4,
+  "componentVersion": "0.5-00",
   "instanceGuid": "b3c4d5e6-f7a8-9012-bcde-f12345678901",
   "ghpython": {
     "isAdvancedMode": false,

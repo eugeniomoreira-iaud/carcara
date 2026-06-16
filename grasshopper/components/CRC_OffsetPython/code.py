@@ -1,4 +1,4 @@
-"""CRC_OffsetPython: Offset planar curves using Rhino's Curve.Offset.
+﻿"""CRC_OffsetPython: Offset planar curves using Rhino's Curve.Offset.
 
 No CToggle — executes on data arrival (matches legacy).
 DataTree fan-out, distance cyclic mapping, and None-fill for failures
@@ -20,7 +20,7 @@ for _b in _bases:
         sys.path.insert(0, _b)
 
 try:
-    ghenv.Component.Message = "v{{version}} - {{date}}"
+    ghenv.Component.Message = "v{{component_version}}"
 except Exception:
     pass
 

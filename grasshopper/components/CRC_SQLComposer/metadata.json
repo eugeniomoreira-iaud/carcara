@@ -1,10 +1,11 @@
-{
+﻿{
   "name": "SQLComposer",
   "nickname": "SQLComp.py",
   "category": "Carcara",
   "subcategory": "03.Utilities",
   "description": "Generates SQL statements by replacing variable placeholders with corresponding values.",
   "exposure": 4,
+  "componentVersion": "0.5-00",
   "ghpython": {
     "isAdvancedMode": false,
     "marshalGuids": true,

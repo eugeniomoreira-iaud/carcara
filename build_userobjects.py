@@ -40,6 +40,23 @@ def read_version():
         return tomllib.load(f)["project"]["version"]
 
 
+def is_advanced_mode(source):
+    """True if the bundle's metadata.json sets ghpython.isAdvancedMode.
+
+    Advanced/SDK-mode bundles (executingcomponent subclass with viewport-preview
+    overrides) are built by componentize_py_sdk, not the procedural cpy builder.
+    """
+    import json
+
+    meta_path = os.path.join(source, "metadata.json")
+    try:
+        with open(meta_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return False
+    return bool(data.get("ghpython", {}).get("isAdvancedMode", False))
+
+
 def main():
     parser = argparse.ArgumentParser(description="Build Carcara .ghuser files")
     parser.add_argument("--ghio", help="Path to folder or file containing GH_IO.dll")
@@ -76,6 +93,12 @@ def main():
         print(f"ERROR: Cannot import C# CurveDisplay builder: {exc}")
         print(f"  Expected at: {VENDOR_COMPONENTIZER}/componentize_cs.py")
         sys.exit(1)
+    try:
+        from componentize_py_sdk import create_python_sdk_ghuser
+    except ImportError as exc:
+        print(f"ERROR: Cannot import Python SDK builder: {exc}")
+        print(f"  Expected at: {VENDOR_COMPONENTIZER}/componentize_py_sdk.py")
+        sys.exit(1)
 
     version = args.version or read_version()
 
@@ -103,16 +126,23 @@ def main():
         target = os.path.join(DIST_DIR, name + ".ghuser")
         has_py = os.path.isfile(os.path.join(source, "code.py"))
         has_cs = os.path.isfile(os.path.join(source, "code.cs"))
-        if name == "CRC_CurveDisplay":
-            # C# Script component — built by the dedicated C# builder.
+        if has_cs:
+            # C# Script component (e.g. CRC_CurveDisplay) — dedicated C# builder.
             try:
                 create_curvedisplay_cs_ghuser(source, target, version)
                 results.append(("OK", name, target))
             except Exception as exc:
                 results.append(("FAIL", name, str(exc)))
         elif not has_py:
-            # No code.py and not a known C# bundle → skip.
+            # No code.py and not a C# bundle → skip.
             results.append(("SKIP", name, "no code.py (non-Python bundle)"))
+        elif is_advanced_mode(source):
+            # CPython SDK / advanced mode (viewport-preview) Script component.
+            try:
+                create_python_sdk_ghuser(source, target, version)
+                results.append(("OK", name, target))
+            except Exception as exc:
+                results.append(("FAIL", name, str(exc)))
         else:
             try:
                 create_ghuser_component(source, target, version)

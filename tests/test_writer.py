@@ -170,3 +170,290 @@ def test_no_float_in_source():
     src = inspect.getsource(w)
     assert "float(cx)" not in src
     assert "float(cy)" not in src
+
+
+# ---------------------------------------------------------------------------
+# coerce_value tests
+# ---------------------------------------------------------------------------
+
+def test_coerce_value_integer_types():
+    from crc_modules.db.writer import coerce_value
+    assert coerce_value("42", "integer") == 42
+    assert isinstance(coerce_value("42", "integer"), int)
+    assert coerce_value("7", "int4") == 7
+    assert coerce_value("100", "bigint") == 100
+    assert coerce_value("1", "serial") == 1
+    assert coerce_value("0", "smallint") == 0
+
+
+def test_coerce_value_float_types():
+    from crc_modules.db.writer import coerce_value
+    assert coerce_value("3.14", "double precision") == pytest.approx(3.14)
+    assert isinstance(coerce_value("2.5", "float"), float)
+    assert coerce_value("1.0", "numeric") == pytest.approx(1.0)
+    assert coerce_value("9.9", "real") == pytest.approx(9.9)
+
+
+def test_coerce_value_bool_types():
+    from crc_modules.db.writer import coerce_value
+    assert coerce_value("true", "boolean") is True
+    assert coerce_value("True", "bool") is True
+    assert coerce_value("t", "boolean") is True
+    assert coerce_value("1", "boolean") is True
+    assert coerce_value("yes", "boolean") is True
+    assert coerce_value("false", "bool") is False
+    assert coerce_value("f", "boolean") is False
+    assert coerce_value("0", "bool") is False
+    assert coerce_value("no", "boolean") is False
+
+
+def test_coerce_value_text_types():
+    from crc_modules.db.writer import coerce_value
+    assert coerce_value("hello", "text") == "hello"
+    assert coerce_value("abc", "varchar(50)") == "abc"
+    assert coerce_value("2024-01-01", "date") == "2024-01-01"
+    assert coerce_value("{}", "json") == "{}"
+
+
+def test_coerce_value_blank_to_none():
+    from crc_modules.db.writer import coerce_value
+    assert coerce_value(None, "integer") is None
+    assert coerce_value("", "text") is None
+    assert coerce_value("   ", "double precision") is None
+    assert coerce_value("", "boolean") is None
+    assert coerce_value(None, "boolean") is None
+
+
+def test_coerce_value_strips_parens_in_type():
+    from crc_modules.db.writer import coerce_value
+    # varchar(255) should be treated as 'text' (str fallback)
+    assert coerce_value("hello", "varchar(255)") == "hello"
+    # numeric(10,2) -> numeric -> float
+    assert coerce_value("1.5", "numeric(10,2)") == pytest.approx(1.5)
+
+
+# ---------------------------------------------------------------------------
+# insert_rows tests
+# ---------------------------------------------------------------------------
+
+def test_insert_rows_executemany_called():
+    conn, cur = _make_mock_conn()
+    cur.rowcount = 2
+    with patch("crc_modules.db.writer.psycopg2.connect", return_value=conn), \
+         patch("crc_modules.db.writer.parse_connection_string",
+               return_value={"host": "h", "port": 5432, "dbname": "db", "user": "u", "password": "pw"}):
+        from crc_modules.db.writer import insert_rows
+        result = insert_rows("fake_cs", "myschema", "mytable",
+                             ["name", "area"],
+                             [("Alice", 100), ("Bob", 200)])
+    assert cur.executemany.call_count == 1
+    stmt, params = cur.executemany.call_args[0]
+    text = flatten(stmt)
+    assert '"name"' in text
+    assert '"area"' in text
+    assert '"myschema"' in text
+    assert '"mytable"' in text
+    assert params == [("Alice", 100), ("Bob", 200)]
+
+
+def test_insert_rows_identifiers_quoted():
+    conn, cur = _make_mock_conn()
+    cur.rowcount = 1
+    with patch("crc_modules.db.writer.psycopg2.connect", return_value=conn), \
+         patch("crc_modules.db.writer.parse_connection_string",
+               return_value={"host": "h", "port": 5432, "dbname": "db", "user": "u", "password": "pw"}):
+        from crc_modules.db.writer import insert_rows
+        insert_rows("fake_cs", "s", "t", ["my col"], [("val",)])
+    stmt, _ = cur.executemany.call_args[0]
+    text = flatten(stmt)
+    # Identifier quoting: column name with space must be double-quoted
+    assert '"my col"' in text
+
+
+# ---------------------------------------------------------------------------
+# create_table_with_data tests
+# ---------------------------------------------------------------------------
+
+def _conn_with_parse():
+    """Return conn+cur mocks and the patch context for writer module."""
+    conn, cur = _make_mock_conn()
+    cur.rowcount = 2
+    return conn, cur
+
+
+def test_create_table_with_data_id_values_given():
+    """id_values -> 'id <type> PRIMARY KEY' in CREATE, id values bound in INSERT."""
+    conn, cur = _make_mock_conn()
+    cur.rowcount = 2
+    with patch("crc_modules.db.writer.psycopg2.connect", return_value=conn), \
+         patch("crc_modules.db.writer.parse_connection_string",
+               return_value={"host": "h", "port": 5432, "dbname": "db", "user": "u", "password": "pw"}):
+        from crc_modules.db.writer import create_table_with_data
+        create_table_with_data(
+            "fake_cs", "myschema", "mytable",
+            columns=[("name", "text"), ("area", "double precision")],
+            rows=[("Alice", "100.5"), ("Bob", "200.3")],
+            id_values=[1, 2],
+        )
+
+    # Two execute calls: CREATE + executemany (INSERT)
+    assert cur.execute.call_count >= 1
+    create_text = flatten(cur.execute.call_args_list[0][0][0])
+    assert "CREATE TABLE" in create_text
+    assert "PRIMARY KEY" in create_text
+    # executemany is called for INSERT
+    assert cur.executemany.call_count == 1
+    _, params = cur.executemany.call_args[0]
+    # First row: id=1, name="Alice", area=100.5
+    assert params[0][0] == 1
+    assert params[0][1] == "Alice"
+    assert params[0][2] == pytest.approx(100.5)
+
+
+def test_create_table_with_data_no_id_values_identity():
+    """No id_values -> identity PK in CREATE; INSERT omits id column."""
+    conn, cur = _make_mock_conn()
+    cur.rowcount = 1
+    with patch("crc_modules.db.writer.psycopg2.connect", return_value=conn), \
+         patch("crc_modules.db.writer.parse_connection_string",
+               return_value={"host": "h", "port": 5432, "dbname": "db", "user": "u", "password": "pw"}):
+        from crc_modules.db.writer import create_table_with_data
+        create_table_with_data(
+            "fake_cs", "myschema", "mytable",
+            columns=[("name", "text")],
+            rows=[("Alice",)],
+        )
+
+    create_text = flatten(cur.execute.call_args_list[0][0][0])
+    assert "GENERATED ALWAYS AS IDENTITY" in create_text
+    assert "PRIMARY KEY" in create_text
+    # INSERT params must NOT include an id value — just "Alice"
+    _, params = cur.executemany.call_args[0]
+    assert len(params[0]) == 1
+    assert params[0][0] == "Alice"
+
+
+def test_create_table_with_data_replace_table_drops_first():
+    """replace_table=True: DROP issued before CREATE."""
+    conn, cur = _make_mock_conn()
+    cur.rowcount = 0
+    with patch("crc_modules.db.writer.psycopg2.connect", return_value=conn), \
+         patch("crc_modules.db.writer.parse_connection_string",
+               return_value={"host": "h", "port": 5432, "dbname": "db", "user": "u", "password": "pw"}):
+        from crc_modules.db.writer import create_table_with_data
+        create_table_with_data(
+            "fake_cs", "s", "t",
+            columns=[("v", "text")],
+            rows=[],
+            replace_table=True,
+        )
+
+    assert cur.execute.call_count >= 2
+    drop_text = flatten(cur.execute.call_args_list[0][0][0])
+    create_text = flatten(cur.execute.call_args_list[1][0][0])
+    assert "DROP TABLE IF EXISTS" in drop_text
+    assert "CREATE TABLE" in create_text
+
+
+def test_create_table_with_data_row_length_mismatch_raises():
+    """Row length != column count -> ValueError (raised before DB call)."""
+    conn, cur = _make_mock_conn()
+    cur.rowcount = 0
+    with patch("crc_modules.db.writer.psycopg2.connect", return_value=conn), \
+         patch("crc_modules.db.writer.parse_connection_string",
+               return_value={"host": "h", "port": 5432, "dbname": "db", "user": "u", "password": "pw"}):
+        from crc_modules.db.writer import create_table_with_data
+        with pytest.raises(ValueError):
+            create_table_with_data(
+                "fake_cs", "s", "t",
+                columns=[("a", "text"), ("b", "integer")],
+                rows=[("only_one_value",)],  # should be 2 values
+            )
+
+
+# ---------------------------------------------------------------------------
+# create_table_with_geometry tests
+# ---------------------------------------------------------------------------
+
+def test_create_table_with_geometry_creates_geom_column():
+    """CREATE has geom geometry(TYPE, srid) + id PK."""
+    conn, cur = _make_mock_conn()
+    cur.rowcount = 1
+    with patch("crc_modules.db.writer.psycopg2.connect", return_value=conn), \
+         patch("crc_modules.db.writer.parse_connection_string",
+               return_value={"host": "h", "port": 5432, "dbname": "db", "user": "u", "password": "pw"}):
+        from crc_modules.db.writer import create_table_with_geometry
+        create_table_with_geometry(
+            "fake_cs", "myschema", "mytable",
+            columns=[("name", "text")],
+            rows=[("Alice",)],
+            geom_wkts=["POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))"],
+            geom_type="POLYGON",
+            srid=4326,
+            cx="0",
+            cy="0",
+        )
+
+    create_text = flatten(cur.execute.call_args_list[0][0][0])
+    assert "geometry(" in create_text or "GEOMETRY(" in create_text.upper()
+    assert "POLYGON" in create_text
+    assert "4326" in create_text
+    assert "PRIMARY KEY" in create_text
+
+
+def test_create_table_with_geometry_insert_uses_st_translate():
+    """INSERT uses ST_Translate(ST_GeomFromText(%s, %s), cx, cy) with cx/cy verbatim."""
+    conn, cur = _make_mock_conn()
+    cur.rowcount = 1
+    with patch("crc_modules.db.writer.psycopg2.connect", return_value=conn), \
+         patch("crc_modules.db.writer.parse_connection_string",
+               return_value={"host": "h", "port": 5432, "dbname": "db", "user": "u", "password": "pw"}):
+        from crc_modules.db.writer import create_table_with_geometry
+        create_table_with_geometry(
+            "fake_cs", "s", "t",
+            columns=[],
+            rows=[],
+            geom_wkts=["POINT (0 0)"],
+            geom_type="POINT",
+            srid=31983,
+            cx="500000",
+            cy="9500000",
+        )
+
+    insert_stmt, params = cur.executemany.call_args[0]
+    text = flatten(insert_stmt)
+    assert "ST_Translate(ST_GeomFromText(%s, %s), 500000, 9500000)" in text
+    # cx/cy must NOT appear in bound params
+    flat_params = [str(v) for row in params for v in row]
+    assert "500000" not in flat_params or all(str(v) != "500000" for v in flat_params[:-2])
+    # wkt and srid are the last two params in each row
+    assert params[0][-2] == "POINT (0 0)"
+    assert params[0][-1] == 31983
+
+
+def test_create_table_with_geometry_values_coerced():
+    """Attribute values are coerced before binding (integer, float, blank=None)."""
+    conn, cur = _make_mock_conn()
+    cur.rowcount = 2
+    with patch("crc_modules.db.writer.psycopg2.connect", return_value=conn), \
+         patch("crc_modules.db.writer.parse_connection_string",
+               return_value={"host": "h", "port": 5432, "dbname": "db", "user": "u", "password": "pw"}):
+        from crc_modules.db.writer import create_table_with_geometry
+        create_table_with_geometry(
+            "fake_cs", "s", "t",
+            columns=[("count", "integer"), ("area", "double precision")],
+            rows=[("5", "123.4"), ("", "")],  # strings from GH
+            geom_wkts=["POINT (0 0)", "POINT (1 1)"],
+            geom_type="POINT",
+            srid=4326,
+            cx="0",
+            cy="0",
+        )
+
+    _, params = cur.executemany.call_args[0]
+    # Row 0: count=5 (int), area=123.4 (float)
+    assert params[0][0] == 5
+    assert params[0][1] == pytest.approx(123.4)
+    # Row 1: blank -> None
+    assert params[1][0] is None
+    assert params[1][1] is None

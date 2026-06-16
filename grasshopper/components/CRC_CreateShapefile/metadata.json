@@ -1,31 +1,34 @@
-{
+﻿{
   "name": "CreateShapefile",
   "nickname": "CrtShp",
   "category": "Carcara",
   "subcategory": "02.Queries",
-  "description": "INSERT WKT geometries into an existing PostGIS table, adding the false-origin correction back in SQL. (Not a file export.)",
+  "description": "Creates a PostGIS table with attribute columns AND a geometry column named 'geom' (type auto-detected). Geometry is a DataTree: branch per row; more than one item per branch = multipart. Applies false-origin (Cx/Cy) add-back in SQL. Not a file export.",
   "exposure": 8,
+  "componentVersion": "0.5-00",
   "instanceGuid": "f6a7b8c9-d0e1-2345-f012-678901234567",
   "ghpython": {
     "isAdvancedMode": false,
     "marshalGuids": true,
     "iconDisplay": 0,
     "inputParameters": [
-      { "name": "CString", "description": "Connection string with encoded password", "typeHintID": "str", "scriptParamAccess": "item" },
-      { "name": "CToggle", "description": "Set True to INSERT geometries (writes to DB)", "typeHintID": "bool", "scriptParamAccess": "item" },
-      { "name": "schema", "description": "Target schema", "typeHintID": "str", "scriptParamAccess": "item" },
-      { "name": "table", "description": "Existing target table", "typeHintID": "str", "scriptParamAccess": "item" },
-      { "name": "geom_column", "description": "Target geometry column name", "typeHintID": "str", "scriptParamAccess": "item" },
-      { "name": "geometry", "description": "Local WKT geometry strings from GH", "typeHintID": "str", "scriptParamAccess": "list" },
-      { "name": "srid", "description": "SRID of the geometries (default 4326)", "typeHintID": "int", "scriptParamAccess": "item" },
-      { "name": "Cx", "description": "Correction X — false origin (numeric text)", "typeHintID": "str", "scriptParamAccess": "item" },
-      { "name": "Cy", "description": "Correction Y — false origin (numeric text)", "typeHintID": "str", "scriptParamAccess": "item" },
-      { "name": "column_names", "description": "Optional attribute column names", "typeHintID": "str", "scriptParamAccess": "list" },
-      { "name": "values", "description": "Optional attribute values (tree: branch per geometry)", "typeHintID": "str", "scriptParamAccess": "tree" },
-      { "name": "replace_table", "description": "Reserved (no-op here; table must exist)", "typeHintID": "bool", "scriptParamAccess": "item" }
+      { "name": "CString",       "description": "Connection string with encoded password",                                                   "typeHintID": "str",  "scriptParamAccess": "item" },
+      { "name": "CToggle",       "description": "Set True to CREATE the table and INSERT rows (destructive if replace_table=True)",          "typeHintID": "bool", "scriptParamAccess": "item" },
+      { "name": "schema",        "description": "Target schema",                                                                             "typeHintID": "str",  "scriptParamAccess": "item" },
+      { "name": "table",         "description": "Table name to create",                                                                      "typeHintID": "str",  "scriptParamAccess": "item" },
+      { "name": "column_names",  "description": "Attribute column names (parallel to column_types; optional — geometry-only table allowed)", "typeHintID": "str",  "scriptParamAccess": "list" },
+      { "name": "column_types",  "description": "SQL types parallel to column_names (e.g. text, integer, double precision)",                "typeHintID": "str",  "scriptParamAccess": "list" },
+      { "name": "values",        "description": "Attribute DataTree — branch per row, parallel to geometry branches (optional)",            "typeHintID": "str",  "scriptParamAccess": "tree" },
+      { "name": "id_values",     "description": "Optional DataTree of primary-key values — branch per row (one id per branch); omit for auto-increment id", "typeHintID": "str",  "scriptParamAccess": "tree" },
+      { "name": "geometry",      "description": "Rhino geometry DataTree — branch per row; >1 item per branch = multipart (required)",      "typeHintID": "ghdoc","scriptParamAccess": "tree" },
+      { "name": "srid",          "description": "SRID of the geometries (default 4326)",                                                    "typeHintID": "int",  "scriptParamAccess": "item" },
+      { "name": "Cx",            "description": "Correction X — false origin added back in SQL (numeric text, default '0')",                "typeHintID": "str",  "scriptParamAccess": "item" },
+      { "name": "Cy",            "description": "Correction Y — false origin added back in SQL (numeric text, default '0')",                "typeHintID": "str",  "scriptParamAccess": "item" },
+      { "name": "replace_table", "description": "DROP TABLE IF EXISTS before CREATE (destructive)",                                          "typeHintID": "bool", "scriptParamAccess": "item" }
     ],
     "outputParameters": [
-      { "name": "report", "description": "Status message" }
+      { "name": "affected", "description": "Rows inserted" },
+      { "name": "report",   "description": "Status message" }
     ]
   }
 }

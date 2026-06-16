@@ -1,10 +1,11 @@
-{
+﻿{
   "name": "QueryValues",
   "nickname": "QV",
   "category": "Carcara",
   "subcategory": "02.Queries",
   "description": "Queries a single column from a PostGIS table, replacing NULL values with a given replacement.",
   "exposure": 2,
+  "componentVersion": "0.5-00",
   "instanceGuid": "c3d4e5f6-a7b8-9012-cdef-345678901234",
   "ghpython": {
     "isAdvancedMode": false,
