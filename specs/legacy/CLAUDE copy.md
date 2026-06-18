@@ -6,10 +6,6 @@ Carcara is a Python-based Grasshopper plugin for Rhino 8 that bridges PostGIS sp
 
 This document is the authoritative specification for agentic and collaborative development of the plugin. All code generation, refactoring, and feature additions must conform to the rules and patterns described here.
 
-> **Status:** the full rebuild of all 32 components is complete and shipped. This spec now governs
-> **maintenance and new feature work**, not the original rebuild. The per-component input/output
-> reference lives in [`COMPONENTS.md`](COMPONENTS.md).
-
 ***
 
 ## Design Principles
@@ -18,7 +14,7 @@ This document is the authoritative specification for agentic and collaborative d
 2. **No Rhino imports in the core library**: `crc_modules` must be importable and testable outside of Rhino using a standard CPython 3.11+ environment.
 3. **Fail visibly, not silently**: Every component wraps its logic in a try/except and surfaces errors through a `report` output string. No component should crash Grasshopper.
 4. **One responsibility per module**: Each file in `crc_modules/` handles one domain concern. Do not mix database logic with geometry conversion.
-5. **No install step**: `release/` is on `sys.path` (tests `import crc_modules.*` directly; components add `…/UserObjects/carcara` to `sys.path` at runtime). Deployment is a folder copy of `release/` → UserObjects — not `pip install`.
+5. **Editable install**: The package is installed in editable mode (`pip install -e .`) so changes to source files are immediately reflected without reinstallation.
 
 ***
 
@@ -116,14 +112,38 @@ carcara/                              ← Repository root
 
 ## Legacy Reference: `legacy-0.4.0-beta.2/`
 
-`legacy-0.4.0-beta.2/` is the **frozen previous version** of the plugin. Treat it as read-only documentation, never as code to import or edit. The rebuild is done — this folder is now a behavioral reference for maintenance and for any new component that revives legacy logic.
+`legacy-0.4.0-beta.2/` is the **frozen previous version** of the plugin. Treat it as read-only documentation, never as code to import or edit.
 
-- **Purpose**: source of truth for the original behavior, inputs, outputs, and nicknames of every component. Open the matching `.ghuser` in `legacy-0.4.0-beta.2/carcara/` to confirm parameter names and semantics.
-- **Do not**: edit, delete, move, run, or import from `legacy-0.4.0-beta.2/`. No runtime code references it.
-- **Decoded reference layer — `legacy-0.4.0-beta.2/ghuser-metadata/`**: all 33 legacy `.ghuser` files are decoded here — the preferred starting point over re-decoding binaries:
-  - `01.Modeling.md`, `02.Queries.md`, `03.Utilities.md`, `04.Dataviz.md` — per-subcategory capture docs: component tables, input/output hook params, logic descriptions, links to decoded scripts.
-  - `scripts/` — 51 canonical decoded source files. Naming: `<Name>.py` (per-component script), `<Name>_interface.txt` (cluster hook params for the 19 cluster-based components), `CRC_<Name>.py` (wiring reconstruction for the 9 query components), and shared engine scripts (`RunODBCQuery.py`, `SQLComposer.py`, `GrasshopperGeometryToWKT.py`, …). `CurveDisplay` is C#.
-- **Inspecting a legacy `.ghuser` directly**: it is a **binary `GH_Archive`**, not a zip — do not unzip. Decode with plain CPython (raw-deflate inflate + base64 script extraction; handles script components and clusters). Full recipe: [`specs/ghuser-decoding.md`](specs/ghuser-decoding.md).
+- **Purpose**: source of truth for behavior, inputs, outputs, and nicknames of every original component. When rebuilding a component, open the matching `.ghuser` in `legacy-0.4.0-beta.2/carcara/` to confirm parameter names and semantics.
+- **Do not**: edit, delete, move, or import from `legacy-0.4.0-beta.2/`. Do not run its modules. Do not rebuild against its code.
+- **Do**: extract metadata, inspect inputs/outputs, and port logic into the new layered architecture under `release/crc_modules/` + `build/components/`.
+- **Decoded reference layer — `legacy-0.4.0-beta.2/ghuser-metadata/`**: all 33 legacy `.ghuser` files have been decoded. The artifacts live here and are the preferred starting point for any component rebuild:
+  - `01.Modeling.md`, `02.Queries.md`, `03.Utilities.md`, `04.Dataviz.md` — per-subcategory capture docs: component tables, input/output hook params, general logic descriptions, and links to decoded scripts.
+  - `scripts/` — 51 canonical decoded source files. Naming conventions: `<Name>.py` (per-component script), `<Name>_interface.txt` (cluster hook params + internal component list for the 19 cluster-based components), `CRC_<Name>.py` (hand-captured wiring reconstruction for the 9 query components), and shared engine scripts (`RunODBCQuery.py`, `SQLComposer.py`, `GrasshopperGeometryToWKT.py`, etc.) deduped to one canonical copy each. `CurveDisplay` is C#.
+  - **Before rebuilding a component**: read the matching capture `.md` entry and linked decoded script first. Do not attempt to re-decode the binary `.ghuser` unless verification is needed.
+- **Inspecting a legacy `.ghuser` directly**: it is a **binary `GH_Archive`**, not a zip — do not try to unzip it. Three options: open it inside Grasshopper (drag onto the canvas after installing into `UserObjects/`), decode it via `GH_IO.dll`, or — preferred for agentic work — decode it with plain CPython (raw-deflate inflate + base64 script extraction; handles both script components and clusters). Full recipe: [`specs/ghuser-decoding.md`](specs/ghuser-decoding.md).
+
+***
+
+## Rebuild Mandate: Every Legacy `.ghuser` Must Be Reimplemented
+
+Every `.ghuser` file present in `legacy-0.4.0-beta.2/carcara/` must be rebuilt under the new architecture before the rebuild is considered complete. No legacy `.ghuser` is shipped as-is.
+
+### Process per component
+
+1. Identify the legacy file in `legacy-0.4.0-beta.2/carcara/carcara_<Name>_*.ghuser`.
+2. Locate the matching row in the [Component Inventory](#component-inventory) below.
+3. Implement the domain logic in the correct `release/crc_modules/` submodule.
+4. Write tests in `tests/` (mock all DB calls).
+5. Create the component bundle at `build/components/CRC_<Name>/` with `metadata.json`, `code.py`, and `icon.png` following the [Grasshopper Component Pattern](#grasshopper-component-pattern).
+6. Run `python tools/build_userobjects.py` to regenerate the `.ghuser` into `release/userobjects/`.
+7. Flip the inventory status from ⬜ Todo to ✅ Done in the commit.
+
+### Completion criteria
+
+- Every legacy `.ghuser` listed in the inventory has a ✅ Done row.
+- `release/userobjects/` contains the freshly built equivalent for every entry.
+- No file under `legacy-0.4.0-beta.2/` is referenced from runtime code.
 
 ***
 
@@ -510,7 +530,7 @@ conda run -n carcara python tools/make_release.py    # build + stamp version.txt
 powershell -ExecutionPolicy Bypass -File tools\deploy.ps1
 ```
 
-DB components need `psycopg2` (and geometry components `shapely`) available to Rhino's Python; their `code.py` carries a `# r: psycopg2-binary` / `# r: shapely` directive so Rhino installs it on first run.
+DB components also need `psycopg2` available to Rhino's Python; their `code.py` carries a `# r: psycopg2` directive so Rhino installs it on first run.
 
 ***
 
@@ -519,12 +539,11 @@ DB components need `psycopg2` (and geometry components `shapely`) available to R
 ### Runtime (required by end users)
 
 ```
-psycopg2>=2.9    # DB components (installed in Rhino via `# r: psycopg2-binary`)
-shapely>=2.0     # geometry/WKT components (installed via `# r: shapely`)
+psycopg2>=2.9
+shapely>=2.0
+svgwrite>=1.4
+matplotlib>=3.7
 ```
-
-> SVG and chart components emit SVG strings via pure stdlib string-building — they do **not**
-> import `svgwrite` or `matplotlib`. Those are not runtime deps; viewport preview is RhinoCommon.
 
 ### Development only
 
@@ -535,10 +554,23 @@ pythonnet>=3.0    # required by build_userobjects.py to call GH_IO.dll
 requests          # optional: NuGet fallback fetch of GH_IO.dll
 ```
 
-Verify the runtime deps are importable in the Rhino 8 CPython environment:
+### `requirements.txt`
+
+```
+psycopg2>=2.9
+shapely>=2.0
+svgwrite>=1.4
+matplotlib>=3.7
+python-dotenv
+pytest
+pythonnet>=3.0
+requests
+```
+
+All dependencies must be installable via pip into the Rhino 8 CPython environment. Verify with:
 
 ```powershell
-conda run -n carcara python -c "import psycopg2, shapely; print('OK')"
+conda run -n carcara python -c "import psycopg2, shapely, svgwrite, matplotlib; print('OK')"
 ```
 
 ***
@@ -620,24 +652,79 @@ build: update build_userobjects.py XML escaping
 
 ## Component Inventory
 
-32 Python components, each a bundle in `build/components/CRC_<Name>/` → built to
-`release/userobjects/CRC_<Name>.ghuser`. Per-component **inputs/outputs/nicknames** live in
-[`COMPONENTS.md`](COMPONENTS.md); the table below maps each component to its **core module** in
-`crc_modules/` — the place to edit its domain logic. `*` = SDK advanced-mode (viewport preview).
+All 33 components in one master map. Each maps to one bundle in `build/components/CRC_<Name>/`
+and one or more functions in `crc_modules/`. The `Legacy file` column points to the original
+`.ghuser` in `legacy-0.4.0-beta.2/carcara/` that must be reimplemented.
 
-`subcategory` in `metadata.json` is one of exactly: **`01.Modeling`**, **`02.Queries`**,
-**`03.Utilities`**, **`04.Dataviz`**. `exposure` (GH_IO toolbar order: `2` primary … `16` obscure)
-is already set per component — read it from the bundle's `metadata.json`.
+The `subcategory` field in each `metadata.json` must be one of exactly: **`01.Modeling`**,
+**`02.Queries`**, **`03.Utilities`**, **`04.Dataviz`**. **Exposure** controls toolbar placement
+using the GH_IO enum: `2` = primary (dropdown front), `4` = secondary, `8` = tertiary,
+`16` = quaternary/obscure. Values marked `?` are
+not yet recovered — **read them from the legacy `.ghuser` before building** and fill in.
 
-| Subcategory | Component → core module |
-|---|---|
-| 01.Modeling | BuildingMeshes → `rhino/building_mesh.py` · IdentifyDuplicatePolylines → `geometry/duplicates.py` · OffsetPython → `rhino/offset.py` · PointInsidePolygon → `geometry/polylabel.py` · SortByContainer → `geometry/containment.py` · ColorCalculator\* → `utils/color.py` |
-| 02.Queries | QuerySchemaNames / QueryTableNames / QueryColumnNames → `db/query.py` · QueryValues → `db/query.py` + `db/spatial_query.py` · GeometryEntities / GeometriesWithSpatialFilter / ValuesWithSpatialFilter → `db/spatial_query.py` · CreateTable / CreateShapefile → `db/writer.py` |
-| 03.Utilities | ConnectionString → `db/connection.py` · FindCorrectionParameters → `utils/correction.py` · SQLComposer → `utils/sql_composer.py` · RunQuery / RunCommand → `db/query.py` · GrasshopperGeometryToWKT / WKTtoGrasshopperGeometry → `geometry/wkt.py` |
-| 04.Dataviz | CurveDisplay\* → `rhino/curve_display.py` · PolylineToSVG\* / CircleToSVG\* / NurbsToSVG\* / TextToSVG\* → `svg/export.py` · Histogram\* → `viz/histogram.py` · ScatterPlot\* → `viz/scatter.py` · LinePlot\* → `viz/lineplot.py` · Heatmap\* → `viz/heatmap.py` · SaveSVG → `svg/save.py` |
+### Master component map (grouped by subcategory)
 
-> **Note:** `CRC_SRID` is a native GH ValueList component — not a Python script component, not part
-> of the componentizer build (a hand-built `CRC_SRID.ghuser` ships in `release/userobjects/`).
+Within each subcategory, ordered by exposure (`1` first). Global `#` runs across all four.
+
+#### 01.Modeling (6)
+
+| # | Component | Exp | Core module | Legacy file | Status |
+|---|---|---|---|---|---|
+| 1 | CRC_BuildingMeshes | 2 | `rhino/building_mesh.py` | `carcara_BuildingMeshes_r03.ghuser` | ✅ Done |
+| 2 | CRC_IdentifyDuplicatePolylines | 2 | `geometry/duplicates.py` | `carcara_IdentifyDuplicatePolylines_r03.ghuser` | ✅ Done |
+| 3 | CRC_OffsetPython | 2 | `rhino/offset.py` | `carcara_OffsetPython_r03.ghuser` | ✅ Done |
+| 4 | CRC_PointInsidePolygon | 2 | `geometry/polylabel.py` | `carcara_PointInsidePolygon_rev03.ghuser` | ✅ Done |
+| 5 | CRC_SortByContainer | 2 | `geometry/containment.py` | `carcara_SortByContainer_rev03.ghuser` | ✅ Done |
+| 6 | CRC_ColorCalculator* | 4 | `utils/color.py` (SDK) | `carcara_ColorCalculator_r00.ghuser` | ✅ Done |
+
+#### 02.Queries (9)
+
+| # | Component | Exp | Core module | Legacy file | Status |
+|---|---|---|---|---|---|
+| 7 | CRC_QuerySchemaNames | 2 | `db/query.py` | `carcara_QuerySchemaNames_r03.ghuser` | ✅ Done |
+| 8 | CRC_QueryTableNames | 2 | `db/query.py` | `carcara_QueryTableNames_rev03.ghuser` | ✅ Done |
+| 9 | CRC_QueryColumnNames | 2 | `db/query.py` | `carcara_QueryColumnNames_rev03.ghuser` | ✅ Done |
+| 10 | CRC_QueryValues | 2 | `db/query.py` + `db/spatial_query.py` | `carcara_QueryValues_rev03.ghuser` | ✅ Done |
+| 11 | CRC_GeometryEntities | 4 | `db/spatial_query.py` | `carcara_GeometryEntities_r03.ghuser` | ✅ Done |
+| 12 | CRC_GeometriesWithSpatialFilter | 4 | `db/spatial_query.py` + `db/connection.py` | `carcara_GeometriesWithSpatialFilter_r03.ghuser` | ✅ Done |
+| 13 | CRC_ValuesWithSpatialFilter | 4 | `db/spatial_query.py` + `db/connection.py` | `carcara_ValuesWithSpatialFilter_rev03.ghuser` | ✅ Done |
+| 14 | CRC_CreateTable | 8 | `db/writer.py` | `carcara_CreateTable_r03.ghuser` | ✅ Done |
+| 15 | CRC_CreateShapefile | 8 | `db/writer.py` | `carcara_CreateShapefile_r03.ghuser` | ✅ Done |
+
+#### 03.Utilities (7)
+
+| # | Component | Exp | Core module | Legacy file | Status |
+|---|---|---|---|---|---|
+| 16 | CRC_ConnectionString | 2 | `db/connection.py` | `carcara_ConnectionString_r03.ghuser` | ✅ Done |
+| 17 | CRC_FindCorrectionParameters | 2 | `utils/correction.py` | `carcara_FindCorrectionParameters_r03.ghuser` | ✅ Done |
+| 18 | CRC_SQLComposer | 4 | `utils/sql_composer.py` | `carcara_SQLComposer_rev02.ghuser` | ✅ Done |
+| 19 | CRC_RunQuery | 4 | `db/query.py` | `carcara_RunODBCQuery_rev03.ghuser` | ✅ Done |
+| 20 | CRC_RunCommand | 4 | `db/query.py` | `carcara_RunODBCCommand_rev01.ghuser` | ✅ Done |
+| 21 | CRC_GrasshopperGeometryToWKT | 8 | `geometry/wkt.py` | `carcara_GrasshopperGeometryToWKT_r02.ghuser` | ✅ Done |
+| 22 | CRC_WKTtoGrasshopperGeometry | 8 | `geometry/wkt.py` | `carcara_WKTtoGrasshopperGeometry_r02.ghuser` | ✅ Done |
+
+#### 04.Dataviz (10)
+
+| # | Component | Exp | Core module | Legacy file | Status |
+|---|---|---|---|---|---|
+| 24 | CRC_CurveDisplay | 2 | `rhino/curve_display.py` (SDK) | `carcara_CurveDisplay_r02.ghuser` | ✅ Done |
+| 25 | CRC_PolylineToSVG* | 4 | `svg/export.py` (`rhino/preview.py`) | `carcara_PolylineToSVG_r03.ghuser` | ✅ Done |
+| 26 | CRC_CircleToSVG* | 4 | `svg/export.py` (`rhino/preview.py`) | `carcara_CircletoSVG_r03.ghuser` | ✅ Done |
+| 27 | CRC_NurbsToSVG* | 4 | `svg/export.py` (`rhino/preview.py`) | `carcara_NurbsToSVG_rev03.ghuser` | ✅ Done |
+| 28 | CRC_TextToSVG* | 4 | `svg/export.py` (`rhino/preview.py`) | `carcara_TextToSVG_rev03.ghuser` | ✅ Done |
+| 29 | CRC_Histogram* | 8 | `viz/histogram.py` (`rhino/preview.py`) | `carcara_Histogram_r01.ghuser` | ✅ Done |
+| 30 | CRC_ScatterPlot* | 8 | `viz/scatter.py` (`rhino/preview.py`) | `carcara_ScatterPlot_r03.ghuser` | ✅ Done |
+| 31 | CRC_LinePlot* | 8 | `viz/lineplot.py` (`rhino/preview.py`) | `carcara_LinePlot_r00.ghuser` | ✅ Done |
+| 32 | CRC_Heatmap* | 8 | `viz/heatmap.py` (`rhino/preview.py`) | `carcara_Heatmap_rev00.ghuser` | ✅ Done |
+| 33 | CRC_SaveSVG | 16 | `svg/save.py` | `carcara_SaveSVG_r03.ghuser` | ✅ Done |
+
+Counts: **01.Modeling 6 · 02.Queries 9 · 03.Utilities 7 · 04.Dataviz 10 = 32.**
+
+> **Note:** `CRC_SRID` (legacy `carcara_SRID_r00.ghuser`) is a native GH ValueList component — not a Python script component. It will be created manually and is not part of the componentizer build pipeline.
+
+> Exposure values are sourced from the legacy `.ghuser` (captured per subcategory in
+> `legacy-0.4.0-beta.2/ghuser-metadata/`; decoded scripts and `_interface.txt` hook files are linked
+> from those docs). Confirm any that are still uncertain when porting.
 
 ### Subcategory notes
 
@@ -652,7 +739,7 @@ is already set per component — read it from the bundle's `metadata.json`.
   (`CRC_ConnectionString`, which *produces* the `CString`), the generic query/command
   runners (`CRC_RunQuery`, `CRC_RunCommand`), the SQL composer (free-form substring replace),
   geometry⇄WKT conversion, and the coordinate-correction false origin tools.
--   **04.Dataviz** — data visualizations rendered on screen (SDK-mode viewport preview) and exportable as SVG. Nine components use SDK mode (`CRC_CurveDisplay` display-only curves; four SVG exporters `CRC_PolylineToSVG` / `CRC_CircleToSVG` / `CRC_NurbsToSVG` / `CRC_TextToSVG`; four chart renderers `CRC_Histogram` / `CRC_ScatterPlot` / `CRC_LinePlot` / `CRC_Heatmap`) — they draw via `PreviewPayload` and emit `svgCode` strings built with pure stdlib (no matplotlib). `CRC_SaveSVG` (procedural) assembles those strings and writes the file. Full SDK inventory and gotchas: [`specs/sdk-components.md`](specs/sdk-components.md).
+-   **04.Dataviz** — data visualizations rendered on screen (SDK-mode viewport preview) and exportable as SVG. All ten components use SDK mode (`CRC_CurveDisplay` for display-only curves; `CRC_ColorCalculator`; five SVG exporters: `CRC_PolylineToSVG`, `CRC_CircleToSVG`, `CRC_NurbsToSVG`, `CRC_TextToSVG`; and four chart renderers: `CRC_Histogram`, `CRC_ScatterPlot`, `CRC_LinePlot`, `CRC_Heatmap`). Charts combine Rhino geometry in the viewport via `PreviewPayload` with SVG file export via matplotlib. Only `CRC_SaveSVG` is procedural. Full SDK component inventory and gotchas: [`specs/sdk-components.md`](specs/sdk-components.md).
 
 > **Engine / reuse pattern (from legacy).** `CRC_RunQuery` / `CRC_RunCommand` (03.Utilities)
 > are the generic primitives — reimplement as thin GH wrappers over `run_query` / `run_command`.
@@ -683,11 +770,11 @@ is already set per component — read it from the bundle's `metadata.json`.
 > uses SDK mode. `CRC_CurveDisplay` is Python SDK-mode (was C# in the legacy) and sits in
 > 04.Dataviz. Set `subcategory` from this table, not from the module path.
 
-> **SDK-mode components.** Nine of the ten data-viz components (all except `CRC_SaveSVG`) plus
-> `CRC_ColorCalculator` (01.Modeling) use SDK mode: they draw a custom Rhino viewport preview via
-> `PreviewPayload`. The four SVG exporters and four chart renderers emit `svgCode` strings (pure
-> stdlib string-building — no matplotlib); `CRC_CurveDisplay` and `CRC_ColorCalculator` are
-> preview-only. Full inventory and gotchas: [`specs/sdk-components.md`](specs/sdk-components.md).
+> **SDK-mode components.** Nine of the ten data-viz components (all except `CRC_SaveSVG`) plus CRC_ColorCalculator (10 total) use SDK mode: they draw a custom Rhino viewport preview via `PreviewPayload`. The five SVG exporters also emit files via matplotlib; the remaining four chart renderers and ColorCalculator are preview-only. Full inventory and gotchas: [`specs/sdk-components.md`](specs/sdk-components.md).
+
+### Inventory cross-check
+
+The rebuild is **complete only when every legacy `.ghuser` in `legacy-0.4.0-beta.2/carcara/` appears in one of the tables above with status ✅ Done**. If you discover a legacy file not listed here, add a row before starting work — do not silently skip a component.
 
 ***
 
@@ -697,7 +784,7 @@ When generating code for this repository, an AI agent must:
 
 1. **Read this spec before writing any code.** Do not infer structure from the existing files alone.
 2. **Write core logic in `crc_modules/` first**, then write the GH component wrapper. Never the reverse.
-3. **Check the [Component Inventory](#component-inventory) and [`COMPONENTS.md`](COMPONENTS.md)** before creating a new file — find the existing module/component to extend instead of duplicating.
+3. **Check the component inventory table** before creating a new file. Update the status column when a component is completed.
 4. **Never add Rhino or Grasshopper imports** to any file under `crc_modules/`. If geometry conversion requires RhinoCommon, create `release/crc_modules/rhino/` and document it as a Rhino-dependent submodule.
 5. **Always include `report` output** in every GH component. The `report` string must distinguish between "not yet run", "success", and "error" states.
 6. **Always guard execution with `if CToggle:`** in every GH component.
@@ -705,7 +792,8 @@ When generating code for this repository, an AI agent must:
 8. **Do not modify `pyproject.toml`** unless adding a new dependency, and document why in the commit message.
 9. **Do not create `.ghuser` files manually.** They are always generated by `build_userobjects.py` (which wraps the `compas-actions.ghpython_components` componentizer and `GH_IO.dll`). A `.ghuser` is a **binary `GH_Archive`**, not a zip — never hand-craft one.
 10. **Match the commit message convention** defined in the Git section above.
-11. **Treat `legacy-0.4.0-beta.2/` as read-only legacy.** Never import from it, never edit it, never delete it. Use it only to recover original behavior, inputs, outputs, and nicknames.
-12. **Paths are repo-root relative.** All commands (`pytest`, `python tools/build_userobjects.py`) run from the repository root. There is no install step — `release/` is already on `sys.path`.
-13. **Component layout is the componentizer bundle layout.** Each component is `build/components/CRC_<Name>/{metadata.json, code.py, icon.png}`. Flat, no subcategory subdirs. Subcategory is a metadata field. See [`specs/componentizer.md`](specs/componentizer.md) for the full schema and rationale.
-14. **Never `float()` the `Cx`/`Cy` correction values.** They are numeric **text**, applied as a false-origin shift **inside SQL** (`ST_Translate`), to avoid the precision loss that motivates the whole correction system. Validate them as numeric literals via `utils/correction.py`, then embed verbatim. See [Coordinate Correction](#coordinate-correction-projected-coordinates--false-origin).
+11. **Treat `legacy-0.4.0-beta.2/` as read-only legacy.** Never import from it, never edit it, never delete it. Use it only to recover original behavior, inputs, outputs, and nicknames when rebuilding a component.
+12. **Rebuild every legacy `.ghuser`.** The end state of this project is that every file currently in `legacy-0.4.0-beta.2/carcara/*.ghuser` has been reimplemented under `build/components/` and regenerated into `release/userobjects/` via `tools/build_userobjects.py`. No legacy `.ghuser` ships as-is.
+13. **Paths are repo-root relative.** There is no `carcara-rebuild/` directory anymore. All commands (`pytest`, `python tools/build_userobjects.py`, `pip install -e .`) run from the repository root.
+14. **Component layout is the componentizer bundle layout.** Each component is `build/components/CRC_<Name>/{metadata.json, code.py, icon.png}`. Flat, no subcategory subdirs. Subcategory is a metadata field. See [`specs/componentizer.md`](specs/componentizer.md) for the full schema and rationale.
+15. **Never `float()` the `Cx`/`Cy` correction values.** They are numeric **text**, applied as a false-origin shift **inside SQL** (`ST_Translate`), to avoid the precision loss that motivates the whole correction system. Validate them as numeric literals via `utils/correction.py`, then embed verbatim. See [Coordinate Correction](#coordinate-correction-projected-coordinates--false-origin).

@@ -1,8 +1,8 @@
 # Runtime (required by end users / Rhino 8 CPython)
-psycopg2>=2.9
-shapely>=2.0
-svgwrite>=1.4
-matplotlib>=3.7
+# Installed into Rhino on first run via `# r:` directives in component code.py.
+psycopg2>=2.9    # DB components (`# r: psycopg2-binary`)
+shapely>=2.0     # geometry/WKT components (`# r: shapely`)
+# SVG/chart components build SVG strings with pure stdlib — no svgwrite/matplotlib.
 
 # Development (build, tests, decoding tools)
 python-dotenv
