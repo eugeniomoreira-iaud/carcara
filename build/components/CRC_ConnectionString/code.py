@@ -15,11 +15,6 @@ try:
 except Exception:
     pass
 
-try:
-    ghenv.Component.Message = "v{{component_version}}-{{date}}"
-except Exception:
-    pass
-
 import Rhino
 import Rhino.UI
 import scriptcontext
@@ -28,16 +23,44 @@ import Eto.Forms as forms
 
 from crc_modules.db.connection import build_connection_string, test_connection
 
+# ===== POSITIONAL INPUT HELPERS (index-based; independent of name/nickname display) =====
+from Grasshopper import DataTree
+
+def _unwrap(g):
+    return g.Value if hasattr(g, "Value") else g
+
+def _in_item(i):
+    for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True):
+        return _unwrap(g)
+    return None
+
+def _in_list(i):
+    return [_unwrap(g) for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True)]
+
+def _in_tree(i):
+    src = ghenv.Component.Params.Input[i].VolatileData
+    t = DataTree[object]()
+    for p in src.Paths:
+        for g in src[p]:
+            t.Add(_unwrap(g), p)
+    return t
+# ========================================================================================
+
+# INPUT MAPPING  0:db:item  1:port:item  2:tog:item
+db_int   = _in_item(0)
+port_int = _in_item(1)
+tog_int  = _in_item(2)
+
 CString, ok, report = "", False, "Set 'CToggle' to True to connect"
 
-if CToggle:
+if tog_int:
     try:
-        port = int(port) if port else 5432
-        if not database:
+        port_int = int(port_int) if port_int else 5432
+        if not db_int:
             report = "ERROR: 'database' is required"
         else:
             # Show Eto dialog to collect host, user, password
-            dialog = _CredentialsDialog(database)
+            dialog = _CredentialsDialog(db_int)
             try:
                 accepted = dialog.ShowModal(Rhino.UI.RhinoEtoApp.MainWindow)
                 if not accepted:
@@ -47,7 +70,7 @@ if CToggle:
                     if not host or not user or not password:
                         report = "ERROR: All fields (host, user, password) are required"
                     else:
-                        CString = build_connection_string(host, port, database, user, password)
+                        CString = build_connection_string(host, port_int, db_int, user, password)
                         ok, msg = test_connection(CString)
                         report = msg if ok else "ERROR: {}".format(msg)
             finally:

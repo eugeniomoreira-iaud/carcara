@@ -21,18 +21,44 @@ from Grasshopper import DataTree
 
 from crc_modules.db.query import run_query
 
+# ===== POSITIONAL INPUT HELPERS (index-based; independent of name/nickname display) =====
+def _unwrap(g):
+    return g.Value if hasattr(g, "Value") else g
+
+def _in_item(i):
+    for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True):
+        return _unwrap(g)
+    return None
+
+def _in_list(i):
+    return [_unwrap(g) for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True)]
+
+def _in_tree(i):
+    src = ghenv.Component.Params.Input[i].VolatileData
+    t = DataTree[object]()
+    for p in src.Paths:
+        for g in src[p]:
+            t.Add(_unwrap(g), p)
+    return t
+# ========================================================================================
+
+# INPUT MAPPING: 0:cs(CString/item), 1:tog(CToggle/item), 2:sql(sql/item)
+cs_int  = _in_item(0)
+tog_int = _in_item(1)
+sql_int = _in_item(2)
+
 rows = DataTree[object]()
 columns = DataTree[object]()
 report = "Set 'CToggle' to True to execute"
 
-if CToggle:
+if tog_int:
     try:
-        if not CString:
+        if not cs_int:
             raise ValueError("CString is required")
-        if not sql:
+        if not sql_int:
             raise ValueError("sql is required")
 
-        _rows, _col_names = run_query(CString, sql)
+        _rows, _col_names = run_query(cs_int, sql_int)
 
         nrows = len(_rows)
         ncols = len(_col_names)

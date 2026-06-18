@@ -17,18 +17,54 @@ except Exception:
 
 from crc_modules.db.writer import create_table_with_data
 
+# ===== POSITIONAL INPUT HELPERS (index-based; independent of name/nickname display) =====
+from Grasshopper import DataTree
+
+def _unwrap(g):
+    return g.Value if hasattr(g, "Value") else g
+
+def _in_item(i):
+    for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True):
+        return _unwrap(g)
+    return None
+
+def _in_list(i):
+    return [_unwrap(g) for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True)]
+
+def _in_tree(i):
+    src = ghenv.Component.Params.Input[i].VolatileData
+    t = DataTree[object]()
+    for p in src.Paths:
+        for g in src[p]:
+            t.Add(_unwrap(g), p)
+    return t
+# ========================================================================================
+
+# INPUT MAPPING
+# 0:cs:item  1:tog:item  2:sch:item  3:tbl:item  4:cols:list  5:types:list
+# 6:vals:tree  7:ids:tree  8:rep:item
+cs_int    = _in_item(0)
+tog_int   = _in_item(1)
+sch_int   = _in_item(2)
+tbl_int   = _in_item(3)
+cols_int  = _in_list(4)
+types_int = _in_list(5)
+vals_int  = _in_tree(6)
+ids_int   = _in_tree(7)
+rep_int   = _in_item(8)
+
 affected, report = 0, "Set CToggle=True to CREATE the table and INSERT rows. This operation is destructive if replace_table=True."
 
-if CToggle:
+if tog_int:
     try:
-        if not CString:
+        if not cs_int:
             raise ValueError("CString is required")
-        if not schema or not table:
+        if not sch_int or not tbl_int:
             raise ValueError("schema and table are required")
 
         # --- validate parallel column lists ---
-        names = [str(c) for c in (columnNames or [])]
-        types = [str(t) for t in (columnTypes or [])]
+        names = [str(c) for c in (cols_int or [])]
+        types = [str(t) for t in (types_int or [])]
         if len(names) != len(types):
             raise ValueError(
                 "columnNames and columnTypes must be parallel (same length); "
@@ -38,9 +74,9 @@ if CToggle:
 
         # --- read DataTree rows (branch per row) ---
         rows = []
-        if values is not None and hasattr(values, "BranchCount"):
-            for i in range(values.BranchCount):
-                branch = [str(x) if x is not None else "" for x in values.Branch(i)]
+        if vals_int is not None and hasattr(vals_int, "BranchCount"):
+            for i in range(vals_int.BranchCount):
+                branch = [str(x) if x is not None else "" for x in vals_int.Branch(i)]
                 if names and len(branch) != len(names):
                     raise ValueError(
                         "Row {} has {} values but {} columns are declared".format(
@@ -51,10 +87,10 @@ if CToggle:
 
         # --- optional idValues (DataTree: branch per row, one id per branch) ---
         ids = None
-        if idValues is not None and hasattr(idValues, "BranchCount") and idValues.BranchCount > 0:
+        if ids_int is not None and hasattr(ids_int, "BranchCount") and ids_int.BranchCount > 0:
             ids = []
-            for i in range(idValues.BranchCount):
-                branch = idValues.Branch(i)
+            for i in range(ids_int.BranchCount):
+                branch = ids_int.Branch(i)
                 ids.append(str(branch[0]) if branch and branch[0] is not None else "")
             if rows and len(ids) != len(rows):
                 raise ValueError(
@@ -65,9 +101,9 @@ if CToggle:
 
         # --- call module (coercion + PK resolution happen inside) ---
         n = create_table_with_data(
-            CString, schema, table, columns, rows,
+            cs_int, sch_int, tbl_int, columns, rows,
             id_values=ids,
-            replace_table=bool(replaceTable)
+            replace_table=bool(rep_int)
         )
         affected = n if n is not None else 0
         report = "success: true\nRows Inserted: {}".format(affected)

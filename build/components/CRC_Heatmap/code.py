@@ -32,6 +32,34 @@ from crc_modules.svg.export import polyline_to_svg, text_to_svg
 
 from crc_modules.rhino.preview import PreviewPayload
 
+# ===== POSITIONAL INPUT HELPERS (index-based; independent of name/nickname display) =====
+from Grasshopper import DataTree
+
+def _unwrap(g):
+    if g is None:
+        return None
+    try:
+        return g.ScriptVariable()
+    except Exception:
+        return g.Value if hasattr(g, "Value") else g
+
+def _in_item(i):
+    for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True):
+        return _unwrap(g)
+    return None
+
+def _in_list(i):
+    return [_unwrap(g) for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True)]
+
+def _in_tree(i):
+    src = ghenv.Component.Params.Input[i].VolatileData
+    t = DataTree[object]()
+    for p in src.Paths:
+        for g in src[p]:
+            t.Add(_unwrap(g), p)
+    return t
+# ========================================================================================
+
 _EDGE_CLR = sd.Color.Black
 _TEXT_CLR = sd.Color.Black
 
@@ -40,10 +68,28 @@ class Heatmap(component):
 
     def RunScript(self, canvasRect, dataMatrix, gradientColors, rowLabels, colLabels, showCellValues, decimals, legendSteps, labelDist, legendBarW, legendDist, legendLabelDist, legendOrientation, showLegend, cellOutlineWidth, legendCellOutlineWidth):
         self.Message = "v{{component_version}}-{{date}}"
+        # ── INPUT MAPPING (index-based) ──────────────────────────────────────
+        cnv_int   = _in_item(0)
+        mtx_int   = _in_tree(1)
+        grad_int  = _in_list(2)
+        rLbl_int  = _in_list(3)
+        cLbl_int  = _in_list(4)
+        cVal_int  = _in_item(5)
+        dec_int   = _in_item(6)
+        legN_int  = _in_item(7)
+        lblD_int  = _in_item(8)
+        legW_int  = _in_item(9)
+        legD_int  = _in_item(10)
+        legLD_int = _in_item(11)
+        legO_int  = _in_item(12)
+        leg_int   = _in_item(13)
+        cellW_int = _in_item(14)
+        lcW_int   = _in_item(15)
+        # ────────────────────────────────────────────────────────────────────
 
         # ── Width defaults ───────────────────────────────────────────────────
-        _cell_ow = float(cellOutlineWidth) if cellOutlineWidth is not None else 0.5   # cell outline width
-        _lcell_ow = float(legendCellOutlineWidth) if legendCellOutlineWidth is not None else 0.5   # legend cell outline width
+        _cell_ow = float(cellW_int) if cellW_int is not None else 0.5   # cell outline width
+        _lcell_ow = float(lcW_int) if lcW_int is not None else 0.5   # legend cell outline width
 
         # ── Default matrix (instant preview when no data) ─────────────────────
         _default_matrix = [
@@ -73,19 +119,19 @@ class Heatmap(component):
         self._pv = pv
 
         # ── Input coercion ───────────────────────────────────────────────────
-        _canvas     = canvasRect if canvasRect is not None else None
-        _colors     = list(gradientColors) if gradientColors else None
-        _rows       = [str(v) for v in rowLabels] if rowLabels else None
-        _cols       = [str(v) for v in colLabels] if colLabels else None
-        _vals       = bool(showCellValues) if showCellValues is not None else False
-        _dec        = int(decimals) if decimals is not None else 1
-        _n_leg      = int(legendSteps) if legendSteps else 5
-        _dist       = float(labelDist) if labelDist is not None else 10.0
-        _leg_w      = float(legendBarW) if legendBarW is not None else None
-        _leg_dist   = float(legendDist) if legendDist is not None else 20.0
-        _leg_l_dist = float(legendLabelDist) if legendLabelDist is not None else 5.0
-        _leg_orient = str(legendOrientation) if legendOrientation else "vertical"
-        _show_leg   = bool(showLegend) if showLegend is not None else True
+        _canvas     = cnv_int if cnv_int is not None else None
+        _colors     = list(grad_int) if grad_int else None
+        _rows       = [str(v) for v in rLbl_int] if rLbl_int else None
+        _cols       = [str(v) for v in cLbl_int] if cLbl_int else None
+        _vals       = bool(cVal_int) if cVal_int is not None else False
+        _dec        = int(dec_int) if dec_int is not None else 1
+        _n_leg      = int(legN_int) if legN_int else 5
+        _dist       = float(lblD_int) if lblD_int is not None else 10.0
+        _leg_w      = float(legW_int) if legW_int is not None else None
+        _leg_dist   = float(legD_int) if legD_int is not None else 20.0
+        _leg_l_dist = float(legLD_int) if legLD_int is not None else 5.0
+        _leg_orient = str(legO_int) if legO_int else "vertical"
+        _show_leg   = bool(leg_int) if leg_int is not None else True
 
         _default_colors = [
             sd.Color.FromArgb(255, 0, 191, 255),
@@ -95,12 +141,12 @@ class Heatmap(component):
         _colors = _default_colors if not _colors or len(_colors) < 2 else list(_colors)
 
         # ── Use default matrix when no data is truly provided ─────────────────
-        if dataMatrix is None \
-                or (hasattr(dataMatrix, "IsEmpty") and dataMatrix.IsEmpty) \
-                or (hasattr(dataMatrix, "BranchCount") and dataMatrix.BranchCount == 0):
+        if mtx_int is None \
+                or (hasattr(mtx_int, "IsEmpty") and mtx_int.IsEmpty) \
+                or (hasattr(mtx_int, "BranchCount") and mtx_int.BranchCount == 0):
             _matrix_data = _default_matrix
-        elif hasattr(dataMatrix, "__iter__"):
-            _flat = [v for v in dataMatrix if v is not None]
+        elif hasattr(mtx_int, "__iter__"):
+            _flat = [v for v in mtx_int if v is not None]
             if (_flat and hasattr(_flat[0], "__iter__")
                     and not isinstance(_flat[0], (str, float, int))):
                 _matrix_data = [[float(v) for v in _sub if v is not None] for _sub in _flat]
@@ -112,9 +158,9 @@ class Heatmap(component):
         try:
             _matrix = []
             if _matrix_data and len(_matrix_data) > 0:
-                if hasattr(dataMatrix, "BranchCount") and dataMatrix.BranchCount > 0:
-                    for _i in range(dataMatrix.BranchCount):
-                        _branch = dataMatrix.Branch(_i)
+                if hasattr(mtx_int, "BranchCount") and mtx_int.BranchCount > 0:
+                    for _i in range(mtx_int.BranchCount):
+                        _branch = mtx_int.Branch(_i)
                         _row = [float(v) for v in _branch if v is not None]
                         if _row:
                             _matrix.append(_row)

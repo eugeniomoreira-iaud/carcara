@@ -19,24 +19,64 @@ from crc_modules.db.writer import create_table_with_geometry
 from crc_modules.geometry.wkt import combine_wkts, detect_wkt_type, promote_to_multi
 from crc_modules.rhino.wkt_conversion import rh_geometry_to_wkt
 
+# ===== POSITIONAL INPUT HELPERS (index-based; independent of name/nickname display) =====
+from Grasshopper import DataTree
+
+def _unwrap(g):
+    return g.Value if hasattr(g, "Value") else g
+
+def _in_item(i):
+    for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True):
+        return _unwrap(g)
+    return None
+
+def _in_list(i):
+    return [_unwrap(g) for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True)]
+
+def _in_tree(i):
+    src = ghenv.Component.Params.Input[i].VolatileData
+    t = DataTree[object]()
+    for p in src.Paths:
+        for g in src[p]:
+            t.Add(_unwrap(g), p)
+    return t
+# ========================================================================================
+
+# INPUT MAPPING
+# 0:cs:item  1:tog:item  2:sch:item  3:tbl:item  4:cols:list  5:types:list
+# 6:vals:tree  7:ids:tree  8:geo:tree  9:srid:item  10:cx:item  11:cy:item  12:rep:item
+cs_int   = _in_item(0)
+tog_int  = _in_item(1)
+sch_int  = _in_item(2)
+tbl_int  = _in_item(3)
+cols_int = _in_list(4)
+types_int = _in_list(5)
+vals_int = _in_tree(6)
+ids_int  = _in_tree(7)
+geo_int  = _in_tree(8)
+srid_int = _in_item(9)
+cx_int   = _in_item(10)
+cy_int   = _in_item(11)
+rep_int  = _in_item(12)
+
 affected, report = 0, "Set CToggle=True to CREATE the table and INSERT rows. This operation is destructive if replace_table=True."
 
-if CToggle:
+if tog_int:
     try:
-        if not CString:
+        if not cs_int:
             raise ValueError("CString is required")
-        if not schema or not table:
+        if not sch_int or not tbl_int:
             raise ValueError("schema and table are required")
 
         # --- geometry DataTree (required) ---
-        if geometry is None or not hasattr(geometry, "BranchCount") or geometry.BranchCount == 0:
+        if geo_int is None or not hasattr(geo_int, "BranchCount") or geo_int.BranchCount == 0:
             raise ValueError("geometry DataTree is required (branch per row)")
 
-        num_geo_branches = geometry.BranchCount
+        num_geo_branches = geo_int.BranchCount
 
         # --- optional attribute columns ---
-        names = [str(c) for c in (columnNames or [])]
-        types = [str(t) for t in (columnTypes or [])]
+        names = [str(c) for c in (cols_int or [])]
+        types = [str(t) for t in (types_int or [])]
         if len(names) != len(types):
             raise ValueError(
                 "columnNames and columnTypes must be parallel (same length); "
@@ -46,15 +86,15 @@ if CToggle:
 
         # --- optional attribute values DataTree (branch per row) ---
         rows = []
-        if values is not None and hasattr(values, "BranchCount") and values.BranchCount > 0:
-            if values.BranchCount != num_geo_branches:
+        if vals_int is not None and hasattr(vals_int, "BranchCount") and vals_int.BranchCount > 0:
+            if vals_int.BranchCount != num_geo_branches:
                 raise ValueError(
                     "values tree has {} branches but geometry tree has {} branches — must be equal".format(
-                        values.BranchCount, num_geo_branches
+                        vals_int.BranchCount, num_geo_branches
                     )
                 )
-            for i in range(values.BranchCount):
-                branch = [str(x) if x is not None else "" for x in values.Branch(i)]
+            for i in range(vals_int.BranchCount):
+                branch = [str(x) if x is not None else "" for x in vals_int.Branch(i)]
                 if names and len(branch) != len(names):
                     raise ValueError(
                         "Row {} has {} attribute values but {} columns are declared".format(
@@ -68,10 +108,10 @@ if CToggle:
 
         # --- optional idValues (DataTree: branch per row, one id per branch) ---
         ids = None
-        if idValues is not None and hasattr(idValues, "BranchCount") and idValues.BranchCount > 0:
+        if ids_int is not None and hasattr(ids_int, "BranchCount") and ids_int.BranchCount > 0:
             ids = []
-            for i in range(idValues.BranchCount):
-                branch = idValues.Branch(i)
+            for i in range(ids_int.BranchCount):
+                branch = ids_int.Branch(i)
                 ids.append(str(branch[0]) if branch and branch[0] is not None else "")
             if len(ids) != num_geo_branches:
                 raise ValueError(
@@ -83,7 +123,7 @@ if CToggle:
         # --- convert each geometry branch to one WKT per row ---
         row_wkts = []
         for i in range(num_geo_branches):
-            branch_geoms = [g for g in geometry.Branch(i) if g is not None]
+            branch_geoms = [g for g in geo_int.Branch(i) if g is not None]
             if not branch_geoms:
                 raise ValueError("Geometry branch {} is empty".format(i))
             branch_wkts = [rh_geometry_to_wkt(g) for g in branch_geoms]
@@ -97,16 +137,16 @@ if CToggle:
             row_wkts = [promote_to_multi(w, geom_type) for w in row_wkts]
 
         # --- scalar inputs ---
-        sr = int(srid) if srid else 4326
-        cx = str(Cx) if Cx else "0"
-        cy = str(Cy) if Cy else "0"
+        sr = int(srid_int) if srid_int else 4326
+        cx = str(cx_int) if cx_int else "0"
+        cy = str(cy_int) if cy_int else "0"
 
         # --- call module ---
         n = create_table_with_geometry(
-            CString, schema, table, columns, rows,
+            cs_int, sch_int, tbl_int, columns, rows,
             row_wkts, geom_type, sr, cx, cy,
             id_values=ids,
-            replace_table=bool(replaceTable)
+            replace_table=bool(rep_int)
         )
         affected = n if n is not None else 0
         report = "success: true\nRows Inserted: {}".format(affected)

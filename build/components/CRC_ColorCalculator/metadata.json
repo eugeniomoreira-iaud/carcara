@@ -5,7 +5,7 @@
   "subcategory": "01.Modeling",
   "description": "Calculates colors for mesh volumes based on numerical values. Supports continuous gradients, fixed class count, or custom class boundaries. Generates legend geometry and renders it directly in the Rhino viewport.",
   "exposure": 4,
-  "componentVersion": "0.5-00",
+  "componentVersion": "0.5-01",
   "date": "2026-06-16",
   "instanceGuid": "b3c4d5e6-f7a8-9012-bcde-f12345678901",
   "ghpython": {

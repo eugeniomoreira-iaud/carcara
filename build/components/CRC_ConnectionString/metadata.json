@@ -5,7 +5,7 @@
   "subcategory": "03.Utilities",
   "description": "Builds a libpq connection string (CString) with plain-text password. Opens an Eto dialog to collect host/user/password; database and port come from canvas inputs.",
   "exposure": 2,
-  "componentVersion": "0.5-00",
+  "componentVersion": "0.5-01",
   "date": "2026-06-16",
   "instanceGuid": "b2c3d4e5-f6a7-8901-bcde-f23456789012",
   "ghpython": {

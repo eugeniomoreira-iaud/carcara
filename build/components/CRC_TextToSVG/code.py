@@ -75,6 +75,35 @@ DEFAULT_FONT_SIZE = 12
 DEFAULT_FILL_COLOR = Color.Black
 
 
+# ===== POSITIONAL INPUT HELPERS (index-based; independent of name/nickname display) =====
+from Grasshopper import DataTree
+
+def _unwrap(g):
+    if g is None:
+        return None
+    try:
+        return g.ScriptVariable()
+    except Exception:
+        return g.Value if hasattr(g, "Value") else g
+
+def _in_item(i):
+    for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True):
+        return _unwrap(g)
+    return None
+
+def _in_list(i):
+    return [_unwrap(g) for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True)]
+
+def _in_tree(i):
+    src = ghenv.Component.Params.Input[i].VolatileData
+    t = DataTree[object]()
+    for p in src.Paths:
+        for g in src[p]:
+            t.Add(_unwrap(g), p)
+    return t
+# ========================================================================================
+
+
 def _get(seq, i, default):
     if seq is None:
         return default
@@ -89,16 +118,36 @@ def _get(seq, i, default):
     return seq[i] if i < n else seq[n - 1]
 
 
+def coerce_to_point(g):
+    if g is None:
+        return None
+    if isinstance(g, (Rhino.Geometry.Plane, Rhino.Geometry.Point3d)):
+        return g
+    if isinstance(g, Rhino.Geometry.Point):
+        return g.Location
+    loc = getattr(g, "Location", None)
+    if isinstance(loc, Rhino.Geometry.Point3d):
+        return loc
+    return g
+
+
 class TextToSVG(component):
 
     def RunScript(self, texts, points, fontFamily, fontSize, fillColor, canvas, justification):
         self.Message = "v{{component_version}}-{{date}}"
+        t_int = _in_list(0)
+        pt_int = _in_list(1)
+        ff_int = _in_item(2)
+        fs_int = _in_item(3)
+        fc_int = _in_item(4)
+        canvas_int = _in_item(5)
+        j_int = _in_list(6)
         svgCode = []
         report = "Provide text on input 'texts'."
         pv = PreviewPayload()
 
         try:
-            texts_list = texts if texts else []
+            texts_list = t_int if t_int else []
             if not texts_list:
                 report = "No text provided on input 'texts'."
             else:
@@ -107,9 +156,9 @@ class TextToSVG(component):
                 anchor_y = 0.0
                 canvas_h = 0.0
 
-                if canvas is not None:
+                if canvas_int is not None:
                     try:
-                        bbox = canvas.BoundingBox
+                        bbox = canvas_int.BoundingBox
                         anchor_x = bbox.Min.X
                         anchor_y = bbox.Min.Y
                         canvas_h = bbox.Max.Y - bbox.Min.Y
@@ -117,10 +166,10 @@ class TextToSVG(component):
                         pass
 
                 # Resolved style constants (same for all text items)
-                font_family = str(fontFamily) if fontFamily else DEFAULT_FONT_FAMILY
-                font_size = float(fontSize) if fontSize else DEFAULT_FONT_SIZE
+                font_family = str(ff_int) if ff_int else DEFAULT_FONT_FAMILY
+                font_size = float(fs_int) if fs_int else DEFAULT_FONT_SIZE
                 # fillColor arrives as System.Drawing.Color or None
-                fill_color = fillColor if fillColor is not None else DEFAULT_FILL_COLOR
+                fill_color = fc_int if fc_int is not None else DEFAULT_FILL_COLOR
                 fill_hex = color_to_hex(fill_color) if fill_color is not None else "black"
 
                 elements = []
@@ -131,8 +180,8 @@ class TextToSVG(component):
                         failed += 1
                         continue
                     try:
-                        ins_raw = _get(points, i, None) if points else None
-                        ins = rs.coercegeometry(ins_raw) if ins_raw is not None and not isinstance(ins_raw, (rg.Plane, rg.Point3d)) else ins_raw
+                        ins_raw = _get(pt_int, i, None) if pt_int else None
+                        ins = coerce_to_point(ins_raw)
 
                         # Defaults
                         x_svg = 0.0
@@ -164,7 +213,7 @@ class TextToSVG(component):
                             else:
                                 y_svg = ry
 
-                        just_val = int(_get(justification, i, DEFAULT_JUST) or DEFAULT_JUST)
+                        just_val = int(_get(j_int, i, DEFAULT_JUST) or DEFAULT_JUST)
                         anchor, baseline = _JUST_MAP.get(just_val, _JUST_MAP[DEFAULT_JUST])
                         h_align = _H_ALIGN_MAP.get(just_val, TextHorizontalAlignment.Right)
                         v_align = _V_ALIGN_MAP.get(just_val, TextVerticalAlignment.Middle)
@@ -201,7 +250,7 @@ class TextToSVG(component):
             report = "ERROR: {}".format(e)
 
         self._pv = pv
-        self.Hidden = True
+        self.Hidden = False
         return (svgCode, report)
 
     def DrawViewportWires(self, args):
@@ -212,5 +261,6 @@ class TextToSVG(component):
         if hasattr(self, "_pv"):
             self._pv.draw_meshes(args)
 
-    def get_ClippingBox(self):
+    @property
+    def ClippingBox(self):
         return self._pv.clipping_box if hasattr(self, "_pv") else Rhino.Geometry.BoundingBox.Empty

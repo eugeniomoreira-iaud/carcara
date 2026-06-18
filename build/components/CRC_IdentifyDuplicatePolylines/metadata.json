@@ -5,7 +5,7 @@
   "subcategory": "01.Modeling",
   "description": "Computes a normalized signature for each polyline to handle differences in start point and direction. Groups those with identical signatures and outputs the duplicate indexes.",
   "exposure": 2,
-  "componentVersion": "0.5-00",
+  "componentVersion": "0.5-01",
   "date": "2026-06-16",
   "instanceGuid": "d4e5f6a7-b8c9-0123-defa-234567890123",
   "ghpython": {

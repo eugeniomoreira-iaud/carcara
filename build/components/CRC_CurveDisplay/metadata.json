@@ -5,7 +5,7 @@
   "subcategory": "04.Dataviz",
   "description": "Custom viewport preview (lineweight, color, dash) for curves — CPython SDK-mode port of CRC_CurveDisplay.",
   "exposure": 2,
-  "componentVersion": "0.5-00",
+  "componentVersion": "0.5-01",
   "date": "2026-06-16",
   "instanceGuid": "a7f3c2e9-1b54-4d80-9c6a-2e8f0b3d7a16",
   "ghpython": {

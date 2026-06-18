@@ -30,6 +30,34 @@ from crc_modules.viz.lineplot import create_lineplot
 from crc_modules.svg.export import polyline_to_svg, text_to_svg
 from crc_modules.rhino.preview import PreviewPayload
 
+# ===== POSITIONAL INPUT HELPERS (index-based; independent of name/nickname display) =====
+from Grasshopper import DataTree
+
+def _unwrap(g):
+    if g is None:
+        return None
+    try:
+        return g.ScriptVariable()
+    except Exception:
+        return g.Value if hasattr(g, "Value") else g
+
+def _in_item(i):
+    for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True):
+        return _unwrap(g)
+    return None
+
+def _in_list(i):
+    return [_unwrap(g) for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True)]
+
+def _in_tree(i):
+    src = ghenv.Component.Params.Input[i].VolatileData
+    t = DataTree[object]()
+    for p in src.Paths:
+        for g in src[p]:
+            t.Add(_unwrap(g), p)
+    return t
+# ========================================================================================
+
 
 # Matplotlib default cycle (same 10 colours used in SVG)
 _SERIES_COLORS_HEX = [
@@ -55,11 +83,28 @@ class LinePlot(component):
 
     def RunScript(self, canvasRect, xValues, yValues, numXLabels, numYLabels, decimals, axisExtension, labelDist, marginLeft, marginBottom, drawGridX, drawGridY, lineWidth, axisLineWidth, gridLineWidth):
         self.Message = "v{{component_version}}-{{date}}"
+        # ── INPUT MAPPING (index-based) ──────────────────────────────────────
+        cnv_int  = _in_item(0)
+        x_int    = _in_list(1)
+        y_int    = _in_list(2)
+        nxL_int  = _in_item(3)
+        nyL_int  = _in_item(4)
+        dec_int  = _in_item(5)
+        axE_int  = _in_item(6)
+        lblD_int = _in_item(7)
+        mL_int   = _in_item(8)
+        mB_int   = _in_item(9)
+        gX_int   = _in_item(10)
+        gY_int   = _in_item(11)
+        lnW_int  = _in_item(12)
+        axW_int  = _in_item(13)
+        grdW_int = _in_item(14)
+        # ────────────────────────────────────────────────────────────────────
 
         # -- Width defaults ----------------------------------------------------
-        _lw = float(lineWidth)     if lineWidth     is not None else 2.0
-        _aw = float(axisLineWidth) if axisLineWidth is not None else 2.0
-        _gw = float(gridLineWidth) if gridLineWidth is not None else 1.0
+        _lw = float(lnW_int)     if lnW_int     is not None else 2.0
+        _aw = float(axW_int) if axW_int is not None else 2.0
+        _gw = float(grdW_int) if grdW_int is not None else 1.0
 
         # -- Default demo data for instant preview -----------------------------
         _default_x      = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -82,27 +127,27 @@ class LinePlot(component):
 
         try:
             # -- Canvas extraction ---------------------------------------------
-            if canvasRect is not None:
-                origin = canvasRect.Corner(0)
+            if cnv_int is not None:
+                origin = cnv_int.Corner(0)
                 ox = origin.X
                 oy = origin.Y
-                cw = canvasRect.Width
-                ch = canvasRect.Height
+                cw = cnv_int.Width
+                ch = cnv_int.Height
             else:
                 ox, oy, cw, ch = 0.0, 0.0, 100.0, 100.0
 
             canvas_tuple = (ox, oy, cw, ch)
 
             # -- Coerce inputs -----------------------------------------------
-            nx_val   = int(numXLabels)    if numXLabels    is not None else 5
-            ny_val   = int(numYLabels)    if numYLabels    is not None else 5
-            d_val    = int(decimals)      if decimals      is not None else 1
-            ext_val  = float(axisExtension) if axisExtension is not None else 0.0
-            dist_val = float(labelDist)   if labelDist     is not None else 10.0
-            mx_val   = float(marginLeft)  if marginLeft    is not None else 0.0
-            my_val   = float(marginBottom)if marginBottom  is not None else 0.0
-            gx_val   = bool(drawGridX)    if drawGridX     is not None else False
-            gy_val   = bool(drawGridY)    if drawGridY     is not None else False
+            nx_val   = int(nxL_int)    if nxL_int    is not None else 5
+            ny_val   = int(nyL_int)    if nyL_int    is not None else 5
+            d_val    = int(dec_int)      if dec_int      is not None else 1
+            ext_val  = float(axE_int) if axE_int is not None else 0.0
+            dist_val = float(lblD_int)   if lblD_int     is not None else 10.0
+            mx_val   = float(mL_int)  if mL_int    is not None else 0.0
+            my_val   = float(mB_int)if mB_int  is not None else 0.0
+            gx_val   = bool(gX_int)    if gX_int     is not None else False
+            gy_val   = bool(gY_int)    if gY_int     is not None else False
 
             # -- Parse DataTree / flat list ----------------------------------
             def _extract_series(data_in):
@@ -124,8 +169,8 @@ class LinePlot(component):
                 except Exception:
                     return []
 
-            x_input = _extract_series(xValues) if xValues else []
-            y_input = _extract_series(yValues) if yValues else []
+            x_input = _extract_series(x_int) if x_int else []
+            y_input = _extract_series(y_int) if y_int else []
 
             # Use defaults when no input provided
             if not x_input and len(_default_x):

@@ -23,17 +23,41 @@ from crc_modules.rhino.wkt_conversion import rh_geometry_to_wkt
 from crc_modules.geometry.wkt import wkt_to_shapely
 from crc_modules.geometry.duplicates import identify_duplicates
 
+# ===== POSITIONAL INPUT HELPERS (index-based; independent of name/nickname display) =====
+def _unwrap(g):
+    return g.Value if hasattr(g, "Value") else g
+
+def _in_item(i):
+    for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True):
+        return _unwrap(g)
+    return None
+
+def _in_list(i):
+    return [_unwrap(g) for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True)]
+
+def _in_tree(i):
+    src = ghenv.Component.Params.Input[i].VolatileData
+    t = DataTree[object]()
+    for p in src.Paths:
+        for g in src[p]:
+            t.Add(_unwrap(g), p)
+    return t
+# ========================================================================================
+
+# INPUT MAPPING  0:pl:list
+pl_int = _in_list(0)
+
 duplicateIndices = DataTree[object]()
 report = "Provide a list of polyline curves to polylines."
 
 try:
-    if not polylines:
+    if not pl_int:
         report = "ERROR: No polylines provided."
     else:
         # Convert Rhino geometry → coordinate rings (list of (x, y) tuples)
         rings = []
         invalid_count = 0
-        for poly in polylines:
+        for poly in pl_int:
             if poly is None:
                 rings.append(None)
                 invalid_count += 1
@@ -78,7 +102,7 @@ try:
                 unique=unique_count,
                 dups=total_duplicates,
                 groups=len(groups),
-                total=len(polylines),
+                total=len(pl_int),
             )
         )
         if invalid_count:

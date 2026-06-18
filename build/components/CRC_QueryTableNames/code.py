@@ -17,12 +17,40 @@ except Exception:
 
 from crc_modules.db.query import run_query, _list_tables
 
+# ===== POSITIONAL INPUT HELPERS (index-based; independent of name/nickname display) =====
+from Grasshopper import DataTree
+
+def _unwrap(g):
+    return g.Value if hasattr(g, "Value") else g
+
+def _in_item(i):
+    for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True):
+        return _unwrap(g)
+    return None
+
+def _in_list(i):
+    return [_unwrap(g) for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True)]
+
+def _in_tree(i):
+    src = ghenv.Component.Params.Input[i].VolatileData
+    t = DataTree[object]()
+    for p in src.Paths:
+        for g in src[p]:
+            t.Add(_unwrap(g), p)
+    return t
+# ========================================================================================
+
+# INPUT MAPPING: 0:cs(CString/item), 1:tog(CToggle/item), 2:sch(schema/item)
+cs_int  = _in_item(0)
+tog_int = _in_item(1)
+sch_int = _in_item(2)
+
 tables, report, queries = [], "Set 'CToggle' to True to execute", ""
 
-if CToggle:
+if tog_int:
     try:
-        q = _list_tables(schema)
-        _rows, _ = run_query(CString, q)
+        q = _list_tables(sch_int)
+        _rows, _ = run_query(cs_int, q)
         tables = [r[0] for r in _rows]
         executed_sql = [q]
         report = "OK – {} tables".format(len(tables))

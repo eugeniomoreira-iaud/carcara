@@ -28,6 +28,34 @@ from System.Drawing import Color
 from crc_modules.svg.export import polyline_to_svg
 from crc_modules.rhino.preview import PreviewPayload, color_to_hex
 
+# ===== POSITIONAL INPUT HELPERS (index-based; independent of name/nickname display) =====
+from Grasshopper import DataTree
+
+def _unwrap(g):
+    if g is None:
+        return None
+    try:
+        return g.ScriptVariable()
+    except Exception:
+        return g.Value if hasattr(g, "Value") else g
+
+def _in_item(i):
+    for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True):
+        return _unwrap(g)
+    return None
+
+def _in_list(i):
+    return [_unwrap(g) for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True)]
+
+def _in_tree(i):
+    src = ghenv.Component.Params.Input[i].VolatileData
+    t = DataTree[object]()
+    for p in src.Paths:
+        for g in src[p]:
+            t.Add(_unwrap(g), p)
+    return t
+# ========================================================================================
+
 
 def _get(seq, i, default):
     if seq is None:
@@ -43,16 +71,44 @@ def _get(seq, i, default):
     return seq[i] if i < n else seq[n - 1]
 
 
+def coerce_to_curve(geom):
+    if geom is None:
+        return None
+    if isinstance(geom, Rhino.Geometry.Curve):
+        return geom
+    if isinstance(geom, Rhino.Geometry.Line):
+        return Rhino.Geometry.LineCurve(geom)
+    if isinstance(geom, Rhino.Geometry.Circle):
+        return Rhino.Geometry.ArcCurve(geom)
+    if isinstance(geom, Rhino.Geometry.Arc):
+        return Rhino.Geometry.ArcCurve(geom)
+    if isinstance(geom, Rhino.Geometry.Polyline):
+        return Rhino.Geometry.PolylineCurve(geom)
+    if isinstance(geom, Rhino.Geometry.Ellipse):
+        return geom.ToNurbsCurve()
+    if isinstance(geom, Rhino.Geometry.Rectangle3d):
+        return geom.ToNurbsCurve()
+    return None
+
+
 class PolylineToSVG(component):
 
     def RunScript(self, polylines, strokeColor, strokeWidth, fillColor, canvas, dashPattern):
         self.Message = "v{{component_version}}-{{date}}"
+        # ── INPUT MAPPING (index-based) ──────────────────────────────────────
+        pl_int     = _in_list(0)
+        sc_int     = _in_list(1)
+        sw_int     = _in_list(2)
+        f_int      = _in_list(3)
+        canvas_int = _in_item(4)
+        dash_int   = _in_list(5)
+        # ────────────────────────────────────────────────────────────────────
         svgCode = []
         report = "Provide polylines on input 'polylines'."
         pv = PreviewPayload()
 
         try:
-            curves = polylines if polylines else []
+            curves = pl_int if pl_int else []
             if not curves:
                 report = "No polylines provided on input 'polylines'."
             else:
@@ -61,9 +117,9 @@ class PolylineToSVG(component):
                 anchor_y = 0.0
                 canvas_h = 0.0
 
-                if canvas is not None:
+                if canvas_int is not None:
                     try:
-                        bbox = canvas.BoundingBox
+                        bbox = canvas_int.BoundingBox
                         anchor_x = bbox.Min.X
                         anchor_y = bbox.Min.Y
                         canvas_h = bbox.Max.Y - bbox.Min.Y
@@ -75,7 +131,7 @@ class PolylineToSVG(component):
                     for poly in curves:
                         if poly is None:
                             continue
-                        crv = rs.coercecurve(poly) if not isinstance(poly, rg.Curve) else poly
+                        crv = coerce_to_curve(poly)
                         if crv and hasattr(crv, 'GetBoundingBox'):
                             combined = rg.BoundingBox.Union(combined, crv.GetBoundingBox(False))
                     if combined.IsValid:
@@ -92,7 +148,7 @@ class PolylineToSVG(component):
                         continue
                     try:
                         # Coerce to RhinoCommon curve
-                        crv = rs.coercecurve(poly) if not isinstance(poly, rg.Curve) else poly
+                        crv = coerce_to_curve(poly)
                         if crv is None:
                             failed += 1
                             continue
@@ -115,12 +171,12 @@ class PolylineToSVG(component):
                         ]
 
                         # Per-item styling — colors now arrive as System.Drawing.Color or None
-                        stroke_color = _get(strokeColor, i, None)
-                        sw_val = float(_get(strokeWidth, i, 0) or 0)
+                        stroke_color = _get(sc_int, i, None)
+                        sw_val = float(_get(sw_int, i, 0) or 0)
                         if sw_val <= 0:
                             sw_val = 1.0
-                        fill_color = _get(fillColor, i, None)
-                        dash_val = _get(dashPattern, i, "") or ""
+                        fill_color = _get(f_int, i, None)
+                        dash_val = _get(dash_int, i, "") or ""
 
                         stroke_hex = color_to_hex(stroke_color) if stroke_color is not None else "#000000"
                         fill_hex = color_to_hex(fill_color) if fill_color is not None else "none"
@@ -158,7 +214,7 @@ class PolylineToSVG(component):
             report = "ERROR: {}".format(e)
 
         self._pv = pv
-        self.Hidden = True
+        self.Hidden = False
         return (svgCode, report)
 
     def DrawViewportWires(self, args):
@@ -169,5 +225,6 @@ class PolylineToSVG(component):
         if hasattr(self, "_pv"):
             self._pv.draw_meshes(args)
 
-    def get_ClippingBox(self):
+    @property
+    def ClippingBox(self):
         return self._pv.clipping_box if hasattr(self, "_pv") else Rhino.Geometry.BoundingBox.Empty

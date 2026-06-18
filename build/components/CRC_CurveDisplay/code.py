@@ -39,6 +39,34 @@ from System.Drawing import Color
 from crc_modules.geometry.dash import parse_dash_pattern
 from crc_modules.rhino.curve_display import apply_dash_pattern
 
+# ===== POSITIONAL INPUT HELPERS (index-based; independent of name/nickname display) =====
+from Grasshopper import DataTree
+
+def _unwrap(g):
+    if g is None:
+        return None
+    try:
+        return g.ScriptVariable()
+    except Exception:
+        return g.Value if hasattr(g, "Value") else g
+
+def _in_item(i):
+    for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True):
+        return _unwrap(g)
+    return None
+
+def _in_list(i):
+    return [_unwrap(g) for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True)]
+
+def _in_tree(i):
+    src = ghenv.Component.Params.Input[i].VolatileData
+    t = DataTree[object]()
+    for p in src.Paths:
+        for g in src[p]:
+            t.Add(_unwrap(g), p)
+    return t
+# ========================================================================================
+
 
 def _get(seq, i, default):
     """Return seq[i] or last element if i >= len; handles .NET List[T] via len()."""
@@ -55,39 +83,65 @@ def _get(seq, i, default):
     return seq[i] if i < n else seq[n - 1]
 
 
+def coerce_to_curve(geom):
+    if geom is None:
+        return None
+    if isinstance(geom, Rhino.Geometry.Curve):
+        return geom
+    if isinstance(geom, Rhino.Geometry.Line):
+        return Rhino.Geometry.LineCurve(geom)
+    if isinstance(geom, Rhino.Geometry.Circle):
+        return Rhino.Geometry.ArcCurve(geom)
+    if isinstance(geom, Rhino.Geometry.Arc):
+        return Rhino.Geometry.ArcCurve(geom)
+    if isinstance(geom, Rhino.Geometry.Polyline):
+        return Rhino.Geometry.PolylineCurve(geom)
+    if isinstance(geom, Rhino.Geometry.Ellipse):
+        return geom.ToNurbsCurve()
+    if isinstance(geom, Rhino.Geometry.Rectangle3d):
+        return geom.ToNurbsCurve()
+    return None
+
+
 class CurveDisplay(component):
 
     def RunScript(self, curves, colours, widths, dashes):
         self.Message = "v{{component_version}}-{{date}}"
+        # ── INPUT MAPPING (index-based) ──────────────────────────────────────
+        crv_int  = _in_list(0)
+        col_int  = _in_list(1)
+        w_int    = _in_list(2)
+        dash_int = _in_list(3)
+        # ────────────────────────────────────────────────────────────────────
         self._entries = []   # list of (segments, color, width)
         self._bbox = Rhino.Geometry.BoundingBox.Empty
-        self.Hidden = True
+        self.Hidden = False
 
-        if not curves:
+        if not crv_int:
             return
 
         # Iterate curve list; scalar input wrapped automatically by GHPython as list[1]
         try:
-            n_curves = len(curves)
+            n_curves = len(crv_int)
         except TypeError:
             # single item handed as non-list
-            curves = [curves]
+            crv_int = [crv_int]
             n_curves = 1
 
         bbox = Rhino.Geometry.BoundingBox.Empty
         entries = []
 
         for i in range(n_curves):
-            crv_raw = _get(curves, i, None)
-            crv = rs.coercecurve(crv_raw) if crv_raw is not None else None
+            crv_raw = _get(crv_int, i, None)
+            crv = coerce_to_curve(crv_raw)
             if crv is None:
                 continue
 
-            color = _get(colours, i, Color.Black)
+            color = _get(col_int, i, Color.Black)
             if color is None:
                 color = Color.Black
 
-            width_raw = _get(widths, i, 1)
+            width_raw = _get(w_int, i, 1)
             try:
                 width = int(float(width_raw)) if width_raw is not None else 1
             except (TypeError, ValueError):
@@ -95,7 +149,7 @@ class CurveDisplay(component):
             if width < 1:
                 width = 1
 
-            dash_raw = _get(dashes, i, None)
+            dash_raw = _get(dash_int, i, None)
 
             try:
                 pattern = parse_dash_pattern(dash_raw)
@@ -114,5 +168,6 @@ class CurveDisplay(component):
             for seg in segments:
                 args.Display.DrawCurve(seg, color, width)
 
-    def get_ClippingBox(self):
+    @property
+    def ClippingBox(self):
         return getattr(self, "_bbox", Rhino.Geometry.BoundingBox.Empty)

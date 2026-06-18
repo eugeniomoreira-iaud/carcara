@@ -19,15 +19,41 @@ from crc_modules.rhino.wkt_conversion import rh_geometry_to_wkt
 from crc_modules.geometry.polylabel import interior_point
 from crc_modules.geometry.wkt import wkt_to_shapely
 
+# ===== POSITIONAL INPUT HELPERS (index-based; independent of name/nickname display) =====
+from Grasshopper import DataTree
+
+def _unwrap(g):
+    return g.Value if hasattr(g, "Value") else g
+
+def _in_item(i):
+    for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True):
+        return _unwrap(g)
+    return None
+
+def _in_list(i):
+    return [_unwrap(g) for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True)]
+
+def _in_tree(i):
+    src = ghenv.Component.Params.Input[i].VolatileData
+    t = DataTree[object]()
+    for p in src.Paths:
+        for g in src[p]:
+            t.Add(_unwrap(g), p)
+    return t
+# ========================================================================================
+
+# INPUT MAPPING  0:pol:item
+pol_int = _in_item(0)
+
 interiorPoint = None
 report = "Provide a closed polygon curve to polygon to compute its pole of inaccessibility (polylabel)."
 
 try:
-    if polygon is None:
+    if pol_int is None:
         report = "No polygon provided."
     else:
         # Convert Rhino curve → WKT (via rhino module, no direct Rhino import here)
-        wkt_str = rh_geometry_to_wkt(polygon)
+        wkt_str = rh_geometry_to_wkt(pol_int)
         if wkt_str is None:
             report = "ERROR: Could not convert input to WKT. Ensure polygon is a closed planar curve."
         else:

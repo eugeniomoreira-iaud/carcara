@@ -5,7 +5,7 @@
   "subcategory": "04.Dataviz",
   "description": "Converts Grasshopper NURBS curves to SVG <path> elements via linear-segment approximation at a configurable sample count (default 50). Coordinates are transformed from Rhino Y-up to SVG Y-down using the canvas anchor.",
   "exposure": 4,
-  "componentVersion": "0.5-00",
+  "componentVersion": "0.5-01",
   "date": "2026-06-16",
   "instanceGuid": "d3e4f5a6-b7c8-9012-defa-123456789003",
   "ghpython": {

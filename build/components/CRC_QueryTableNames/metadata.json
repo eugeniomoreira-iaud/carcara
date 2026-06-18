@@ -5,7 +5,7 @@
   "subcategory": "02.Queries",
   "description": "Lists all tables in a specified schema.",
   "exposure": 2,
-  "componentVersion": "0.5-00",
+  "componentVersion": "0.5-01",
   "date": "2026-06-16",
   "instanceGuid": "e5f6a7b8-c9d0-1234-efab-567890123456",
   "ghpython": {

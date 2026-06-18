@@ -30,6 +30,34 @@ from crc_modules.viz.scatter import create_scatterplot
 from crc_modules.svg.export import circle_to_svg, polyline_to_svg, text_to_svg
 from crc_modules.rhino.preview import PreviewPayload
 
+# ===== POSITIONAL INPUT HELPERS (index-based; independent of name/nickname display) =====
+from Grasshopper import DataTree
+
+def _unwrap(g):
+    if g is None:
+        return None
+    try:
+        return g.ScriptVariable()
+    except Exception:
+        return g.Value if hasattr(g, "Value") else g
+
+def _in_item(i):
+    for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True):
+        return _unwrap(g)
+    return None
+
+def _in_list(i):
+    return [_unwrap(g) for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True)]
+
+def _in_tree(i):
+    src = ghenv.Component.Params.Input[i].VolatileData
+    t = DataTree[object]()
+    for p in src.Paths:
+        for g in src[p]:
+            t.Add(_unwrap(g), p)
+    return t
+# ========================================================================================
+
 _AXIS_CLR = sd.Color.Black
 _GRID_CLR = sd.Color.FromArgb(255, 204, 204, 204)
 _TEXT_CLR = sd.Color.Black
@@ -43,11 +71,37 @@ class ScatterPlot(component):
                   showLegend, colorValues, gradientColors, numLegendSteps, legendBarWidth, legendDist,
                   legendLabelDist, legendOrientation, dotOutlineWidth, axisLineWidth, gridLineWidth):
         self.Message = "v{{component_version}}-{{date}}"
+        # ── INPUT MAPPING (index-based) ──────────────────────────────────────
+        cnv_int    = _in_item(0)
+        x_int      = _in_list(1)
+        y_int      = _in_list(2)
+        r_int      = _in_list(3)
+        nxL_int    = _in_item(4)
+        nyL_int    = _in_item(5)
+        dec_int    = _in_item(6)
+        axE_int    = _in_item(7)
+        lblD_int   = _in_item(8)
+        mL_int     = _in_item(9)
+        mB_int     = _in_item(10)
+        gX_int     = _in_item(11)
+        gY_int     = _in_item(12)
+        leg_int    = _in_item(13)
+        cVal_int   = _in_list(14)
+        grad_int   = _in_list(15)
+        legN_int   = _in_item(16)
+        legW_int   = _in_item(17)
+        legD_int   = _in_item(18)
+        legLD_int  = _in_item(19)
+        legO_int   = _in_item(20)
+        dotW_int   = _in_item(21)
+        axW_int    = _in_item(22)
+        grdW_int   = _in_item(23)
+        # ────────────────────────────────────────────────────────────────────
 
         # ── Width defaults ───────────────────────────────────────────────────
-        _dw = float(dotOutlineWidth) if dotOutlineWidth is not None else 0.5
-        _aw = float(axisLineWidth)   if axisLineWidth   is not None else 2.0
-        _gw = float(gridLineWidth)   if gridLineWidth   is not None else 1.0
+        _dw = float(dotW_int) if dotW_int is not None else 0.5
+        _aw = float(axW_int)   if axW_int   is not None else 2.0
+        _gw = float(grdW_int)   if grdW_int   is not None else 1.0
 
         # ── Output defaults ──────────────────────────────────────────────────
         dots       = []
@@ -70,9 +124,9 @@ class ScatterPlot(component):
         self._pv = pv
 
         # ── Input coercion ───────────────────────────────────────────────────
-        _cv          = canvasRect if canvasRect is not None else None
-        _x_input     = list(xValues) if xValues else None
-        _y_input     = list(yValues) if yValues else None
+        _cv          = cnv_int if cnv_int is not None else None
+        _x_input     = list(x_int) if x_int else None
+        _y_input     = list(y_int) if y_int else None
 
         # Default data for instant preview
         if not _x_input or not _y_input:
@@ -85,24 +139,24 @@ class ScatterPlot(component):
 
         _x = _default_x
         _y = _default_y
-        _r           = list(dotRadius) if dotRadius else [2.0]
-        _nx          = int(numXLabels) if numXLabels else 5
-        _ny          = int(numYLabels) if numYLabels else 5
-        _d           = int(decimals) if decimals is not None else 1
-        _ext         = float(axisExtension) if axisExtension is not None else 0.0
-        _dist        = float(labelDist) if labelDist is not None else 10.0
-        _mx          = float(marginLeft) if marginLeft is not None else 0.0
-        _my          = float(marginBottom) if marginBottom is not None else 0.0
-        _gx          = bool(drawGridX) if drawGridX is not None else False
-        _gy          = bool(drawGridY) if drawGridY is not None else False
-        _show_leg    = bool(showLegend) if showLegend is not None else False
-        _col_vals    = list(colorValues) if colorValues else None
-        _colors      = list(gradientColors) if gradientColors else None
-        _n_leg       = int(numLegendSteps) if numLegendSteps else 5
-        _leg_w       = float(legendBarWidth) if legendBarWidth is not None else None
-        _leg_dist    = float(legendDist) if legendDist is not None else 20.0
-        _leg_l_dist  = float(legendLabelDist) if legendLabelDist is not None else 5.0
-        _leg_orient  = str(legendOrientation) if legendOrientation else "vertical"
+        _r           = list(r_int) if r_int else [2.0]
+        _nx          = int(nxL_int) if nxL_int else 5
+        _ny          = int(nyL_int) if nyL_int else 5
+        _d           = int(dec_int) if dec_int is not None else 1
+        _ext         = float(axE_int) if axE_int is not None else 0.0
+        _dist        = float(lblD_int) if lblD_int is not None else 10.0
+        _mx          = float(mL_int) if mL_int is not None else 0.0
+        _my          = float(mB_int) if mB_int is not None else 0.0
+        _gx          = bool(gX_int) if gX_int is not None else False
+        _gy          = bool(gY_int) if gY_int is not None else False
+        _show_leg    = bool(leg_int) if leg_int is not None else False
+        _col_vals    = list(cVal_int) if cVal_int else None
+        _colors      = list(grad_int) if grad_int else None
+        _n_leg       = int(legN_int) if legN_int else 5
+        _leg_w       = float(legW_int) if legW_int is not None else None
+        _leg_dist    = float(legD_int) if legD_int is not None else 20.0
+        _leg_l_dist  = float(legLD_int) if legLD_int is not None else 5.0
+        _leg_orient  = str(legO_int) if legO_int else "vertical"
 
         try:
             # ── Canvas extraction ────────────────────────────────────────

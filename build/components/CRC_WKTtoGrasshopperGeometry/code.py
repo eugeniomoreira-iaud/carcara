@@ -20,9 +20,33 @@ from Grasshopper import DataTree
 
 from crc_modules.rhino.wkt_conversion import wkt_to_rhino
 
+# ===== POSITIONAL INPUT HELPERS (index-based; independent of name/nickname display) =====
+def _unwrap(g):
+    return g.Value if hasattr(g, "Value") else g
+
+def _in_item(i):
+    for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True):
+        return _unwrap(g)
+    return None
+
+def _in_list(i):
+    return [_unwrap(g) for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True)]
+
+def _in_tree(i):
+    src = ghenv.Component.Params.Input[i].VolatileData
+    t = DataTree[object]()
+    for p in src.Paths:
+        for g in src[p]:
+            t.Add(_unwrap(g), p)
+    return t
+# ========================================================================================
+
+# INPUT MAPPING: 0:wkt(wktGeometry/list)
+wkt_int = _in_list(0)
+
 geometry, report = DataTree[object](), "No WKT strings provided"
 
-wkt_inputs = wktGeometry if isinstance(wktGeometry, (list, tuple)) else ([wktGeometry] if wktGeometry else [])
+wkt_inputs = wkt_int if wkt_int else []
 
 if wkt_inputs:
     built = failed = multipart = 0

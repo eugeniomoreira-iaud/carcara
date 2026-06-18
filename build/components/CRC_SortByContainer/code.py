@@ -22,12 +22,30 @@ from Grasshopper import DataTree
 from crc_modules.rhino.wkt_conversion import rh_geometry_to_wkt
 from crc_modules.geometry.containment import sort_points_by_containers
 
-indices = DataTree[object]()
-report = "Provide container curves (containers) and points (points)."
-
-
+# ===== POSITIONAL INPUT HELPERS (index-based; independent of name/nickname display) =====
 def _unwrap(v):
     return v.Value if hasattr(v, "Value") else v
+
+def _in_item(i):
+    for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True):
+        return _unwrap(g)
+    return None
+
+def _in_list(i):
+    return [_unwrap(g) for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True)]
+
+def _in_tree(i):
+    src = ghenv.Component.Params.Input[i].VolatileData
+    t = DataTree[object]()
+    for p in src.Paths:
+        for g in src[p]:
+            t.Add(_unwrap(g), p)
+    return t
+# ========================================================================================
+
+# INPUT MAPPING: 0:C(containers/tree), 1:P(points/tree)
+C_int = _in_tree(0)
+P_int = _in_tree(1)
 
 
 def _flatten_tree(tree):
@@ -40,20 +58,23 @@ def _flatten_tree(tree):
     return result
 
 
+indices = DataTree[object]()
+report = "Provide container curves (containers) and points (points)."
+
 try:
-    _containers_empty = (containers is None or containers.PathCount == 0 or
-                         all(len(containers.Branch(containers.Path(bi))) == 0
-                             for bi in range(containers.PathCount)))
-    _points_empty = (points is None or points.PathCount == 0 or
-                     all(len(points.Branch(points.Path(bi))) == 0
-                         for bi in range(points.PathCount)))
+    _containers_empty = (C_int is None or C_int.PathCount == 0 or
+                         all(len(C_int.Branch(C_int.Path(bi))) == 0
+                             for bi in range(C_int.PathCount)))
+    _points_empty = (P_int is None or P_int.PathCount == 0 or
+                     all(len(P_int.Branch(P_int.Path(bi))) == 0
+                         for bi in range(P_int.PathCount)))
 
     if _containers_empty or _points_empty:
         report = "ERROR: Both containers and points inputs are required."
     else:
         # Flatten both trees to plain Python lists (global indices)
-        flat_containers = _flatten_tree(containers)
-        flat_points = _flatten_tree(points)
+        flat_containers = _flatten_tree(C_int)
+        flat_points = _flatten_tree(P_int)
 
         # Convert Rhino curves → WKT strings (None for unconvertible)
         container_wkts = []

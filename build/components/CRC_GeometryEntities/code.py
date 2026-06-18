@@ -23,22 +23,51 @@ from shapely import wkt as shapely_wkt
 from crc_modules.db.spatial_query import get_geometries, detect_geometry_columns
 from crc_modules.rhino.wkt_conversion import wkt_to_rhino
 
+# ===== POSITIONAL INPUT HELPERS (index-based; independent of name/nickname display) =====
+def _unwrap(g):
+    return g.Value if hasattr(g, "Value") else g
+
+def _in_item(i):
+    for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True):
+        return _unwrap(g)
+    return None
+
+def _in_list(i):
+    return [_unwrap(g) for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True)]
+
+def _in_tree(i):
+    src = ghenv.Component.Params.Input[i].VolatileData
+    t = DataTree[object]()
+    for p in src.Paths:
+        for g in src[p]:
+            t.Add(_unwrap(g), p)
+    return t
+# ========================================================================================
+
+# INPUT MAPPING  0:cs:item  1:tog:item  2:sch:item  3:tbl:item  4:cx:item  5:cy:item
+cs_int  = _in_item(0)
+tog_int = _in_item(1)
+sch_int = _in_item(2)
+tbl_int = _in_item(3)
+cx_int  = _in_item(4)
+cy_int  = _in_item(5)
+
 geometry, primaryKeys, report, queries = DataTree[object](), DataTree[object](), "Set 'CToggle' to True to execute", ""
 
-if CToggle:
+if tog_int:
     try:
-        if not CString:
+        if not cs_int:
             raise ValueError("CString is required")
-        if not schema or not table:
+        if not sch_int or not tbl_int:
             raise ValueError("schema and table are required")
 
-        cx = str(Cx) if Cx else "0"
-        cy = str(Cy) if Cy else "0"
+        cx = str(cx_int) if cx_int else "0"
+        cy = str(cy_int) if cy_int else "0"
 
         executed_sql = []
-        geom_cols = detect_geometry_columns(CString, schema, table, sql_log=executed_sql)
+        geom_cols = detect_geometry_columns(cs_int, sch_int, tbl_int, sql_log=executed_sql)
 
-        wkt_list, pk_list = get_geometries(CString, schema, table, cx=cx, cy=cy, sql_log=executed_sql)
+        wkt_list, pk_list = get_geometries(cs_int, sch_int, tbl_int, cx=cx, cy=cy, sql_log=executed_sql)
 
         built = null_wkt = failed = 0
         sample_fail = ""

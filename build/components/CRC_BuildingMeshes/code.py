@@ -30,10 +30,30 @@ from crc_modules.rhino.building_mesh import (
     create_building_mesh_with_holes,
 )
 
-# ── Resolve inputs ────────────────────────────────────────────────────────────
-# buildingFootprints / buildingHeights are already DataTrees (scriptParamAccess: "tree"); use them directly.
-_fp_tree = buildingFootprints
-_h_tree  = buildingHeights
+# ===== POSITIONAL INPUT HELPERS (index-based; independent of name/nickname display) =====
+def _unwrap(g):
+    return g.Value if hasattr(g, "Value") else g
+
+def _in_item(i):
+    for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True):
+        return _unwrap(g)
+    return None
+
+def _in_list(i):
+    return [_unwrap(g) for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True)]
+
+def _in_tree(i):
+    src = ghenv.Component.Params.Input[i].VolatileData
+    t = DataTree[object]()
+    for p in src.Paths:
+        for g in src[p]:
+            t.Add(_unwrap(g), p)
+    return t
+# ========================================================================================
+
+# INPUT MAPPING  0:fp:tree  1:h:tree
+fp_int = _in_tree(0)
+h_int  = _in_tree(1)
 
 groundFaces = DataTree[object]()
 lateralFaces = DataTree[object]()
@@ -78,28 +98,28 @@ def _resolve_heights(raw_heights, fp_count):
 
 
 try:
-    if _fp_tree.BranchCount == 0:
+    if fp_int.BranchCount == 0:
         _log.append("WARNING: No footprints provided.")
-    elif _h_tree.BranchCount == 0:
+    elif h_int.BranchCount == 0:
         _log.append("WARNING: No heights provided.")
     else:
-        _total_branches = _fp_tree.BranchCount
+        _total_branches = fp_int.BranchCount
 
-        for _i in range(_fp_tree.BranchCount):
-            _path = _fp_tree.Path(_i)
+        for _i in range(fp_int.BranchCount):
+            _path = fp_int.Path(_i)
 
             # Ensure branch exists in all output trees (preserves empty branches)
             groundFaces.EnsurePath(_path)
             lateralFaces.EnsurePath(_path)
             rooftopFaces.EnsurePath(_path)
 
-            _fps = [_unwrap(x) for x in _fp_tree.Branch(_path)]
+            _fps = [_unwrap(x) for x in fp_int.Branch(_path)]
 
             if not _fps:
                 _empty_branches += 1
                 continue
 
-            _raw_h = _get_h_branch(_h_tree, _path)
+            _raw_h = _get_h_branch(h_int, _path)
 
             try:
                 _heights = _resolve_heights(_raw_h, len(_fps))

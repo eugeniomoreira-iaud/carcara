@@ -30,6 +30,34 @@ from crc_modules.viz.histogram import create_histogram
 from crc_modules.svg.export import polyline_to_svg, text_to_svg
 from crc_modules.rhino.preview import PreviewPayload
 
+# ===== POSITIONAL INPUT HELPERS (index-based; independent of name/nickname display) =====
+from Grasshopper import DataTree
+
+def _unwrap(g):
+    if g is None:
+        return None
+    try:
+        return g.ScriptVariable()
+    except Exception:
+        return g.Value if hasattr(g, "Value") else g
+
+def _in_item(i):
+    for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True):
+        return _unwrap(g)
+    return None
+
+def _in_list(i):
+    return [_unwrap(g) for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True)]
+
+def _in_tree(i):
+    src = ghenv.Component.Params.Input[i].VolatileData
+    t = DataTree[object]()
+    for p in src.Paths:
+        for g in src[p]:
+            t.Add(_unwrap(g), p)
+    return t
+# ========================================================================================
+
 
 # Matplotlib-cycle colours used for bar fills in viewport (same grey as SVG)
 _BAR_FILL  = sd.Color.FromArgb(255, 170, 170, 170)   # #AAAAAA
@@ -44,11 +72,25 @@ class Histogram(component):
 
     def RunScript(self, canvasRect, dataValues, numBins, numXLabels, numYLabels, decimals, axisExtension, labelDist, drawGridY, barOutlineWidth, axisLineWidth, gridLineWidth):
         self.Message = "v{{component_version}}-{{date}}"
+        # ── INPUT MAPPING (index-based) ──────────────────────────────────────
+        cnv_int  = _in_item(0)
+        val_int  = _in_list(1)
+        bins_int = _in_item(2)
+        nxL_int  = _in_item(3)
+        nyL_int  = _in_item(4)
+        dec_int  = _in_item(5)
+        axE_int  = _in_item(6)
+        lblD_int = _in_item(7)
+        gY_int   = _in_item(8)
+        barW_int = _in_item(9)
+        axW_int  = _in_item(10)
+        grdW_int = _in_item(11)
+        # ────────────────────────────────────────────────────────────────────
 
         # -- Width defaults --------------------------------------------------
-        _bw = float(barOutlineWidth) if barOutlineWidth is not None else 1.0
-        _aw = float(axisLineWidth) if axisLineWidth is not None else 2.0
-        _gw = float(gridLineWidth) if gridLineWidth is not None else 1.0
+        _bw = float(barW_int) if barW_int is not None else 1.0
+        _aw = float(axW_int) if axW_int is not None else 2.0
+        _gw = float(grdW_int) if grdW_int is not None else 1.0
 
         # -- Default demo data for instant preview ---------------------------
         _default_values = [12, 19, 25, 30, 42, 38, 27, 20, 15, 10]
@@ -68,29 +110,29 @@ class Histogram(component):
         self._pv = pv
 
         try:
-            values_list = ([float(x) for x in dataValues if x is not None]
-                           if dataValues else _default_values)
+            values_list = ([float(x) for x in val_int if x is not None]
+                           if val_int else _default_values)
 
             # -- Canvas extraction -------------------------------------------
-            if canvasRect is not None:
-                origin = canvasRect.Corner(0)
+            if cnv_int is not None:
+                origin = cnv_int.Corner(0)
                 ox = origin.X
                 oy = origin.Y
-                cw = canvasRect.Width
-                ch = canvasRect.Height
+                cw = cnv_int.Width
+                ch = cnv_int.Height
             else:
                 ox, oy, cw, ch = 0.0, 0.0, 100.0, 100.0
 
             canvas_tuple = (ox, oy, cw, ch)
 
             # -- Coerce inputs -----------------------------------------------
-            bins_val  = int(numBins)    if numBins    is not None else 10
-            nx_val    = int(numXLabels) if numXLabels is not None else None
-            ny_val    = int(numYLabels) if numYLabels is not None else 5
-            d_val     = int(decimals)   if decimals   is not None else 1
-            ext_val   = float(axisExtension) if axisExtension is not None else 0.0
-            dist_val  = float(labelDist)     if labelDist     is not None else 10.0
-            gy_val    = bool(drawGridY)      if drawGridY     is not None else False
+            bins_val  = int(bins_int)    if bins_int    is not None else 10
+            nx_val    = int(nxL_int) if nxL_int is not None else None
+            ny_val    = int(nyL_int) if nyL_int is not None else 5
+            d_val     = int(dec_int)   if dec_int   is not None else 1
+            ext_val   = float(axE_int) if axE_int is not None else 0.0
+            dist_val  = float(lblD_int)     if lblD_int     is not None else 10.0
+            gy_val    = bool(gY_int)      if gY_int     is not None else False
 
             # -- Call pure module --------------------------------------------
             result = create_histogram(

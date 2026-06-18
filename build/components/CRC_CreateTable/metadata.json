@@ -5,7 +5,7 @@
   "subcategory": "02.Queries",
   "description": "CREATE TABLE in PostGIS and INSERT row data; always adds a primary key (from Id Values or auto-increment). Destructive when replace_table=True.",
   "exposure": 8,
-  "componentVersion": "0.5-00",
+  "componentVersion": "0.5-01",
   "date": "2026-06-16",
   "instanceGuid": "e5f6a7b8-c9d0-1234-ef01-567890123456",
   "ghpython": {

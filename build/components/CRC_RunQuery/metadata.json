@@ -5,7 +5,7 @@
   "subcategory": "03.Utilities",
   "description": "Runs a raw SQL SELECT against a PostGIS database and returns results as a DataTree organised by column.",
   "exposure": 4,
-  "componentVersion": "0.5-00",
+  "componentVersion": "0.5-01",
   "date": "2026-06-16",
   "instanceGuid": "b3c4d5e6-f7a8-9012-bcde-f12345678901",
   "ghpython": {

@@ -26,11 +26,35 @@ from Grasshopper.Kernel.Data import GH_Path
 
 from crc_modules.rhino.offset import get_corner_style, offset_curve, DEFAULT_TOLERANCE
 
+# ===== POSITIONAL INPUT HELPERS (index-based; independent of name/nickname display) =====
+def _unwrap(g):
+    return g.Value if hasattr(g, "Value") else g
+
+def _in_item(i):
+    for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True):
+        return _unwrap(g)
+    return None
+
+def _in_list(i):
+    return [_unwrap(g) for g in ghenv.Component.Params.Input[i].VolatileData.AllData(True)]
+
+def _in_tree(i):
+    src = ghenv.Component.Params.Input[i].VolatileData
+    t = DataTree[object]()
+    for p in src.Paths:
+        for g in src[p]:
+            t.Add(_unwrap(g), p)
+    return t
+# ========================================================================================
+
+# INPUT MAPPING  2:cs:item  (inputs 0 and 1 are already read by index below)
+cs_int = _in_item(2)
+
 # ── Resolve inputs ────────────────────────────────────────────────────────────
 # curves and distances arrive as DataTrees via GHPython tree access.
 # cornerStyle is a single item (may be None → default to 1 = Sharp).
 
-_style_int = int(cornerStyle) if cornerStyle is not None else 1
+_style_int = int(cs_int) if cs_int is not None else 1
 _corner_style = get_corner_style(_style_int)
 
 _curves_tree  = ghenv.Component.Params.Input[0].VolatileData
