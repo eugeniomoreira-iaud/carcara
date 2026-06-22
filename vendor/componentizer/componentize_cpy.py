@@ -204,7 +204,7 @@ def parse_param_type_hint(type_hint_id):
     return type_hint_id
 
 
-def replace_templates(code, version, name, ghuser_name, component_version=None):
+def replace_templates(code, version, name, ghuser_name, component_version=None, component_date=None):
     if version:
         code = TEMPLATE_VER.sub(version, code)
 
@@ -213,7 +213,7 @@ def replace_templates(code, version, name, ghuser_name, component_version=None):
 
     code = TEMPLATE_NAME.sub(name, code)
     code = TEMPLATE_GHUSER_NAME.sub(ghuser_name, code)
-    code = TEMPLATE_DATE.sub(datetime.now().strftime("%Y/%m/%d"), code)
+    code = TEMPLATE_DATE.sub(component_date or datetime.now().strftime("%Y/%m/%d"), code)
 
     return code
 
@@ -224,8 +224,9 @@ def create_ghuser_component(source, target, version=None, prefix=None):
     icon, code, data = validate_source_bundle(source)
 
     component_version = data.get("componentVersion") or version
+    component_date = data.get("date")
     code = replace_templates(code, version, data["name"], os.path.basename(target),
-                             component_version)
+                             component_version, component_date)
 
     instance_guid = data.get("instanceGuid")
     if not instance_guid:

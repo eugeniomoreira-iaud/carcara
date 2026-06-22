@@ -6,7 +6,7 @@
   "description": "Converts Grasshopper polylines/polygons to SVG <polyline>/<polygon> element strings. Closed polylines emit <polygon>; open polylines emit <polyline>. Coordinates are transformed from Rhino Y-up to SVG Y-down using the canvas anchor.",
   "exposure": 4,
   "componentVersion": "0.5-01",
-  "date": "2026-06-16",
+  "date": "2026-06-17",
   "instanceGuid": "b1c2d3e4-f5a6-7890-bcde-f12345678901",
   "ghpython": {
     "isAdvancedMode": true,

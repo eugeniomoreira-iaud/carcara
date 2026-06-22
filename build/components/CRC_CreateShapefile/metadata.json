@@ -6,7 +6,7 @@
   "description": "Creates a PostGIS table with attribute columns AND a geometry column named 'geom' (type auto-detected). Geometry is a DataTree: branch per row; more than one item per branch = multipart. Applies false-origin (Cx/Cy) add-back in SQL. Not a file export.",
   "exposure": 8,
   "componentVersion": "0.5-01",
-  "date": "2026-06-16",
+  "date": "2026-06-17",
   "instanceGuid": "f6a7b8c9-d0e1-2345-f012-678901234567",
   "ghpython": {
     "isAdvancedMode": false,

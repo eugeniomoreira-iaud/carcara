@@ -15,7 +15,7 @@ try:
 except Exception:
     pass
 
-from crc_modules.db.query import run_query, _query_values_sql
+from crc_modules.db.query import query_values
 
 # ===== POSITIONAL INPUT HELPERS (index-based; independent of name/nickname display) =====
 from Grasshopper import DataTree
@@ -56,28 +56,11 @@ if tog_int:
         if not sch_int or not tbl_int or not col_int:
             raise ValueError("schema, table, and column are required")
 
-        # Handle single column or multiple columns (comma-separated)
         cols = [c.strip() for c in str(col_int).split(",")] if col_int else []
         null_val = N_int if N_int else ""
 
-        # Build SQL for multiple columns
-        from crc_modules.db.query import _quote_identifier, _quote_literal
-        target = "{}.{}".format(_quote_identifier(sch_int), _quote_identifier(tbl_int))
-        col_list = ", ".join(_quote_identifier(c) for c in cols)
-
-        if null_val != "":
-            case_exprs = []
-            for c in cols:
-                qc = _quote_identifier(c)
-                case_exprs.append("CASE WHEN {qc} IS NULL THEN {nv} ELSE {qc}::text END".format(
-                    qc=qc, nv=_quote_literal(null_val)))
-            select_clause = ", ".join(case_exprs)
-        else:
-            select_clause = col_list
-
-        sql = "SELECT {} FROM {}".format(select_clause, target)
-
-        _rows, columns = run_query(cs_int, sql)
+        executed_sql = []
+        _rows, columns = query_values(cs_int, sch_int, tbl_int, cols, null_val, sql_log=executed_sql)
 
         # Output as Grasshopper DataTree: each row is a branch, items are column values in order
         from Grasshopper.Kernel.Data import GH_Path
@@ -88,7 +71,6 @@ if tog_int:
                 tree.Add(str(val), path)
         rows = tree
 
-        executed_sql = [sql]
         report = "OK – {} rows, {} columns returned".format(len(_rows), len(columns))
         queries = "\n\n".join("-- query {}\n{}".format(i + 1, s) for i, s in enumerate(executed_sql))
     except Exception as e:

@@ -6,7 +6,7 @@
   "description": "Converts Grasshopper Circle geometries to SVG <circle> element strings. Transforms center from Rhino Y-up to SVG Y-down using the canvas anchor.",
   "exposure": 4,
   "componentVersion": "0.5-01",
-  "date": "2026-06-16",
+  "date": "2026-06-17",
   "instanceGuid": "c2d3e4f5-a6b7-8901-cdef-012345678902",
   "ghpython": {
     "isAdvancedMode": true,

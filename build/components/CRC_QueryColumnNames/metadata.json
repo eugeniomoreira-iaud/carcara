@@ -6,7 +6,7 @@
   "description": "Lists all columns and their types in a specified table.",
   "exposure": 2,
   "componentVersion": "0.5-01",
-  "date": "2026-06-16",
+  "date": "2026-06-17",
   "instanceGuid": "f6a7b8c9-d0e1-2345-fabc-678901234567",
   "ghpython": {
     "isAdvancedMode": false,

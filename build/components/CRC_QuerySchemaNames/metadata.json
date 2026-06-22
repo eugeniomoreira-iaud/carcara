@@ -6,7 +6,7 @@
   "description": "Lists all non-system schemas in a PostGIS database.",
   "exposure": 2,
   "componentVersion": "0.5-01",
-  "date": "2026-06-16",
+  "date": "2026-06-17",
   "instanceGuid": "d4e5f6a7-b8c9-0123-defa-456789012345",
   "ghpython": {
     "isAdvancedMode": false,

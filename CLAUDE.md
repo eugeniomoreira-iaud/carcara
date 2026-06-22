@@ -384,6 +384,16 @@ Minimum viable shape:
 
 Defaults applied by the componentizer: `optional=true` (inputs), `scriptParamAccess="item"`, `typeHintID="ghdoc"`. Override only when needed.
 
+**Version + date stamp.** `metadata.json` also carries `componentVersion` and `date`. Both are
+substituted into the `code.py` `Component.Message` stamp `v{{component_version}}-{{date}}` at build
+time (the `{{date}}` token reads the metadata `date`, not the build clock). When you change a
+component, **bump `componentVersion` and set `date`** (YYYY-MM-DD) in that bundle's `metadata.json`.
+`componentVersion` is `<release>-<component>`: the `<release>` part (e.g. `0.5`) tracks the plugin
+release line; the two-digit `<component>` suffix (`01`, `02`, …) increments once per change to that
+component within the release. **Before every deploy, ask the user** whether the component version
+and/or the release version (`pyproject.toml` → `version`, the `<release>` part of `componentVersion`)
+should be bumped.
+
 ### `code.py` (required)
 
 Plain Python source that runs as the component's `RunScript` body. Pattern:

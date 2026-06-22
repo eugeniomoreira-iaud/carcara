@@ -6,7 +6,7 @@
   "description": "Generates SQL statements by replacing variable placeholders with corresponding values.",
   "exposure": 4,
   "componentVersion": "0.5-01",
-  "date": "2026-06-16",
+  "date": "2026-06-17",
   "ghpython": {
     "isAdvancedMode": false,
     "marshalGuids": true,

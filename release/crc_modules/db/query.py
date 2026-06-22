@@ -118,3 +118,37 @@ def _query_values_sql(schema: str, table: str, column: str, null_val: str = "", 
         q = "{} LIMIT {}".format(q, int(limit))
 
     return q
+
+
+def query_values(cstring: str, schema: str, table: str, columns: list,
+                 null_val: str = "", sql_log: Optional[list] = None) -> tuple[list, list]:
+    """
+    SELECT one or more columns from a table, ordered by primary key (or the
+    table's first column if no PK). Optionally replace NULL with null_val.
+    Returns (rows, columns). Raises psycopg2.Error on failure.
+    """
+    from .spatial_query import detect_primary_key, detect_first_column
+
+    target = "{}.{}".format(_quote_identifier(schema), _quote_identifier(table))
+
+    if null_val != "":
+        parts = []
+        for c in columns:
+            qc = _quote_identifier(c)
+            parts.append("CASE WHEN {qc} IS NULL THEN {nv} ELSE {qc}::text END".format(
+                qc=qc, nv=_quote_literal(null_val)))
+        select_clause = ", ".join(parts)
+    else:
+        select_clause = ", ".join(_quote_identifier(c) for c in columns)
+
+    sql = "SELECT {} FROM {}".format(select_clause, target)
+
+    order_col = detect_primary_key(cstring, schema, table, sql_log) \
+        or detect_first_column(cstring, schema, table, sql_log)
+    if order_col:
+        sql = "{} ORDER BY {}".format(sql, _quote_identifier(order_col))
+
+    if sql_log is not None:
+        sql_log.append(sql)
+
+    return run_query(cstring, sql)

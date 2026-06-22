@@ -114,7 +114,7 @@ _CONVERTER_DATA = {
 _CONVERTER_DEFAULT = ("System.Private.CoreLib", "System.Object")
 
 
-def _replace_templates(code, version, name, ghuser_name, component_version=None):
+def _replace_templates(code, version, name, ghuser_name, component_version=None, component_date=None):
     """Substitute componentizer template tokens in the source before embedding."""
     if version:
         code = code.replace("{{version}}", version)
@@ -122,7 +122,7 @@ def _replace_templates(code, version, name, ghuser_name, component_version=None)
         code = code.replace("{{component_version}}", component_version)
     code = code.replace("{{name}}", name)
     code = code.replace("{{ghuser_name}}", ghuser_name)
-    code = code.replace("{{date}}", datetime.now().strftime("%Y/%m/%d"))
+    code = code.replace("{{date}}", component_date or datetime.now().strftime("%Y/%m/%d"))
     return code
 
 
@@ -222,8 +222,9 @@ def create_python_sdk_ghuser(source: str, target: str,
 
     # Substitute template tokens, then BASE64-encode the source.
     component_version = data.get("componentVersion") or version
+    component_date = data.get("date")
     py_source = _replace_templates(py_source, version, name, os.path.basename(target),
-                                   component_version)
+                                   component_version, component_date)
     py_source_b64 = base64.b64encode(py_source.encode("utf-8")).decode("ascii")
 
     # --- inner chunk (new Rhino 8 Script-component schema) ---

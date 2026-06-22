@@ -66,7 +66,7 @@ import os
 from datetime import datetime
 
 
-def _replace_templates(code, version, name, ghuser_name, component_version=None):
+def _replace_templates(code, version, name, ghuser_name, component_version=None, component_date=None):
     """Substitute the componentizer template tokens in the C# source.
 
     Mirrors componentize_cpy.replace_templates so the C# code can use
@@ -80,7 +80,7 @@ def _replace_templates(code, version, name, ghuser_name, component_version=None)
         code = code.replace("{{component_version}}", component_version)
     code = code.replace("{{name}}", name)
     code = code.replace("{{ghuser_name}}", ghuser_name)
-    code = code.replace("{{date}}", datetime.now().strftime("%Y/%m/%d"))
+    code = code.replace("{{date}}", component_date or datetime.now().strftime("%Y/%m/%d"))
     return code
 
 # clr / GH_IO / System must already be referenced by the caller
@@ -203,8 +203,9 @@ def create_curvedisplay_cs_ghuser(source: str, target: str,
 
     # --- substitute template tokens ({{version}}, {{component_version}}, …) then BASE64-encode ---
     component_version = data.get("componentVersion") or version
+    component_date = data.get("date")
     cs_source = _replace_templates(cs_source, version, name, os.path.basename(target),
-                                   component_version)
+                                   component_version, component_date)
     cs_source_b64 = base64.b64encode(cs_source.encode("utf-8")).decode("ascii")
 
     # --- build inner chunk (mirrors the decoded legacy structure) ---

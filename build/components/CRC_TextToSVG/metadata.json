@@ -6,7 +6,7 @@
   "description": "Converts text strings with Point3d or Plane insertion to SVG <text> elements. Plane input yields rotation from the plane X-axis angle. Justification 1–9 maps to SVG text-anchor/dominant-baseline pairs.",
   "exposure": 4,
   "componentVersion": "0.5-01",
-  "date": "2026-06-16",
+  "date": "2026-06-17",
   "instanceGuid": "e4f5a6b7-c8d9-0123-efab-234567890104",
   "ghpython": {
     "isAdvancedMode": true,

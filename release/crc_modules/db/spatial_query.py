@@ -86,6 +86,34 @@ def detect_primary_key(cstring: str, schema: str, table: str,
         return None
 
 
+def detect_first_column(cstring: str, schema: str, table: str,
+                        sql_log: Optional[list] = None) -> Optional[str]:
+    """Return the first column name (by ordinal_position) for a table, or None."""
+    sql = psycopg2.sql.SQL("""
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_schema = {schema} AND table_name = {table}
+        ORDER BY ordinal_position
+        LIMIT 1
+    """).format(
+        schema=psycopg2.sql.Literal(schema),
+        table=psycopg2.sql.Literal(table),
+    )
+    try:
+        conn = _get_connection(cstring)
+        try:
+            with conn.cursor() as cur:
+                if sql_log is not None:
+                    sql_log.append(cur.mogrify(sql).decode("utf-8", "replace"))
+                cur.execute(sql)
+                row = cur.fetchone()
+                return row[0] if row else None
+        finally:
+            conn.close()
+    except Exception:
+        return None
+
+
 def _build_geometry_expr(geom_col: str, cx: str, cy: str, srid: int) -> str:
     """Build the geometry expression with coordinate correction for read path."""
     cx = validate_offset(cx)
@@ -138,11 +166,11 @@ def get_geometries(
 
     geom_expr = _build_geometry_expr(f'"{geom_col}"', cx, cy, srid)
 
+    order_col = pk_col or detect_first_column(cstring, schema, table, sql_log)
+    order_by = f'ORDER BY "{order_col}"' if order_col else ""
     if pk_col:
-        order_by = f'ORDER BY "{pk_col}"'
         select_pk = f'"{pk_col}"'
     else:
-        order_by = ""
         select_pk = "NULL"
 
     where_clause = f"WHERE {where}" if where else ""
@@ -196,11 +224,11 @@ def get_geometries_with_spatial_filter(
     geom_expr = _build_geometry_expr(f'"{geom_col}"', cx, cy, srid)
     spatial_pred = _build_spatial_filter_expr(f'"{geom_col}"', filter_wkts, cx, cy, srid, func)
 
+    order_col = pk_col or detect_first_column(cstring, schema, table, sql_log)
+    order_by = f'ORDER BY "{order_col}"' if order_col else ""
     if pk_col:
-        order_by = f'ORDER BY "{pk_col}"'
         select_pk = f'"{pk_col}"'
     else:
-        order_by = ""
         select_pk = "NULL"
 
     where_clause = f"WHERE {spatial_pred}"
@@ -253,11 +281,11 @@ def get_values_with_spatial_filter(
 
     spatial_pred = _build_spatial_filter_expr(f'"{geom_col}"', filter_wkts, cx, cy, srid, func)
 
+    order_col = pk_col or detect_first_column(cstring, schema, table, sql_log)
+    order_by = f'ORDER BY "{order_col}"' if order_col else ""
     if pk_col:
-        order_by = f'ORDER BY "{pk_col}"'
         select_pk = f'"{pk_col}"'
     else:
-        order_by = ""
         select_pk = "NULL"
 
     where_clause = f"WHERE {spatial_pred}"

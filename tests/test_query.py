@@ -1,7 +1,7 @@
 from unittest.mock import patch, MagicMock, call
 import pytest
 import psycopg2
-from crc_modules.db.query import run_query, run_command, _list_schemas, _list_tables, _list_columns
+from crc_modules.db.query import run_query, run_command, _list_schemas, _list_tables, _list_columns, query_values
 
 
 def _mock_conn(rows, col_names):
@@ -108,3 +108,38 @@ def test_list_columns_sql():
     assert "information_schema.columns" in sql
     assert "table_schema = 'public'" in sql
     assert "table_name = 'mytable'" in sql
+
+
+# ── query_values ───────────────────────────────────────────────────────────
+
+def test_query_values_orders_by_pk():
+    from crc_modules.db import query as q
+    sql_log = []
+    with patch("crc_modules.db.spatial_query.detect_primary_key", return_value="id"), \
+         patch("crc_modules.db.spatial_query.detect_first_column", return_value="other"), \
+         patch("crc_modules.db.query.run_query", return_value=([(1,)], ["a"])) as rq:
+        q.query_values("cs", "public", "t", ["a", "b"], sql_log=sql_log)
+        sent = rq.call_args[0][1]
+        assert 'ORDER BY "id"' in sent
+        assert 'SELECT "a", "b"' in sent
+
+
+def test_query_values_orders_by_first_column_when_no_pk():
+    from crc_modules.db import query as q
+    with patch("crc_modules.db.spatial_query.detect_primary_key", return_value=None), \
+         patch("crc_modules.db.spatial_query.detect_first_column", return_value="gid"), \
+         patch("crc_modules.db.query.run_query", return_value=([], [])) as rq:
+        q.query_values("cs", "public", "t", ["a"])
+        sent = rq.call_args[0][1]
+        assert 'ORDER BY "gid"' in sent
+
+
+def test_query_values_null_replacement_case():
+    from crc_modules.db import query as q
+    with patch("crc_modules.db.spatial_query.detect_primary_key", return_value="id"), \
+         patch("crc_modules.db.spatial_query.detect_first_column", return_value=None), \
+         patch("crc_modules.db.query.run_query", return_value=([], [])) as rq:
+        q.query_values("cs", "public", "t", ["a"], null_val="N/A")
+        sent = rq.call_args[0][1]
+        assert "CASE WHEN" in sent
+        assert "'N/A'" in sent

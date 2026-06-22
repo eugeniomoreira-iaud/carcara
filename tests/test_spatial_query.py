@@ -5,6 +5,7 @@ from decimal import Decimal
 from crc_modules.db.spatial_query import (
     detect_geometry_column,
     detect_geometry_columns,
+    detect_first_column,
     detect_primary_key,
     get_geometries,
     get_geometries_with_spatial_filter,
@@ -174,10 +175,12 @@ class TestDetectPrimaryKey:
 
 def make_spatial_query_mocks(geo_col="geom", pk_col="gid",
                              query_rows=[("POINT (0 0)", 1)],
-                             query_cols=["geom", "pk"]):
-    """Build a chain of mocks for the 3 connection calls in get_geometries:
-    connect->geo->connect->pk->connect->query.
-    Returns (capture_sql, return_value) tuple collector."""
+                             query_cols=["geom", "pk"],
+                             first_col=None):
+    """Build a chain of mocks for the connection calls in get_geometries:
+    connect->geo->connect->pk->[connect->first_col if pk_col is None]->connect->query.
+    first_col: value returned by detect_first_column when pk_col is None (default None).
+    Returns (mock_connect, captured_sql_list) tuple."""
     call_num = [0]
     captured_sql_list = []
 
@@ -205,8 +208,19 @@ def make_spatial_query_mocks(geo_col="geom", pk_col="gid",
             conn_out.cursor.return_value = ctx
             return conn_out, None
 
-        elif n == 2:
-            # Actual query
+        elif n == 2 and pk_col is None:
+            # detect_first_column call (only when no PK)
+            cur = MagicMock()
+            cur.fetchone.return_value = (first_col,) if first_col else None
+            ctx = MagicMock()
+            ctx.__enter__ = lambda s: cur
+            ctx.__exit__ = MagicMock(return_value=False)
+            conn_out = MagicMock()
+            conn_out.cursor.return_value = ctx
+            return conn_out, None
+
+        else:
+            # Actual query (call index 2 when pk present, 3 when pk absent)
             cur = MagicMock()
             cur.fetchall.return_value = query_rows
             cur.description = [tuple([c] + [None] * 6) for c in query_cols]
@@ -298,8 +312,9 @@ class TestGetGeometries:
 
     def test_no_pk_path_returns_none_and_no_order_by(self):
         cstring = "host=localhost port=5432 dbname=db user=u password=pw"
-        # pk_col=None in SQL means we SELECT NULL for the PK column, so DB returns None per row
+        # pk_col=None + first_col=None -> no ORDER BY; SELECT NULL for the PK column
         mock_gc, captured = make_spatial_query_mocks(geo_col="geom", pk_col=None,
+                                                     first_col=None,
                                                      query_rows=[("POINT (0 0)", None)])
         with patch("crc_modules.db.spatial_query.psycopg2.connect", mock_gc), \
              patch("crc_modules.db.spatial_query.parse_connection_string"
@@ -649,3 +664,79 @@ class TestSqlLogGetGeometries:
 
         assert wkt == ["POINT (0 0)"]
         assert pk == [1]
+
+
+# ── detect_first_column ────────────────────────────────────────────────────
+
+class TestDetectFirstColumn:
+    def test_found(self):
+        cstring = "host=localhost port=5432 dbname=db user=u password=pw"
+        conn_out = make_detection_conn(("gid",))
+        with patch("crc_modules.db.spatial_query.psycopg2.connect", return_value=conn_out):
+            result = detect_first_column(cstring, "public", "buildings")
+            assert result == "gid"
+
+    def test_not_found_returns_none(self):
+        cstring = "host=localhost port=5432 dbname=db user=u password=pw"
+        conn_out = make_detection_conn(None)
+        with patch("crc_modules.db.spatial_query.psycopg2.connect", return_value=conn_out):
+            result = detect_first_column(cstring, "public", "empty_table")
+            assert result is None
+
+    def test_exception_returns_none(self):
+        cstring = "host=localhost port=5432 dbname=db user=u password=pw"
+        with patch("crc_modules.db.spatial_query.psycopg2.connect",
+                   side_effect=Exception("DB error")):
+            result = detect_first_column(cstring, "public", "any_table")
+            assert result is None
+
+
+# ── ORDER BY first-column fallback tests ───────────────────────────────────
+
+class TestOrderByFirstColumnFallback:
+    """When no PK exists, the 3 read functions fall back to ORDER BY first column."""
+
+    def test_get_geometries_orders_by_first_column_when_no_pk(self):
+        cstring = "host=localhost port=5432 dbname=db user=u password=pw"
+        mock_gc, captured = make_spatial_query_mocks(
+            geo_col="geom", pk_col=None, first_col="geomid",
+            query_rows=[("POINT (0 0)", None)])
+        with patch("crc_modules.db.spatial_query.psycopg2.connect", mock_gc), \
+             patch("crc_modules.db.spatial_query.parse_connection_string",
+                   return_value={"host": "localhost", "port": 5432,
+                                 "dbname": "db", "user": "u", "password": "pw"}):
+            wkt, pk = get_geometries(cstring, "public", "t")
+
+        assert any('ORDER BY "geomid"' in s for s in captured), \
+            f'Expected ORDER BY "geomid" in SQL: {captured}'
+
+    def test_get_geometries_with_spatial_filter_orders_by_first_column_when_no_pk(self):
+        cstring = "host=localhost port=5432 dbname=db user=u password=pw"
+        mock_gc, captured = make_spatial_query_mocks(
+            geo_col="geom", pk_col=None, first_col="geomid",
+            query_rows=[("POINT (0 0)", None)])
+        with patch("crc_modules.db.spatial_query.psycopg2.connect", mock_gc), \
+             patch("crc_modules.db.spatial_query.parse_connection_string",
+                   return_value={"host": "localhost", "port": 5432,
+                                 "dbname": "db", "user": "u", "password": "pw"}):
+            wkt, pk = get_geometries_with_spatial_filter(
+                cstring, "public", "t", filter_wkts=["POINT(0 0)"])
+
+        assert any('ORDER BY "geomid"' in s for s in captured), \
+            f'Expected ORDER BY "geomid" in SQL: {captured}'
+
+    def test_get_values_with_spatial_filter_orders_by_first_column_when_no_pk(self):
+        cstring = "host=localhost port=5432 dbname=db user=u password=pw"
+        mock_gc, captured = make_spatial_query_mocks(
+            geo_col="geom", pk_col=None, first_col="geomid",
+            query_rows=[("val", None)])
+        with patch("crc_modules.db.spatial_query.psycopg2.connect", mock_gc), \
+             patch("crc_modules.db.spatial_query.parse_connection_string",
+                   return_value={"host": "localhost", "port": 5432,
+                                 "dbname": "db", "user": "u", "password": "pw"}):
+            values, pk = get_values_with_spatial_filter(
+                cstring, "public", "t", column="val",
+                filter_wkts=["POINT(0 0)"])
+
+        assert any('ORDER BY "geomid"' in s for s in captured), \
+            f'Expected ORDER BY "geomid" in SQL: {captured}'

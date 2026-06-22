@@ -6,7 +6,7 @@
   "description": "Renders a scatter chart in the Rhino viewport and exports raw SVG body content. Chain svgCode into CRC_SaveSVG to write the file.",
   "exposure": 8,
   "componentVersion": "0.5-01",
-  "date": "2026-06-16",
+  "date": "2026-06-17",
   "instanceGuid": "b2c3d4e5-f6a7-8901-bcde-f23456789abc",
   "ghpython": {
     "isAdvancedMode": true,

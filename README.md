@@ -150,14 +150,19 @@ Carcará is free software under the **GNU General Public License v3.0 or later**
 If you use Carcará in academic work, please cite the original paper:
 
 ```bibtex
-@inproceedings{moreira2022carcara,
-  author    = {Moreira, Eugenio},
-  title     = {The Use of Visual Programming Interface for Structuring a Generic
-               Digital Framework in a City Information Modeling Workflow},
-  booktitle = {Proceedings of SIGraDi 2022},
-  publisher = {Blucher},
-  year      = {2022},
-  note      = {SIGraDi Research Innovation Award 2022},
-  url       = {https://www.proceedings.blucher.com.br/article-details/the-use-of-visual-programming-interface-for-structuring-a-generic-digital-framework-in-a-city-information-modeling-workflow-38530}
+@article{Alexandrino20144,
+    title="The use of visual programming interface for structuring a generic digital framework in a city information modeling workflow",
+    journal="Blucher Design Proceedings",
+    volume="11",
+    number="2",
+    pages="675 - 686",
+    year="2023",
+    note="",
+    issn="23186968",
+    doi="http://dx.doi.org/10.5151/sigradi2022-sigradi2022_200",
+    url="www.proceedings.blucher.com.br/article-details/the-use-of-visual-programming-interface-for-structuring-a-generic-digital-framework-in-a-city-information-modeling-workflow-38530",
+    author="João Victor Mota Alexandrino", "Vinícius Fernandes Muniz", "Daniel Cardoso", "Eugênio Moreira",
+    keywords="None",
 }
+
 ```

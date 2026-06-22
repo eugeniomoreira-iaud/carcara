@@ -6,7 +6,7 @@
   "description": "Renders a line chart in the Rhino viewport and exports raw SVG body content. Chain svgCode into CRC_SaveSVG to write the file.",
   "exposure": 8,
   "componentVersion": "0.5-01",
-  "date": "2026-06-16",
+  "date": "2026-06-17",
   "instanceGuid": "c4d5e6f7-a8b9-0123-cdef-ab3456789012",
   "ghpython": {
     "isAdvancedMode": true,
