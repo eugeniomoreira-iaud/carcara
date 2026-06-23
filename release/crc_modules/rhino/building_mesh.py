@@ -85,6 +85,8 @@ def group_polygons_with_holes_and_heights(polygons, heights):
     if not polygons:
         return []
 
+    polygons = [_to_polyline(p) for p in polygons]
+
     if len(polygons) < 2:
         return [(polygons[0], [], heights[0])]
 
@@ -124,6 +126,19 @@ def group_polygons_with_holes_and_heights(polygons, heights):
 # Mesh creation
 # ---------------------------------------------------------------------------
 
+def _to_polyline(poly):
+    """Coerce a Polyline / PolylineCurve / Curve to a Rhino.Geometry.Polyline."""
+    if isinstance(poly, rg.Polyline):
+        return poly
+    if isinstance(poly, rg.PolylineCurve):
+        return poly.ToPolyline()
+    if isinstance(poly, rg.Curve):
+        ok, pl = poly.TryGetPolyline()
+        if ok:
+            return pl
+    raise RuntimeError("cannot coerce {} to Polyline".format(type(poly).__name__))
+
+
 def _to_polyline_curve(poly):
     """Coerce a Polyline or PolylineCurve to a closed PolylineCurve."""
     if isinstance(poly, rg.PolylineCurve):
@@ -150,15 +165,16 @@ def create_ngon_mesh_with_holes(exterior_poly, hole_polys):
         Rhino.Geometry.Mesh or None on failure.
     """
     try:
+        exterior_poly = _to_polyline(exterior_poly)
+        hole_polys = [_to_polyline(h) for h in hole_polys]
+
         if not hole_polys:
             # Simple case: no holes
             mesh = rg.Mesh.CreateFromClosedPolyline(exterior_poly)
             if mesh:
-                v_idx = list(range(mesh.Vertices.Count))
-                f_idx = list(range(mesh.Faces.Count))
-                ngon = rg.MeshNgon.Create(v_idx, f_idx)
-                if ngon:
-                    mesh.Ngons.AddNgon(ngon)
+                mesh.Ngons.AddPlanarNgons(0.01, 4, 1, True)
+                mesh.Compact()
+                mesh.RebuildNormals()
             return mesh
 
         # With holes: planar Brep route
@@ -167,29 +183,27 @@ def create_ngon_mesh_with_holes(exterior_poly, hole_polys):
         breps = rg.Brep.CreatePlanarBreps(all_curves, 1e-6)
 
         if not breps or len(breps) == 0:
-            return None
+            raise RuntimeError("CreatePlanarBreps failed (exterior + {} holes)".format(len(hole_polys)))
 
         mesh_params = rg.MeshingParameters.Default
         mesh_params.MaximumEdgeLength = 10.0
 
         meshes = rg.Mesh.CreateFromBrep(breps[0], mesh_params)
         if not meshes or len(meshes) == 0:
-            return None
+            raise RuntimeError("Mesh.CreateFromBrep produced no mesh")
 
         final_mesh = rg.Mesh()
         for m in meshes:
             final_mesh.Append(m)
 
-        v_idx = list(range(final_mesh.Vertices.Count))
-        f_idx = list(range(final_mesh.Faces.Count))
-        ngon = rg.MeshNgon.Create(v_idx, f_idx)
-        if ngon:
-            final_mesh.Ngons.AddNgon(ngon)
+        final_mesh.Ngons.AddPlanarNgons(0.01, 4, 1, True)
+        final_mesh.Compact()
+        final_mesh.RebuildNormals()
 
         return final_mesh
 
-    except Exception:
-        return None
+    except Exception as e:
+        raise RuntimeError("ngon mesh failed: {}".format(e))
 
 
 def create_building_mesh_with_holes(exterior_poly, hole_polys, height):
@@ -209,10 +223,13 @@ def create_building_mesh_with_holes(exterior_poly, hole_polys, height):
         tuple: (ground_mesh, lateral_mesh, roof_mesh) or (None, None, None) on failure.
     """
     try:
+        exterior_poly = _to_polyline(exterior_poly)
+        hole_polys = [_to_polyline(h) for h in hole_polys]
+
         # --- Ground / Roof ---
         ground_mesh = create_ngon_mesh_with_holes(exterior_poly, hole_polys)
         if not ground_mesh:
-            return None, None, None
+            raise RuntimeError("ground mesh is None")
 
         roof_mesh = ground_mesh.Duplicate()
         roof_mesh.Translate(rg.Vector3d(0, 0, height))
@@ -251,5 +268,5 @@ def create_building_mesh_with_holes(exterior_poly, hole_polys, height):
 
         return ground_mesh, lateral_mesh, roof_mesh
 
-    except Exception:
-        return None, None, None
+    except Exception as e:
+        raise RuntimeError("building mesh failed: {}".format(e))

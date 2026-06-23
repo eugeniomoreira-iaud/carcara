@@ -169,3 +169,12 @@ if _log:
     _summary += "\n--- Details ---\n" + "\n".join(_log)
 
 out = _summary
+
+try:
+    from Grasshopper.Kernel import GH_RuntimeMessageLevel as _RML
+    if any(l.startswith("ERROR:") for l in _log):
+        ghenv.Component.AddRuntimeMessage(_RML.Error, "See 'out' for error details.")
+    elif _fail_bldg > 0:
+        ghenv.Component.AddRuntimeMessage(_RML.Warning, "{} building(s) failed - see 'out'.".format(_fail_bldg))
+except Exception:
+    pass

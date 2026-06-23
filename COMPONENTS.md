@@ -299,7 +299,7 @@ Database communication components for reading and writing geometry and attribute
 | table | tbl | str | item | Table to be queried |
 | spatialFilter | flt | ghdoc | list | Grasshopper geometries to act as spatial filter (list — all polygons dissolved into a single mask) |
 | srid | srid | int | item | Spatial reference identifier for the spatial filter (default 4326) |
-| sqlFilter | fn | int | item | Filter function: 0 = ST_Intersects, else = ST_Contains |
+| function | fn | int | item | Filter function: 0 = ST_Intersects, else = ST_Contains |
 | Cx | cx | str | item | Correction X (false origin) - default 0 |
 | Cy | cy | str | item | Correction Y (false origin) - default 0 |
 
@@ -330,7 +330,7 @@ Database communication components for reading and writing geometry and attribute
 | nullReplacement | N | str | item | Value to replace NULL items with |
 | spatialFilter | flt | ghdoc | list | Grasshopper geometries to act as spatial filter (list — all polygons dissolved into a single mask) |
 | srid | srid | int | item | Spatial reference identifier for the spatial filter (default 4326) |
-| sqlFilter | fn | int | item | Filter function: 0 = ST_Intersects, else = ST_Contains |
+| function | fn | int | item | Filter function: 0 = ST_Intersects, else = ST_Contains |
 | Cx | cx | str | item | Correction X (false origin) - default 0 |
 | Cy | cy | str | item | Correction Y (false origin) - default 0 |
 

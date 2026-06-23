@@ -89,6 +89,14 @@ def _color_to_argb_tuple(c):
 def _argb_to_color(t):
     return Color.FromArgb(int(t[0]), int(t[1]), int(t[2]), int(t[3]))
 
+def _to_plane(p):
+    """Coerce legendPlane input (Plane / Point3d / None) to a Rhino.Geometry.Plane."""
+    if isinstance(p, rg.Plane):
+        return p
+    if isinstance(p, rg.Point3d):
+        return rg.Plane(p, rg.Vector3d.ZAxis)
+    return rg.Plane.WorldXY
+
 def _is_valid_number(x):
     try:
         fv = float(x)
@@ -144,7 +152,7 @@ class ColorCalculator(component):
 
             input_lin = bool(lin_int) if lin_int is not None else True
             input_leg_cfg = str(legCfg_int) if legCfg_int else None
-            input_leg_pln = legPln_int if legPln_int else rg.Plane.WorldXY
+            input_leg_pln = _to_plane(legPln_int)
             cls_raw = list(cls_int) if cls_int else [0]
 
             if val_int is None or val_int.BranchCount == 0:

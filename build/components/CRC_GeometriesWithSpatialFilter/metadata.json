@@ -56,9 +56,9 @@
         "scriptParamAccess": "item"
       },
       {
-        "name": "sqlFilter",
+        "name": "function",
         "nickname": "fn",
-        "description": "Filter function: 0 = ST_Intersects, else = ST_Contains",
+        "description": "Filter function: 0 = ST_Intersects, 1 = ST_Contains",
         "typeHintID": "int",
         "scriptParamAccess": "item"
       },
